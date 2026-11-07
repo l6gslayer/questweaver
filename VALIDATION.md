@@ -228,3 +228,36 @@ ready recipient or carrying an urgent timed delivery should retain priority.
 Test another nearby accepted pair when these one-time quests are already done;
 no quest abandonment/reset is required or automated. In-game behavior remains
 unverified by the agent.
+
+## 0.2.0 on-route pickups and local feedback — 2026-11-07
+
+**193 Lua tests passed** under the embedded Lua 5.1 runtime, including
+compilation of all nine addon sources. **17 Python reader tests passed**.
+New checks cover Porthannius with accepted ready Crown, pin/previous route,
+observed versus estimated availability, route-leg pickup precedence, unrelated
+pickups, detour/work/risk/capacity/gate limits, neutral grouped/later/unplanned
+acceptance/readiness/turn-in observations, snapshot/event deduplication including
+lagged log updates and bounded expiry, stable counters across reload/clear,
+300-entry limits, malformed saved data, loading/API gaps, preceding-plan event
+context, bounded Unicode notes/reports, compact/expanded feedback controls,
+manual commands and logout export persistence. A synthetic actual Lua-generated
+quoted report round-tripped through the safe Python reader, including UTF-8.
+This does not establish actual client rendering or SavedVariables serialization.
+
+Porthannius reproduction: at 61.2,47.6 with ready Crown 928 and its pinned/previous
+Dolanaar trip, the prior planner excluded Delivery despite its real 110-XP seed.
+The new supplement includes pickup before the southbound destination, requiring
+route proximity .012, a destination within .03, <=1 minute estimated work per
+pickup, <=.5 added walking and <=1.5 total extra outing minutes, at most four
+quests and existing eligibility/capacity/risk/gear/pin safeguards. Metadata-only
+availability is explicitly labeled check availability. This is a reproduced
+code path; the user's exact prior live state was not captured retrospectively.
+
+Manual review was chosen by the user; no automation or recurring review exists.
+The existing local QuestWeaver saved file was accessible to the reader but had
+no feedback export, as expected before this build loads. After installing,
+reload once to start capture, play/use Feedback or `/qw mark`, then reload or
+log out to write data and ask for a review. Actual on-route pickup suggestions,
+UI text entry/copying, quest-event delivery, reload persistence and saved-export
+readback remain pending Forever playtesting. No game commands were run by the
+agent, and no live/private report was copied into public source.

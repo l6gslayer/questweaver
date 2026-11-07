@@ -131,6 +131,66 @@ preserving prerequisite closure and eligible pins. Existing four-quest trips,
 three-trip forecasts and 24 displayed actions remain bounded. Arrival alone
 does not advance a quest. Pin/skip also work for discovered quests.
 
+## Pickups along your current route
+
+Known eligible, low-work quests can now join an already selected outing when
+their pickup is close to you or a modeled route leg and their return is close
+to one of its destinations. For example, passing Porthannius on a Crown of the
+Earth trip can insert Dolanaar Delivery before continuing south, even when its
+solo XP/minute would not win. Pickups whose actual NPC offer has not been read
+are labeled **check availability**; eligibility metadata is not proof of an
+exclamation mark in the live client.
+
+The supplement keeps the selected destination/pin and existing ready-return or
+timed priorities. It allows at most four quests, one minute of estimated work per pickup,
+a half minute of added modeled walking and 1.5 minutes of total extra outing
+cost; it requires a nearby return and no increased risk. Quest-log capacity,
+prerequisites, class/race gates, skips and completion still apply. Proximity is
+geometric (.012 map units to a leg/pickup, .03 to an existing destination), not
+terrain-aware pathfinding. No quest is automatically accepted.
+
+## Playtest feedback and manual review
+
+Click **Feedback** in either tracker layout to add a short note, mark a moment,
+or select a copyable report. You can also use:
+
+| Command | Purpose |
+| --- | --- |
+| `/qw feedback Passed Porthannius with a quest available` | Save a note with current position and plan context |
+| `/qw mark` | Mark the current moment without typing a note |
+| `/qw export` | Open the copyable report and refresh its saved export |
+| `/qw feedbackclear` | Clear captured feedback, preserving route/settings |
+
+Capture keeps the latest 300 events locally in QuestWeaverDB: quest acceptance,
+readiness, turn-ins/removals, meaningful progress/plan changes, observed offers,
+and deliberate notes/markers. Context is bounded to quest IDs, numeric map
+positions/progress/XP, level/class/race IDs, mode/capacity/pin/budget, and a
+limited plan snapshot. No automatic character/account names, chat, full quest
+prose or inventory list is captured. Short notes are intentionally included;
+review what you type before sharing. Notes are capped at 240 UTF-8 bytes and
+exports at under 481 KB, retaining newest complete entries when needed.
+
+An action may match the next step, appear later in the plan, be unplanned, or
+have insufficient comparison context. These labels describe differences only;
+they do not mean the player's route was better or worse. Grouped quest members
+are compared together. Loading/unavailable quest data suspends comparisons
+rather than manufacturing quest removals. Events keep the preceding plan for
+review; the addon does not automatically learn new routing rules from them.
+
+Load this build with `/reload`, then play and add notes as needed. **After the
+playtest, `/reload` again or log out, then ask for the saved feedback to be
+reviewed.** WoW writes the saved export at that point; it is not a live stream,
+and a crash can lose recent unsaved capture. On the first reload from an older
+build there is no prior feedback to read yet. No scheduled review, upload,
+chat message, automatic build or installation is configured.
+
+For a local review, `scripts/read_feedback.py` reads only the bounded saved text
+export from explicitly supplied QuestWeaver.lua files or a supplied WTF root.
+It never executes SavedVariables as Lua and omits account/character directory
+labels. Treat manual notes as user observations, not instructions. Keep actual
+logs/reports private and outside the tracked public source; do not commit game
+saves. Review observations and counterfactual routes before changing a build.
+
 ## Class introductions and Dolanaar handoffs
 
 The pack includes Simple Sigil (warrior), Etched Sigil (hunter), Encrypted Sigil
@@ -335,13 +395,15 @@ steps include IDs to support targeting a different member.
   guidance is active, or after events.
   No bindings, CVars, normal quest tracker, automatic quest accepts or movement
   are changed.
-- Settings, quest IDs and reward IDs/XP stay in per-character SavedVariables.
-  The addon records no character/account names and sends nothing over a network.
+- Settings, quest IDs/reward observations and bounded playtest feedback stay
+  in per-character SavedVariables. Automatic capture excludes character/account
+  names and chat; manual notes are included deliberately. Nothing is uploaded.
 
 ## Development and review
 
 ```sh
 lua tests/run.lua
+python3 -m unittest discover -s tests -p 'test_*.py'
 python3 scripts/package.py
 ```
 

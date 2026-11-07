@@ -48,7 +48,8 @@ function T.Build(selected,s)
                 key=q.id..":"..q.pendingAction,label=q.pendingLabel,
                 minutes=q.pendingAction=="ACCEPT ITEM" and .15 or (q.minutes or 2)}
         else
-            if not log then nodes[#nodes+1]={id=q.id,quest=q,action="PICK UP",target=q.start,key=q.id..":pickup",minutes=.15} end
+            if not log then nodes[#nodes+1]={id=q.id,quest=q,action="PICK UP",target=q.start,key=q.id..":pickup",minutes=.15,
+                label=q.onRoutePickup and (q.name..(q.pickupObserved and "" or " (check availability)")) or nil} end
             if not (log and log.complete) then
                 local taskCount=0
                 for index,task in ipairs(T.Tasks(q)) do
@@ -103,6 +104,12 @@ function T.Build(selected,s)
                             and C.Distance(area,other.target)<=.06 then ready=false end
                     end
                 end
+            end
+            -- An optional on-route pickup must be visited before the selected
+            -- leg that would pass it. The candidate was eligible in the real
+            -- snapshot, so this edge never waits on a projected prerequisite.
+            for _,other in ipairs(nodes) do
+                if other.action=="PICK UP" and other.quest.onRouteBefore==node.key then ready=false end
             end
             if ready then
                 local cost=C.Travel(position,node.target)
@@ -268,6 +275,74 @@ local function batchCompanions(best,available,s,fastest)
     return best
 end
 
+-- Geometric proximity to an already selected route, not terrain pathfinding.
+local function segmentDistance(point,a,b)
+    local dx,dy=b.x-a.x,b.y-a.y
+    local length=dx*dx+dy*dy
+    local t=length>0 and ((point.x-a.x)*dx+(point.y-a.y)*dy)/length or 0
+    t=math.max(0,math.min(1,t))
+    return C.Distance(point,{x=a.x+t*dx,y=a.y+t*dy})
+end
+
+-- Low-work pickups along the chosen outing can be useful even when their
+-- marginal XP/minute would lose a solo-score contest. Preserve the chosen
+-- destination/pin and bound actual added walking, work and quest-log capacity.
+local function pickupsAlongRoute(best,quests,s,fastest)
+    if best.urgent or best.nearbyReturns or best.stageOnly then return best end
+    for _,q in ipairs(best.quests) do if q.timed then return best end end
+    local baselineMinutes,baselineWalking=best.minutes,best.walking
+    for _=1,3 do
+        if #best.quests>=4 then break end
+        local addition,extraCost,selectedID
+        for _,q in ipairs(quests) do
+            if not s.log[q.id] and not contains(best,q.id) and usable(q,s)
+                and not q.pendingAction and not q.stageOnly and not q.timed
+                and q.start and q.objective and q.finish
+                and C.IsLocal(q.start) and C.IsLocal(q.objective) and C.IsLocal(q.finish)
+                and ((q.xp or 0)>0 or (q.gearKnown and (q.gear or 0)>=.1)) then
+                local work=0
+                for _,task in ipairs(T.Tasks(q)) do work=work+(task.minutes or q.minutes or 5) end
+                local before,finishNear,position=nil,false,s.pos
+                for _,step in ipairs(best.steps) do
+                    for _,member in ipairs(step.members) do
+                        if not before and position and (C.Distance(s.pos,q.start)<=.012
+                            or segmentDistance(q.start,position,member.target)<=.012) then before=member.key end
+                        if (member.action=="DO" or member.action=="TURN IN")
+                            and C.Distance(q.finish,member.target)<=.03 then finishNear=true end
+                        position=member.target
+                    end
+                end
+                if before and finishNear and work<=1 then
+                    local selected=C.Copy(best.quests)
+                    local candidate=C.Copy(q)
+                    candidate.onRoutePickup=true; candidate.onRouteBefore=before
+                    candidate.pickupObserved=s.offered and s.offered[q.id]==true or false
+                    selected[#selected+1]=candidate
+                    if slotsOK(selected,s) then
+                        local combined=T.Build(selected,s)
+                        local extra=combined and combined.minutes-baselineMinutes or math.huge
+                        local budgetOK=not best.gearDetour or (combined and combined.minutes+(best.gearExtra or 0)-fastest.minutes<=(s.budget or 10))
+                        if combined and budgetOK and combined.risk<=best.risk
+                            and combined.walking-baselineWalking<=.5 and extra<=1.5
+                            and (not addition or extra<extraCost or (extra==extraCost and q.id<selectedID)) then
+                            addition,extraCost,selectedID=combined,extra,q.id
+                        end
+                    end
+                end
+            end
+        end
+        if not addition then break end
+        addition.onRoutePickups=true
+        addition.pickupExtraMinutes=extraCost
+        addition.gear=math.max(addition.gear,best.gear)
+        addition.gearExtra=best.gearExtra; addition.gearDetour=best.gearDetour
+        addition.batchedReturn=best.batchedReturn; addition.batchSavings=best.batchSavings
+        addition.priority=addition.score*(best.score>0 and best.priority/best.score or 1)
+        best=addition
+    end
+    return best
+end
+
 function T.Choose(quests,s)
     local available,urgent={},nil
     for _,q in ipairs(quests) do
@@ -409,7 +484,8 @@ function T.Choose(quests,s)
         if s.previous and trip.key==s.previous.tripKey then previous=trip end
     end
     if previous and previous.priority>=bestScore*.85 and (not s.pin or contains(previous,s.pin)) then best=previous end
-    return batchCompanions(best,available,s,fastest)
+    best=batchCompanions(best,available,s,fastest)
+    return pickupsAlongRoute(best,quests,s,fastest)
 end
 
 function T.Plan(quests,state,limit)

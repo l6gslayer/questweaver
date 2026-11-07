@@ -13,6 +13,8 @@ jobs:
         run: find QuestWeaver tests -name '*.lua' -exec luac5.1 -p {} \;
       - name: Test planner and adapters
         run: lua5.1 tests/run.lua
+      - name: Test saved-feedback reader
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
       - name: Validate privacy and package
         run: python3 scripts/package.py
       - uses: actions/upload-artifact@v4

@@ -102,6 +102,8 @@ function U.Create()
     U.auto=button(f,"Auto: On",112,function()
         Q.Navigation.SetAutomatic(not Q.db.autoWaypoint); Q.Runtime.Refresh()
     end); U.auto:SetPoint("BOTTOMLEFT",114,12)
+    U.feedback=button(f,"Feedback",108,function() Q.Runtime.FeedbackAction("show") end)
+    U.feedback:SetPoint("BOTTOMRIGHT",-14,12)
     U.navStatus=label(f); U.navStatus:SetPoint("BOTTOMLEFT",14,42); U.navStatus:SetWidth(332); U.navStatus:SetHeight(18)
     U.summary=label(f); U.summary:SetPoint("TOPLEFT",14,-208); U.summary:SetWidth(472)
     U.mode=button(f,"Balanced",116,function()
@@ -126,6 +128,50 @@ function U.Create()
     if Q.db.hidden then f:Hide() end
     U.Render()
 end
+-- Text remains local and user-copyable; this panel never sends a report.
+function U.ShowFeedback(report)
+    if not U.feedbackFrame then
+        local f=CreateFrame("Frame","QuestWeaverFeedback",UIParent,BackdropTemplateMixin and "BackdropTemplate" or nil)
+        U.feedbackFrame=f; f:SetSize(620,500); f:SetPoint("CENTER"); f:EnableMouse(true); f:SetClampedToScreen(true)
+        if f.SetBackdrop then
+            f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=12})
+            f:SetBackdropColor(.035,.055,.065,.98)
+        end
+        local title=label(f,"GameFontNormalLarge"); title:SetPoint("TOPLEFT",16,-14); title:SetText("QuestWeaver playtest feedback")
+        local help=label(f); help:SetPoint("TOPLEFT",16,-44); help:SetWidth(586)
+        help:SetText("Add a note or mark this moment. /reload writes feedback for later review.\nDeviations are observations, not proof of a better route. Notes are included in exports.")
+        U.feedbackNote=CreateFrame("EditBox",nil,f,"InputBoxTemplate")
+        U.feedbackNote:SetPoint("TOPLEFT",20,-100); U.feedbackNote:SetSize(578,28)
+        U.feedbackNote:SetAutoFocus(false); U.feedbackNote:SetMaxLetters(240)
+        U.feedbackNote:SetScript("OnEscapePressed",function(self) self:ClearFocus() end)
+        local save=button(f,"Save note / mark",142,function()
+            Q.Runtime.FeedbackAction("note",U.feedbackNote:GetText()); U.feedbackNote:SetText("")
+            U.ShowFeedback(Q.db.feedbackReport)
+        end); save:SetPoint("TOPLEFT",16,-138); U.feedbackSave=save
+        local copy=button(f,"Select report",116,function()
+            U.feedbackReport:SetFocus(); U.feedbackReport:HighlightText()
+        end); copy:SetPoint("TOPLEFT",168,-138)
+        local clear=button(f,"Clear feedback",116,function()
+            Q.Runtime.FeedbackAction("clear"); U.ShowFeedback(Q.db.feedbackReport)
+        end); clear:SetPoint("TOPLEFT",294,-138)
+        local close=button(f,"Close",70,function() f:Hide() end); close:SetPoint("TOPRIGHT",-16,-10)
+        local hint=label(f); hint:SetPoint("TOPLEFT",16,-174); hint:SetWidth(586)
+        hint:SetText("Select report, then copy with your normal copy shortcut. Review your notes before sharing.")
+        local scroll=CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
+        scroll:SetPoint("TOPLEFT",16,-204); scroll:SetPoint("BOTTOMRIGHT",-34,16)
+        local edit=CreateFrame("EditBox",nil,scroll)
+        U.feedbackReport=edit; edit:SetMultiLine(true); edit:SetAutoFocus(false)
+        edit:SetFontObject(ChatFontNormal or GameFontHighlightSmall); edit:SetWidth(564)
+        edit:SetScript("OnEscapePressed",function(self) self:ClearFocus() end)
+        scroll:SetScrollChild(edit)
+        U.feedbackMeasure=label(f); U.feedbackMeasure:SetWidth(564); U.feedbackMeasure:Hide()
+    end
+    U.feedbackReport:SetText(report or "No feedback yet.")
+    U.feedbackMeasure:SetText(safe(report))
+    U.feedbackReport:SetHeight(math.max(260,U.feedbackMeasure:GetStringHeight()+32))
+    U.feedbackFrame:Show()
+end
+
 function U.Render()
     if not U.frame then return end
     local step=Q.route and Q.route[1]

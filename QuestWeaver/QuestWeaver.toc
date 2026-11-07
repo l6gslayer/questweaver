@@ -11,5 +11,6 @@ Shadowglen.lua
 Provider.lua
 Gear.lua
 Navigation.lua
+Feedback.lua
 Runtime.lua
 UI.lua

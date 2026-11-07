@@ -81,3 +81,16 @@ estimates, static timing flags and travel geometry still require Forever testing
   partial progress and solo XP/minute do not split Moss/Totem-style outings.
 - Preserve ready nearby turn-ins, urgent deliveries, prerequisites, pins, gear
   allowance and capacity; bound companion work/risk/travel and four-quest size.
+
+### 0.2.0 on-route pickups and local playtest feedback
+
+- Add eligible low-work pickups along selected outings, preserving destination,
+  ready/timed priority, capacity, gates and bounded extra travel/work. Porthannius
+  can be suggested before continuing an existing Dolanaar trip.
+- Add local bounded quest/plan observations and neutral deviation classification,
+  grouped-plan awareness, manual notes/markers and a feedback/export panel.
+- Save the copyable export on reload/logout for user-initiated review. Add a
+  safe local reader that never executes saved Lua or exposes directory labels.
+- Avoid false capture during unavailable log/loading data and keep the preceding
+  recommendation with inferred actions. No automatic learning, scheduled review,
+  network upload, quest acceptance or player movement is introduced.

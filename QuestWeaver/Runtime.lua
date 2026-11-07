@@ -96,14 +96,19 @@ function R.Snapshot()
             if positiveID(id) then s.offered[id]=true end
         end
     end
-    local count=call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or call(GetNumQuestLogEntries) or 0
+    local count=call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or call(GetNumQuestLogEntries)
+    local reader=type(C_QuestLog and C_QuestLog.GetInfo)=="function" or type(GetQuestLogTitle)=="function"
+    s.logAvailable=reader and type(count)=="number" and count>=0 and count<math.huge
+    count=boundedCount(count,0,200)
     for i=1,count do
         local info=call(C_QuestLog and C_QuestLog.GetInfo,i)
-        if not info and GetQuestLogTitle then
-            local title,level,_,header,_,complete,_,id=GetQuestLogTitle(i)
-            info={title=title,level=level,isHeader=header,questID=id,isComplete=complete}
+        if type(info)~="table" and type(GetQuestLogTitle)=="function" then
+            local ok,title,level,_,header,_,complete,_,id=pcall(GetQuestLogTitle,i)
+            if ok and title then info={title=title,level=level,isHeader=header,questID=id,isComplete=complete} end
         end
-        if info and not info.isHeader and info.questID and info.questID>0 then
+        local valid=type(info)=="table" and (info.isHeader==true or info.isHeader==1 or positiveID(info.questID))
+        if not valid then s.logAvailable=false end
+        if valid and not info.isHeader and positiveID(info.questID) then
             local id=info.questID
             local complete=call(C_QuestLog and C_QuestLog.IsComplete,id)
             local ready=call(C_QuestLog and C_QuestLog.ReadyForTurnIn,id)
@@ -153,6 +158,22 @@ function R.Snapshot()
     return s
 end
 
+function R.SaveFeedback()
+    if Q.db and Q.Feedback then Q.db.feedbackReport=Q.Feedback.Report(Q.db) end
+end
+function R.FeedbackAction(kind,text)
+    if not Q.db or not Q.Feedback then return end
+    if kind=="clear" then Q.Feedback.Clear(Q.db)
+    elseif kind=="mark" or kind=="note" then
+        Q.Feedback.Mark(text,R.Snapshot(),Q.route)
+        print("QuestWeaver: feedback recorded. Use /reload before asking for a saved-log review.")
+    end
+    R.SaveFeedback()
+    if kind=="show" or kind=="export" then
+        if Q.UI and Q.UI.ShowFeedback then Q.UI.ShowFeedback(Q.db.feedbackReport) end
+    end
+end
+
 function R.Refresh()
     if not Q.db then return end
     local s=R.Snapshot()
@@ -168,6 +189,8 @@ function R.Refresh()
         Q.route={}; Q.status="This starter pack is for Alliance characters."
     elseif not Q.Core.IsLocal(s.pos) then
         Q.route={}; Q.status="Return to the supported Shadowglen-Dolanaar corridor in Teldrassil."
+    elseif s.logAvailable==false then
+        Q.route={}; Q.status="Waiting for quest log data."
     else
         Q.quests,Q.notices=Q.Provider.Quests(s,Q.db)
         Q.notices=Q.notices or {}
@@ -177,6 +200,7 @@ function R.Refresh()
     local first=Q.route[1]
     Q.previous=first and {tripKey=first.tripKey,nextKey=first.key} or nil
     if not first then Q.trips={} end
+    if Q.Feedback and Q.inWorld~=false then Q.Feedback.Observe(s,Q.route,Q.trips) end
     Q.Navigation.Sync(first)
     if Q.UI then Q.UI.Render() end
 end
@@ -220,11 +244,21 @@ f:SetScript("OnEvent",function(_,event,...)
         db.compact=db.compact==true
         if type(db.autoWaypoint)~="boolean" then db.autoWaypoint=true end
         db.schema=3
+        if Q.Feedback then Q.Feedback.Initialize(db) end
         Q.UI.Create()
     elseif Q.db then
+        if event=="PLAYER_LOGOUT" then R.SaveFeedback(); return end
+        if Q.Feedback and (event=="QUEST_ACCEPTED" or event=="QUEST_TURNED_IN" or event=="QUEST_REMOVED") then
+            local first,second=...
+            local id=event=="QUEST_ACCEPTED" and (type(second)=="number" and second or first) or first
+            if positiveID(id) then Q.Feedback.Event(event,id,R.Snapshot(),Q.route) end
+        end
         if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true end
         if event=="GOSSIP_CLOSED" or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
-        if event=="PLAYER_LEAVING_WORLD" then Q.inWorld=false; Q.Navigation.Clear() end
+        if event=="PLAYER_LEAVING_WORLD" then
+            Q.inWorld=false; Q.Navigation.Clear()
+            if Q.Feedback and Q.Feedback.Suspend then Q.Feedback.Suspend() end
+        end
         if event=="PLAYER_ENTERING_WORLD" then Q.inWorld=true end
         if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then Q.Gear.Capture(Q.db) end
         if event=="QUEST_TURNED_IN" then
@@ -234,7 +268,7 @@ f:SetScript("OnEvent",function(_,event,...)
         Q.dirty=true
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGOUT","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end
@@ -254,6 +288,10 @@ SlashCmdList.QUESTWEAVER=function(text)
     if not Q.db then return end
     local cmd,arg=(text or ""):match("^%s*(%S*)%s*(.-)%s*$")
     cmd=cmd:lower()
+    if cmd=="feedback" then R.FeedbackAction(arg=="" and "show" or "note",arg); return end
+    if cmd=="mark" then R.FeedbackAction("mark",arg); return end
+    if cmd=="export" then R.FeedbackAction("export"); return end
+    if cmd=="feedbackclear" then R.FeedbackAction("clear"); return end
     if cmd=="" or cmd=="show" then Q.UI.frame:Show(); Q.db.hidden=false
     elseif cmd=="hide" then Q.UI.frame:Hide(); Q.db.hidden=true
     elseif cmd=="mode" and (arg=="balanced" or arg=="xp" or arg=="gear") then Q.db.mode=arg
@@ -279,7 +317,7 @@ SlashCmdList.QUESTWEAVER=function(text)
     elseif cmd=="minimize" or cmd=="compact" then Q.UI.SavePosition(); Q.db.compact=true; Q.UI.Layout()
     elseif cmd=="expand" then Q.UI.SavePosition(); Q.db.compact=false; Q.UI.Layout()
     elseif cmd=="resetposition" then Q.UI.ResetPosition()
-    else print("QuestWeaver: /qw show|hide|way|unlock|lock|minimize|expand|resetposition; auto on|off; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
+    else print("QuestWeaver: /qw feedback [note]|mark [note]|export|feedbackclear; /qw show|hide|way|unlock|lock|minimize|expand|resetposition; auto on|off; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
     if cmd~="" and cmd~="show" and cmd~="hide" and cmd~="way" and cmd~="lock" and cmd~="unlock" then Q.previous=nil end
     R.Refresh()
 end

@@ -13,11 +13,11 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch shared-return batching follow-up
+- Latest addon implementation: current feature-branch on-route pickup and feedback follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
-- Source: nested `QuestWeaver/` directory; eight Lua files plus its manifest.
+- Source: nested `QuestWeaver/` directory; nine Lua files plus its manifest.
 - Installable artifact: `dist/QuestWeaver-0.2.0.zip`, one addon folder at root.
 - Settings: `QuestWeaverDB`, per-character SavedVariables, schema 3.
 
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **162 tests passed** under an existing embedded Lua 5.1 runtime; all eight
+- **193 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -161,6 +161,36 @@ Actual near-ready turn-ins and urgent deliveries retain priority. No estimated
 spawn coordinate or shared combat savings were added. All 162 tests passed.
 The user authorized rebuilding/installing 0.2.0 for playtesting; no PR, merge or
 push is authorized. Keep feature/0.2.0-trip-planning and preserve main.
+
+## On-route pickups and manual feedback review
+
+The user reported passing Porthannius without a Delivery recommendation. A
+fixture reproduced ready Crown/pinned prior trip excluding the real 110-XP
+Delivery. Trips now inserts eligible low-work pickups close to selected route
+legs, with the pickup before that leg, a nearby return and bounded extra cost.
+Availability inferred only from metadata is labeled check availability.
+
+New Feedback.lua records a bounded local 300-event ring, numeric quest/plan
+context and neutral next/later/unplanned/unknown relations. Feedback controls
+exist in compact/expanded layouts; `/qw feedback <note>`, `/qw mark`, `/qw export`
+and `/qw feedbackclear` are available. Reports use capture tag
+`0.2.0-route-feedback-1`; bump that tag for later planner/capture changes.
+Automatic capture has no character/account names, chat or full quest prose;
+manual notes are explicit user-provided reference text. Never publish actual
+saved logs, notes, reports or raw game saves.
+
+The user chose MANUAL reviews: after loading the new build, play, reload/logout,
+and ask for review. No schedule is authorized/created. Runtime writes the
+bounded feedbackReport export on PLAYER_LOGOUT. `scripts/read_feedback.py`
+extracts only that export from supplied files/WTF root without executing Lua,
+using neutral source labels. Local target details belong in parent AGENTS.md.
+193 Lua tests and 17 Python tests passed; a synthetic actual Lua report roundtrip
+through the safe reader also passed. All nine addon sources compiled. Actual
+Forever event/UI/persistence behavior still needs user testing. The previous
+installed build has no feedback export; the first reload loads
+capture, and a later reload after playing saves reviewable data. Treat reported
+deviations as hypotheses to compare, not automatic planner training or approval
+for new builds. Stay on the feature branch; no PR, merge or push is authorized.
 
 ## Immediate next task: install for user playtesting
 

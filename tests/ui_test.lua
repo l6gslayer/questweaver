@@ -15,6 +15,7 @@ function methods:SetPoint(point,parent,relative,x,y)
 end
 function methods:ClearAllPoints() self.anchor=nil end
 function methods:SetText(text) self.text=text end
+function methods:GetText() return self.text or "" end
 function methods:GetStringHeight()
     local n=0
     for line in ((self.text or "").."\n"):gmatch("(.-)\n") do n=n+math.max(1,math.ceil(#line*6/self:GetWidth())) end
@@ -30,7 +31,7 @@ function methods:IsShown() return self.shown end
 function methods:SetEnabled(value) self.enabled=value end
 function methods:StartMoving() self.moving=true end
 function methods:StopMovingOrSizing() self.moving=false end
-for _,name in ipairs({"SetJustifyH","SetJustifyV","SetClampedToScreen","SetMovable","SetBackdrop","SetBackdropColor","SetBackdropBorderColor","RegisterForDrag","RegisterEvent","SetScrollChild"}) do
+for _,name in ipairs({"SetJustifyH","SetJustifyV","SetClampedToScreen","SetMovable","SetBackdrop","SetBackdropColor","SetBackdropBorderColor","RegisterForDrag","RegisterEvent","SetScrollChild","SetMultiLine","SetAutoFocus","SetFontObject","SetMaxLetters","HighlightText","SetFocus","ClearFocus"}) do
     methods[name]=function() end
 end
 local function frame() return setmetatable({scripts={},shown=true},{__index=methods}) end
