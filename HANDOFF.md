@@ -13,7 +13,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch objective-location follow-up
+- Latest addon implementation: current feature-branch nearby quest/item-start follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
@@ -35,7 +35,7 @@ before claiming publication; preserve generic commit author/committer metadata.
   projected turn-ins. Shared travel counts once; combat savings require explicit
   shared-source metadata. Handles known log capacity, timed delivery, pin/skip,
   partial progress, gear-chain lookahead and modest route hysteresis.
-- `Shadowglen.lua`: 12 starter quests; separate mushroom/lily/spider tasks for
+- `Shadowglen.lua`: 13 starter quests; separate mushroom/lily/spider tasks for
   Iverron's Antidote, conservative English-token progress matching, and relevant
   cave/upstairs/timed-delivery hints.
 - `Provider.lua` / `Gear.lua`: optional QuestieDB metadata and learned reward
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **91 tests passed** under an existing embedded Lua 5.1 runtime; all eight
+- **125 tests passed** under an existing embedded Lua 5.1 runtime; all eight
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -100,6 +100,21 @@ coordinates were guessed from screenshots. All 100 Lua 5.1 tests passed.
 The rebuilt 0.2.0 needs user playtesting against the blue quest area; API data
 availability/accuracy is still unverified in Forever. See README and VALIDATION.
 No PR, merge or push is authorized.
+
+## Nearby quest and item-start follow-up
+
+Fang of Githyiss is now a known cave-drop opportunity (quest 97236/item 277190),
+a manual bag-acceptance action, and an Aldrassil delivery once accepted. Runtime
+reads carried-bag starters and accepted quest titles/levels/current XP. Provider
+adds local accepted quests and local item starters outside the pack. Unlocated
+items remain reminders; unknown returns stay current-stage-only without fake
+completion or chain unlocks. QuestieDB can supply local return metadata; unknown
+gear stays unscored and unknown XP/work remain labeled estimates. Whole-trip
+insertion shortlists at most sixteen candidates with prerequisite closure.
+See README for exact evidence/fallback boundaries and VALIDATION for the new
+125-test result and user checklist. The rebuilt package was installed after a verified backup; all fourteen release
+files matched the ZIP. In-game discovery remains unverified;
+no PR, merge or push is authorized. Preserve the feature branch and main.
 
 ## Immediate next task: install for user playtesting
 

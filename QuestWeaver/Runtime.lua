@@ -29,6 +29,52 @@ function R.QuestLocation(id,map,pois)
         end
     end
 end
+local function positiveID(value)
+    return type(value)=="number" and value>0 and value<math.huge and value==math.floor(value)
+end
+local function boundedCount(value,fallback,maximum)
+    if type(value)~="number" or value~=value or value<0 or value==math.huge then return fallback end
+    return math.min(maximum,math.floor(value))
+end
+
+-- Read carried bags only. No item is used, accepted, moved or selected here.
+-- The resulting item identities are transient snapshot data, not SavedVariables.
+function R.ItemStarts(log)
+    local items,known={},{}
+    for _,q in ipairs(Q.Pack.quests) do
+        if positiveID(q.itemStartID) then known[q.itemStartID]=q.id end
+    end
+    local container=C_Container or {}
+    local bags=boundedCount(NUM_BAG_SLOTS,4,10)
+    for bag=0,bags do
+        local slots=call(container.GetContainerNumSlots,bag)
+        if slots==nil then slots=call(GetContainerNumSlots,bag) end
+        for slot=1,boundedCount(slots,0,100) do
+            local info=call(container.GetContainerItemQuestInfo,bag,slot)
+            local id,active
+            if type(info)=="table" then id,active=info.questID,info.isActive end
+            if not positiveID(id) then
+                local _,legacyID,legacyActive=call(GetContainerItemQuestInfo,bag,slot)
+                if positiveID(legacyID) then id,active=legacyID,legacyActive end
+            end
+            local itemID=call(container.GetContainerItemID,bag,slot)
+                or call(GetContainerItemID,bag,slot)
+            if not positiveID(itemID) then
+                local item=call(container.GetContainerItemInfo,bag,slot)
+                if type(item)=="table" then itemID=item.itemID end
+            end
+            if not positiveID(id) and positiveID(itemID) then id=known[itemID] end
+            if positiveID(id) and active~=true and active~=1 and not (log and log[id]) and not items[id] then
+                local name=positiveID(itemID) and (call(C_Item and C_Item.GetItemInfo,itemID) or call(GetItemInfo,itemID))
+                local title=call(C_QuestLog and C_QuestLog.GetTitleForQuestID,id)
+                items[id]={itemID=positiveID(itemID) and itemID or nil,
+                    name=type(name)=="string" and name or nil,
+                    title=type(title)=="string" and title or nil,bag=bag,slot=slot}
+            end
+        end
+    end
+    return items
+end
 function R.Snapshot()
     local _,class,classID=UnitClass("player")
     local _,_,raceID=UnitRace("player")
@@ -58,16 +104,31 @@ function R.Snapshot()
             end
             local text={}
             for _,o in ipairs(objectives or {}) do if o.text then text[#text+1]=o.text end end
+            local xp=call(GetQuestLogRewardXP,id)
+            local level=info.level or call(C_QuestLog and C_QuestLog.GetQuestDifficultyLevel,id)
+            local title=info.title or call(C_QuestLog and C_QuestLog.GetTitleForQuestID,id)
             s.log[id]={complete=complete,failed=info.isComplete==-1 or info.isFailed,
+                title=type(title)=="string" and title or nil,
+                level=type(level)=="number" and level>0 and level or s.level,
+                xp=type(xp)=="number" and xp>=0 and xp<math.huge and xp or nil,
                 location=R.QuestLocation(id,Q.Pack.mapID,pois),
                 objectives=objectives,text=table.concat(text,"; "),progressKnown=complete or total>0,
                 progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end
     end
-    for _,q in ipairs(Q.Pack.quests) do
-        local done=call(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,q.id)
-        if done==nil then done=call(IsQuestFlaggedCompleted,q.id) end
-        s.done[q.id]=done or Q.db.completed[q.id] or false
+    s.itemStarts=R.ItemStarts(s.log)
+    local ids={}
+    for _,q in ipairs(Q.Pack.quests) do ids[q.id]=true end
+    for id in pairs(s.log) do ids[id]=true end
+    for id in pairs(s.itemStarts) do ids[id]=true end
+    for id in pairs(ids) do
+        local done=call(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,id)
+        if done==nil then done=call(IsQuestFlaggedCompleted,id) end
+        s.done[id]=done or Q.db.completed[id] or false
+        if s.itemStarts[id] then
+            if s.done[id] then s.itemStarts[id]=nil
+            else s.itemStarts[id].location=R.QuestLocation(id,Q.Pack.mapID,pois) end
+        end
     end
     if type(MAX_QUESTLOG_QUESTS)=="number" then
         local active=0
@@ -81,6 +142,7 @@ function R.Refresh()
     if not Q.db then return end
     local s=R.Snapshot()
     Q.state=s
+    Q.notices={}
     if Q.inWorld==false then
         Q.route={}; Q.status="Waiting for the world to load."
     elseif s.map~=Q.Pack.mapID or not s.pos then
@@ -92,7 +154,8 @@ function R.Refresh()
     elseif s.pos.x<.50 or s.pos.x>.65 or s.pos.y<.23 or s.pos.y>.50 then
         Q.route={}; Q.status="Shadowglen pack: return to the starting area (northeast Teldrassil)."
     else
-        Q.quests=Q.Provider.Quests(s,Q.db)
+        Q.quests,Q.notices=Q.Provider.Quests(s,Q.db)
+        Q.notices=Q.notices or {}
         Q.route,Q.trips=Q.Trips.Plan(Q.quests,s,24)
         Q.status=#Q.route>0 and "Next action is live. Later steps assume you complete this trip." or "No eligible quests remain in this pack. Check your level, skips, and prerequisites."
     end
@@ -104,7 +167,7 @@ function R.Refresh()
 end
 function R.Waypoint()
     local next=Q.route and Q.route[1]
-    if not next then return end
+    if not next or next.action=="ACCEPT ITEM" then return end
     if Q.Navigation.Available() then
         Q.Navigation.Show(next,true)
         if Q.UI then Q.UI.Render() end
@@ -154,7 +217,7 @@ f:SetScript("OnEvent",function(_,event,...)
         Q.dirty=true
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end
@@ -183,10 +246,12 @@ SlashCmdList.QUESTWEAVER=function(text)
         local id=tonumber(arg) or (Q.route and Q.route[1] and Q.route[1].id)
         local supported=false
         for _,q in ipairs(Q.Pack.quests) do if q.id==id then supported=true end end
+        for _,q in ipairs(Q.quests or {}) do if q.id==id then supported=true end end
+        if Q.state and Q.state.itemStarts and Q.state.itemStarts[id] then supported=true end
         if supported then
             if cmd=="pin" then Q.db.pin=id; Q.db.skip[id]=nil
             else Q.db.skip[id]=cmd=="skip" or nil; if Q.db.pin==id then Q.db.pin=nil end end
-        else print("QuestWeaver: use a quest ID from the Shadowglen pack.") end
+        else print("QuestWeaver: use a supported or discovered local quest ID.") end
     elseif cmd=="unpin" then Q.db.pin=nil
     elseif cmd=="restore" then Q.db.skip={}; Q.db.pin=nil
     elseif cmd=="way" then R.Waypoint()

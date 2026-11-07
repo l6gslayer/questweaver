@@ -26,7 +26,7 @@ end
 
 local function usable(q,s)
     return C.Eligible(q,s) and not (s.log[q.id] and s.log[q.id].failed)
-        and q.start and q.finish and q.objective
+        and q.start and q.objective and (q.finish or q.stageOnly)
 end
 
 local function keyFor(ids)
@@ -43,24 +43,30 @@ function T.Build(selected,s)
     for _,q in ipairs(selected) do
         ids[#ids+1]=q.id
         local log=s.log[q.id]
-        if not log then nodes[#nodes+1]={id=q.id,quest=q,action="PICK UP",target=q.start,key=q.id..":pickup",minutes=.15} end
-        if not (log and log.complete) then
-            local taskCount=0
-            for index,task in ipairs(T.Tasks(q)) do
-                local progress=T.Progress(q,task,log)
-                if progress<1 and task.target then
-                    nodes[#nodes+1]={id=q.id,quest=q,action="DO",target=task.target,
-                        key=q.id..":task:"..index,task=index,label=task.label,
-                        combatKey=task.combatKey,minutes=(task.minutes or q.minutes or 5)*(1-progress)}
-                    taskCount=taskCount+1
+        if q.pendingAction then
+            nodes[#nodes+1]={id=q.id,quest=q,action=q.pendingAction,target=q.start,
+                key=q.id..":"..q.pendingAction,label=q.pendingLabel,
+                minutes=q.pendingAction=="ACCEPT ITEM" and .15 or (q.minutes or 2)}
+        else
+            if not log then nodes[#nodes+1]={id=q.id,quest=q,action="PICK UP",target=q.start,key=q.id..":pickup",minutes=.15} end
+            if not (log and log.complete) then
+                local taskCount=0
+                for index,task in ipairs(T.Tasks(q)) do
+                    local progress=T.Progress(q,task,log)
+                    if progress<1 and task.target then
+                        nodes[#nodes+1]={id=q.id,quest=q,action="DO",target=task.target,
+                            key=q.id..":task:"..index,task=index,label=task.label,
+                            combatKey=task.combatKey,minutes=(task.minutes or q.minutes or 5)*(1-progress)}
+                        taskCount=taskCount+1
+                    end
+                end
+                if taskCount==0 then
+                    nodes[#nodes+1]={id=q.id,quest=q,action="DO",target=q.objective,
+                        key=q.id..":verify",label="Check remaining requirements: "..q.name,minutes=.5}
                 end
             end
-            if taskCount==0 then
-                nodes[#nodes+1]={id=q.id,quest=q,action="DO",target=q.objective,
-                    key=q.id..":verify",label="Check remaining requirements: "..q.name,minutes=.5}
-            end
+            if q.finish then nodes[#nodes+1]={id=q.id,quest=q,action="TURN IN",target=q.finish,key=q.id..":return",minutes=.15} end
         end
-        nodes[#nodes+1]={id=q.id,quest=q,action="TURN IN",target=q.finish,key=q.id..":return",minutes=.15}
     end
     local accepted,finished={},{}
     for _,q in ipairs(selected) do if s.log[q.id] then accepted[q.id]=true end end
@@ -68,7 +74,7 @@ function T.Build(selected,s)
     while #nodes>0 do
         local best,bestCost
         for i,node in ipairs(nodes) do
-            local ready=node.action=="PICK UP" or accepted[node.id]
+            local ready=node.action=="PICK UP" or node.action=="LOOT ITEM" or node.action=="ACCEPT ITEM" or accepted[node.id]
             if node.action=="PICK UP" then
                 for _,id in ipairs(node.quest.all or {}) do if not s.done[id] and not finished[id] then ready=false end end
                 local any=node.quest.any
@@ -115,15 +121,28 @@ function T.Build(selected,s)
             steps[#steps+1]=prev
         end
     end
-    local xp,risk,gear=0,0,0
+    local xp,scoreXP,risk,gear=0,0,0,0
+    local stageOnly=false
+    -- Reserve the known return journey for drop opportunities even though a
+    -- return cannot be instructed until the player actually accepts the quest.
+    -- Unknown returns get a conservative allowance, not an invented waypoint.
+    local reserved=0
     for _,q in ipairs(selected) do
+        if q.stageOnly then
+            stageOnly=true
+            reserved=math.max(reserved,q.finish and C.Travel(position,q.finish) or 3)
+        end
         xp=xp+(q.xp or 100)
+        -- Half credit is a conservative ranking heuristic for unresolved
+        -- stages, not a measured drop probability or promised reward.
+        scoreXP=scoreXP+(q.xp or 100)*(q.stageOnly and .5 or 1)
         risk=math.max(risk,math.max(0,(q.level or 1)-s.level-1)*.6+(q.risk or 0))
         gear=math.max(gear,q.gear or 0)
     end
-    local trip={steps=steps,quests=selected,ids=ids,key=keyFor(ids),minutes=math.max(.2,total),walking=walking,
+    total=total+reserved
+    local trip={stageOnly=stageOnly,reserved=reserved,steps=steps,quests=selected,ids=ids,key=keyFor(ids),minutes=math.max(.2,total),walking=walking,
         xp=xp,risk=risk,gear=gear,completed=finished,urgent=selected[1] and selected[1].timed or false}
-    trip.score=xp/trip.minutes/(1+risk)
+    trip.score=scoreXP/trip.minutes/(1+risk)
     return trip
 end
 
@@ -148,10 +167,11 @@ local function chainGear(trip,quests,s)
         for _,child in ipairs(quests) do
             local depends,ready=false,true
             for _,pre in ipairs(child.all or {}) do
-                if pre==id then depends=true elseif not s.done[pre] and not contains(trip,pre) then ready=false end
+                if pre==id then depends=true elseif not s.done[pre] and not trip.completed[pre] then ready=false end
             end
             if child.any and #child.any>0 then ready=false end
-            if depends and ready and not child.disabled and not s.skip[child.id] and not s.done[child.id]
+            if depends and ready and not child.stageOnly and not child.acceptedOnly
+                and child.start and child.objective and child.finish and not child.disabled and not s.skip[child.id] and not s.done[child.id]
                 and not contains(trip,child.id) and (child.minLevel or 1)<=s.level then
                 local nextCost=cost+C.Travel(position,child.start)+C.Travel(child.start,child.objective)
                     +(child.minutes or 5)+C.Travel(child.objective,child.finish)+.3
@@ -161,7 +181,7 @@ local function chainGear(trip,quests,s)
         end
     end
     local endPoint=trip.steps[#trip.steps].lastTarget
-    for _,q in ipairs(trip.quests) do visit(q.id,endPoint,0,3,{}) end
+    for _,q in ipairs(trip.quests) do if not q.stageOnly then visit(q.id,endPoint,0,3,{}) end end
     return best,extra
 end
 
@@ -186,7 +206,7 @@ function T.Choose(quests,s)
     for _=1,3 do
         local newly={}
         for _,q in ipairs(quests) do
-            if usable(q,possible) then newly[q.id]=true end
+            if usable(q,possible) and not q.stageOnly then newly[q.id]=true end
         end
         for id in pairs(newly) do possible.done[id]=true; possible.log[id]=nil end
         for _,q in ipairs(quests) do
@@ -196,6 +216,46 @@ function T.Choose(quests,s)
                 if not found then available[#available+1]=q end
             end
         end
+    end
+    -- Discovery can expose a full quest log. Bound expensive insertion work
+    -- to sixteen candidates; score every candidate cheaply before shortlisting.
+    -- Pins are retained, and accepted timed deliveries were handled above.
+    if #available>16 then
+        local rank={}
+        for _,q in ipairs(available) do
+            local log=s.log[q.id]
+            local complete=log and log.complete
+            local target=complete and q.finish or (q.pendingAction and q.start or q.objective)
+            local cost=C.Travel(s.pos,log and target or q.start)
+            if not log and not q.pendingAction then cost=cost+C.Travel(q.start,q.objective) end
+            if not complete then
+                cost=cost+(q.pendingAction=="ACCEPT ITEM" and .15 or (q.minutes or 5)*(1-(log and log.progress or 0)))
+                cost=cost+(q.finish and C.Travel(target,q.finish) or 3)
+            end
+            local score=(q.xp or 100)*(q.stageOnly and .5 or 1)/math.max(.2,cost)
+            if s.mode~="xp" then score=score*(1+math.min(q.gear or 0,1)*1.5) end
+            rank[q.id]=score
+        end
+        table.sort(available,function(a,b)
+            if a.id==s.pin or b.id==s.pin then return a.id==s.pin and b.id~=s.pin end
+            if rank[a.id]~=rank[b.id] then return rank[a.id]>rank[b.id] end
+            return a.id<b.id
+        end)
+        -- Preserve prerequisite closure: a projected child cannot consume a
+        -- shortlist slot until its required returns are retained too.
+        local shortlist,retained,projected={},{},C.Copy(s)
+        for _=1,16 do
+            local nextQuest
+            for _,q in ipairs(available) do
+                if not retained[q.id] and C.Eligible(q,projected) then nextQuest=q; break end
+            end
+            if not nextQuest then break end
+            shortlist[#shortlist+1]=nextQuest; retained[nextQuest.id]=true
+            if not nextQuest.stageOnly then
+                projected.done[nextQuest.id]=true; projected.log[nextQuest.id]=nil
+            end
+        end
+        available=shortlist
     end
     table.sort(available,function(a,b) return a.id<b.id end)
     local candidates={}
@@ -258,9 +318,14 @@ function T.Plan(quests,state,limit)
             if #route<(limit or 24) then route[#route+1]=step end
         end
         for _,q in ipairs(trip.quests) do
-            if s.log[q.id] and s.freeSlots then s.freeSlots=s.freeSlots+1 end
-            s.done[q.id]=true; s.log[q.id]=nil
+            if trip.completed[q.id] then
+                if s.log[q.id] and s.freeSlots then s.freeSlots=s.freeSlots+1 end
+                s.done[q.id]=true; s.log[q.id]=nil
+            end
         end
+        -- Rebuild from observed bags/log before forecasting past an unresolved
+        -- item start or a quest whose eventual return is not yet known.
+        if trip.stageOnly then break end
         s.pos=trip.steps[#trip.steps].lastTarget; s.previous=nil
     end
     return route,trips

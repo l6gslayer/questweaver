@@ -21,6 +21,8 @@ function U.Instruction(step)
         local m=step.members[1]
         return step.action..": "..safe(m.label or m.quest.name)
     end
+    if step.action=="ACCEPT ITEM" then return "Accept quests from items in your bags" end
+    if step.action=="LOOT ITEM" then return "Collect nearby quest-starting drops" end
     if step.action=="PICK UP" then return "Collect nearby quests" end
     if step.action=="TURN IN" then return "Turn in nearby quests" end
     return "Work nearby objectives"
@@ -36,6 +38,10 @@ function U.MemberText(member)
                 text=text..(known and string.format(" (%.0f%%)",progress*100) or " (check quest log)")
             end
         end
+    end
+    if member.quest.xpEstimated then text=text.." (XP estimate)" end
+    if member.quest.dynamic and member.quest.stageOnly and member.action=="DO" then
+        text=text.." - current stage; return unknown"
     end
     return text
 end
@@ -137,7 +143,11 @@ function U.Render()
             if i<=3 then lines[#lines+1]=U.MemberText(m) end
         end
         if #step.members>3 then lines[#lines+1]="+"..(#step.members-3).." more: expand for details" end
-        lines[#lines+1]=string.format("Destination %.1f, %.1f (%s)",step.target.x*100,step.target.y*100,step.target.source or "starter estimate")
+        if step.action=="ACCEPT ITEM" then
+            lines[#lines+1]="Use the item yourself; the plan refreshes after acceptance."
+        else
+            lines[#lines+1]=string.format("Destination %.1f, %.1f (%s)",step.target.x*100,step.target.y*100,step.target.source or "starter estimate")
+        end
         local n=0; for _ in pairs(ids) do n=n+1 end
         if n>1 then lines[#lines+1]=n.." quests share this stop" end
         local trip=Q.trips and Q.trips[1]
@@ -145,8 +155,12 @@ function U.Render()
         local destination=Q.Navigation.Destination(step)
         if destination and destination.hint then lines[#lines+1]=destination.hint end
     else lines[1]=Q.status or "Reading quest progress..." end
+    for i,notice in ipairs(Q.notices or {}) do
+        if i<=2 then lines[#lines+1]=safe(notice) end
+    end
+    if Q.notices and #Q.notices>2 then lines[#lines+1]="+"..(#Q.notices-2).." more: expand for details" end
     U.current:SetText(table.concat(lines,"\n"))
-    U.way:SetEnabled(step~=nil)
+    U.way:SetEnabled(step~=nil and step.action~="ACCEPT ITEM")
     local height=math.min(360,math.max(190,162+math.min(190,U.current:GetStringHeight())))
     U.current:SetHeight(Q.db.compact and 190 or 100)
     if Q.db.compact then U.frame:SetHeight(height); return end
@@ -162,9 +176,13 @@ function U.Render()
         end
         body[#body+1]="\n|cff8ae8b1"..U.Instruction(group).."|r"
         for _,m in ipairs(group.members) do
-            body[#body+1]=string.format("  %s [quest %d] - %.1f, %.1f",U.MemberText(m),m.id,m.target.x*100,m.target.y*100)
+            if m.action=="ACCEPT ITEM" then
+                body[#body+1]=string.format("  %s [quest %d]",U.MemberText(m),m.id)
+            else body[#body+1]=string.format("  %s [quest %d] - %.1f, %.1f",U.MemberText(m),m.id,m.target.x*100,m.target.y*100) end
             if m.quest.note then body[#body+1]="  "..safe(m.quest.note) end
         end
     end
+    if trip and trip.stageOnly then body[#body+1]="\nPlan stops at an observed stage; accept/advance quests to refresh. Reserved return time is estimated." end
+    for _,notice in ipairs(Q.notices or {}) do body[#body+1]=safe(notice) end
     U.body:SetText(table.concat(body,"\n")); U.child:SetHeight(math.max(1,U.body:GetStringHeight()+24))
 end

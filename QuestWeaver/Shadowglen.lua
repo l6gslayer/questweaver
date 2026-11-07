@@ -14,6 +14,8 @@ Q.Pack={mapID=1438, name="Shadowglen", quests={
     quest(459,"The Woodland Protector",3,1,250,6,{x=.578,y=.452},{x=.563,y=.456},{x=.578,y=.452},{458}),
     quest(916,"Webwood Venom",4,3,360,6,{x=.578,y=.417},{x=.575,y=.328},{x=.578,y=.417},nil,
         "Spider territory; combine with antidote gathering if both quests are accepted."),
+    quest(97236,"Fang of Githyiss",5,1,450,2,{x=.566,y=.263},{x=.578,y=.417},{x=.578,y=.417},nil,
+        "Optional cave drop: kill and loot Githyiss, then use the fang in your bags to accept. Drop availability is not guaranteed."),
     quest(917,"Webwood Egg",5,1,450,5,{x=.578,y=.417},{x=.567,y=.264},{x=.578,y=.417},{916},
         "Inside Shadowthread Cave. Follow the cave entrance; the waypoint is not a safe walking path."),
     quest(920,"Tenaron's Summons",5,1,90,2,{x=.578,y=.417},tree,tree,{917},
@@ -30,6 +32,10 @@ Q.Pack={mapID=1438, name="Shadowglen", quests={
 -- or localized text stays unresolved until the quest is complete. Locations
 -- remain unverified estimates for this alpha.
 for _,q in ipairs(Q.Pack.quests) do
+    if q.id==97236 then
+        q.itemStartID=277190; q.dropCompanion=917
+        q.navigationNote="Cave: use the entrance"; q.navigationActions={["LOOT ITEM"]=true}
+    end
     if q.id==916 then q.tasks={{label="Gather Webwood Venom",match="venom",target=q.objective,minutes=6,combatKey="webwood-spiders"}} end
     if q.id==3521 then q.tasks={
         {label="Gather Hyacinth Mushrooms",match="hyacinth",target={x=.578,y=.397},minutes=2},

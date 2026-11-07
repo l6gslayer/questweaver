@@ -7,7 +7,7 @@ function N.Available()
 end
 
 function N.Destination(step)
-    if not step or not step.target then return nil end
+    if not step or not step.target or step.action=="ACCEPT ITEM" then return nil end
     local x,y=step.target.x,step.target.y
     if type(x)~="number" or type(y)~="number" or x~=x or y~=y or x<0 or x>1 or y<0 or y>1 then return nil end
     local member=step.members and step.members[1]

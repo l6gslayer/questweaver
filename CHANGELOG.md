@@ -41,3 +41,14 @@ estimates, static timing flags and travel geometry still require Forever testing
   when location data is unavailable.
 - Show destination provenance in both tracker layouts. Live quest stages do
   not duplicate static gathering-task pins or change the player's tracked quest.
+
+### 0.2.0 nearby quest and item-start follow-up
+
+- Add Fang of Githyiss as an optional cave outing, bag acceptance and Aldrassil
+  delivery; combine accepted returns with Webwood Egg when useful.
+- Discover carried quest-starting items through guarded modern/legacy bag APIs,
+  plus accepted quests with live Shadowglen destinations. Show unlocated bag
+  items as reminders and keep acceptance/manual item use under player control.
+- Support current-stage trips when the eventual return is unknown; do not
+  fabricate turn-ins or unlock chains from unresolved stages. Label unknown XP,
+  reserve conservative return cost, and bound large-log candidate evaluation.

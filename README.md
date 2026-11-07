@@ -1,6 +1,6 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, starting with a 12-quest
+An adaptive quest planner for **WoW Forever**, starting with a 13-quest
 **Shadowglen** pack. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
@@ -65,6 +65,42 @@ remaining area to identify; the addon does not infer that area from your positio
 Quest-area centers and routing waypoints are guidance, not terrain-safe paths
 or a guarantee that a mob is standing at the pin. Exact Forever API behavior
 still needs playtesting.
+
+## Nearby quests and quest-starting items
+
+Fang of Githyiss (quest 97236, item 277190) is part of the pack. While Webwood
+Egg is accepted, or while you are near Githyiss's cave location, it can be
+considered as an optional **LOOT ITEM** opportunity. The planner compares its
+additional work and shared return travel; it does not assume the drop occurred.
+
+When a quest-starting item is detected in your carried bags, **ACCEPT ITEM**
+asks you to use it and accept the quest yourself. This action has no waypoint.
+A full quest log prevents scheduling acceptance, but keeps the reminder visible.
+Bag/log changes refresh the plan; an accepted/completed quest is not duplicated.
+Fang can be identified by its known item ID if the optional quest-item API is
+missing. Other starters require the client to identify the quest ID.
+
+Accepted quests outside the authored pack enter planning when WoW exposes a
+current destination inside the existing Shadowglen bounds on map 1438
+(x 50-65%, y 23-50%). Discovered item starts require a local client destination
+or a local QuestieDB return location before they enter routing; unlocated items
+remain bag reminders. QuestieDB remains optional. No remote destination is
+silently converted into local coordinates.
+
+For a discovered quest with an unknown return, only its known current stage is
+planned. Completion refreshes the route to the real return location when the
+client supplies it. An unresolved item/stage never unlocks follow-ups or gets
+a guessed turn-in; later trips wait for updated bag/log evidence. Unknown XP
+uses a labeled 250 XP estimate, work defaults to five minutes, and unknown gear
+is unscored. Known drop work is also estimated. Unresolved stages receive half
+reward credit in ranking and reserve known return travel (or a three-minute
+unknown-return allowance); these are conservative heuristics, not measured drop
+odds or a promise of earned XP. Potential XP totals still include those quests.
+
+Large logs are shortlisted to sixteen candidates before whole-trip insertion,
+preserving prerequisite closure and eligible pins. Existing four-quest trips,
+three-trip forecasts and 24 displayed actions remain bounded. Arrival alone
+does not advance a quest. Pin/skip also work for discovered quests.
 
 ## TomTom arrow guidance
 
@@ -196,9 +232,10 @@ steps include IDs to support targeting a different member.
 
 ## Limits and data quality
 
-- The pack covers a subset of Shadowglen's Classic starter chains, not all
-  Forever additions or class quests. It does not infer availability of quests
-  outside the pack. The panel is scoped to Shadowglen, not all Teldrassil.
+- The authored pack covers a subset of Shadowglen quests, including Fang of
+  Githyiss. Accepted quests and carried quest-starting items may be discovered
+  dynamically as described above. This is not a complete catalogue of unseen
+  Forever drops/class quests. The panel remains scoped to Shadowglen.
 - Starter objective coordinates, XP baselines and work times are **unverified
   estimates**. QuestieDB can replace selected metadata and giver positions,
   but not these objective areas. No paid routes or third-party datasets are
@@ -213,7 +250,8 @@ steps include IDs to support targeting a different member.
 - XP is credited once per quest in the trip estimate. Kill XP, rested bonuses,
   spawn competition, measured drop rates and personal combat pace are not
   modeled. A same-level XP observation from the quest window replaces the
-  fallback estimate; changed buffs may still make that observation stale.
+  fallback estimate, as does a usable current quest-log XP read. Changed buffs
+  may still make a saved observation stale.
 - UI refresh/planning runs at most once a second while shown, while TomTom
   guidance is active, or after events.
   No bindings, CVars, normal quest tracker, automatic quest accepts or movement

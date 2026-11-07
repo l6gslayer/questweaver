@@ -131,3 +131,26 @@ label, then finish an objective and check the destination refresh. If it says
 starter estimate, the client did not expose valid location data via these reads.
 Test completion/return and a multi-objective gathering quest too. A quest-area
 point is not an individual mob spawn or an objective-indexed location.
+
+## 0.2.0 nearby quests and item-start discovery — 2026-11-07
+
+**125 tests passed** under the existing embedded Lua 5.1 runtime, with all eight
+addon sources compiled. New regressions cover modern/legacy bag discovery,
+known item fallback, accepted/active/completed suppression, uncached/missing
+APIs, bounded carried-bag scans, bag removal, log XP/title/level reads, Fang's
+loot/accept/return stages, shared egg outing and Aldrassil returns, full-log
+reminders, local/remote filtering, seed deduplication, missing return/XP/gear,
+no fake completion/unlocks, discovered pinning, manual-only acceptance without
+waypoints, compact/expanded rendering, and prerequisite-safe shortlisting.
+A synthetic 40-local-quest plan took about 0.03 seconds in the test runtime,
+not an in-game timing guarantee. Existing navigation ownership tests remain.
+
+Playtest pending: after reload, inspect an unaccepted Fang in bags (if still
+available), manually accept it, then confirm it joins the Aldrassil return.
+With Webwood Egg active, check the optional Githyiss loot opportunity; if already
+turned in, Fang should stay absent. Test another nearby accepted quest outside
+the authored pack, a detected item-start quest, bag item removal, full-log
+reminder, skip/pin and progression to its live return. Remote/unlocated quests
+must not gain fabricated local waypoints. Unlocated starters should explain
+that the bag item needs manual inspection. No full catalogue of unseen drops
+is implied. New discovery/API behavior requires actual Forever validation.

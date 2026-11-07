@@ -46,3 +46,20 @@ Forever before treating this as a dependable speed-leveling route.
 - The locally installed TomTom v4.4.1-release `modules/poi.lua` independently
   uses next-waypoint reads followed by quest map positions. Inspected as local
   compatibility evidence only; no third-party implementation was copied.
+
+## Nearby quests and item starts
+
+- [Blizzard-generated container API documentation mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/ContainerDocumentation.lua):
+  modern `C_Container.GetContainerItemQuestInfo` returns `ItemQuestInfo` with
+  questID/isActive, alongside bag slot-count/item identity reads. A guarded
+  legacy tuple fallback is supported; exact Forever behavior needs playtesting.
+- [Fang of Githyiss quest record](https://zephras.com/forever/enUS/quest/97236/)
+  and [item record](https://zephras.com/forever/enUS/item/277190/): community
+  observations/game-file records identify quest 97236, item 277190, base level
+  5 / 450 XP and Gilshalan's turn-in. These are supporting evidence, not local
+  client verification. The user's cave-drop report independently confirms the
+  item-started quest and Aldrassil return in their playtest.
+- [Forever quest location listing](https://www.60.tools/quests/97236-fang-of-githyiss):
+  Githyiss cave source 56.6, 26.3 and Gilshalan return near 57.8, 41.6. Starter
+  locations and time estimates remain approximate; live client data takes
+  precedence. No third-party database/code is bundled.

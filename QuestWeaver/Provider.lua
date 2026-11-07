@@ -24,8 +24,36 @@ local function restricted(mask,index)
 end
 
 function P.Quests(state,db)
-    local result={}
-    for _,seed in ipairs(Q.Pack.quests) do
+    local result,notices,seeds,known={},{},{},{}
+    for _,seed in ipairs(Q.Pack.quests) do seeds[#seeds+1]=seed; known[seed.id]=true end
+    local ids={}
+    for id in pairs(state.log) do if not known[id] then ids[#ids+1]=id end end
+    for id in pairs(state.itemStarts or {}) do
+        if not known[id] and not state.log[id] then ids[#ids+1]=id end
+    end
+    table.sort(ids)
+    for _,id in ipairs(ids) do
+        local log,item=state.log[id],(state.itemStarts or {})[id]
+        local dest=(log and log.location) or (item and item.location)
+        local finish=point(read(QuestDB,id,"finishedBy"))
+        if not Q.Core.IsLocal(finish) then finish=nil end
+        if (log and Q.Core.IsLocal(dest)) or (item and (Q.Core.IsLocal(dest) or finish)) then
+            local complete=log and log.complete
+            seeds[#seeds+1]={id=id,name=(log and log.title) or (item and item.title) or ("Quest "..id),
+                minLevel=1,level=(log and log.level) or state.level,
+                xp=(log and log.xp) or 250,xpEstimated=not (log and log.xp),minutes=5,
+                start=Q.Core.Copy(state.pos),objective=dest or finish,
+                finish=complete and dest or finish,acceptedOnly=log~=nil,
+                itemStartID=item and item.itemID,dynamic=true,
+                stageOnly=not complete and (item~=nil or not finish),
+                note="Discovered nearby quest. Work time is estimated; unknown rewards are not assumed to be gear upgrades."}
+        elseif item and not state.done[id] and not state.skip[id] then
+            notices[#notices+1]="Bag quest: use "..(item.name or ("item for quest "..id)).." to inspect/accept; local destination unknown."
+        elseif log and not log.failed and not log.location and not state.skip[id] then
+            notices[#notices+1]="Quest "..id..": location unavailable; check quest log."
+        end
+    end
+    for _,seed in ipairs(seeds) do
         local q=Q.Core.Copy(seed)
         local name=read(QuestDB,q.id,"name")
         if name then
@@ -54,8 +82,29 @@ function P.Quests(state,db)
             for _,id in ipairs(read(QuestDB,q.id,"exclusiveTo") or {}) do
                 if state.done[id] or state.log[id] then q.disabled=true end
             end
-        else q.metadata="Unverified Classic starter baseline" end
+        else q.metadata=q.dynamic and "Discovered nearby quest" or "Unverified starter baseline" end
         local log=state.log[q.id]
+        local item=(state.itemStarts or {})[q.id]
+        if (q.itemStartID or item) and not log then
+            q.stageOnly=true
+            if item then
+                q.pendingAction="ACCEPT ITEM"; q.start=Q.Core.Copy(state.pos)
+                q.itemName=item.name or (q.itemStartID and ("item "..q.itemStartID)) or ("bag "..(item.bag or "?").." slot "..(item.slot or "?"))
+                q.pendingLabel="Use "..q.itemName.." in bags; accept "..q.name
+                if not state.skip[q.id] and not state.done[q.id] then notices[#notices+1]=q.pendingLabel end
+            else
+                q.pendingAction="LOOT ITEM"
+                q.pendingLabel="Loot Githyiss's fang: "..q.name
+                -- This is an outing opportunity, not a prerequisite claim.
+                q.disabled=q.disabled or (not state.log[q.dropCompanion]
+                    and Q.Core.Distance(state.pos,q.start)>.025)
+            end
+        end
+        if q.id==97236 and log then q.minutes=.15 end
+        if q.dynamic then
+            if not Q.Core.IsLocal(q.finish) then q.finish=nil end
+            q.stageOnly=not (log and log.complete) and (item~=nil or not q.finish)
+        end
         if log and not log.failed and log.location then
             if log.complete then
                 q.finish=Q.Core.Copy(log.location)
@@ -69,7 +118,10 @@ function P.Quests(state,db)
         end
         local observed=db.rewards[q.id]
         if observed and observed.level==state.level and observed.xp and observed.xp>0 then
-            q.xp=observed.xp; q.xpObserved=true
+            q.xp=observed.xp; q.xpObserved=true; q.xpEstimated=false
+        end
+        if log and type(log.xp)=="number" and log.xp>=0 then
+            q.xp=log.xp; q.xpObserved=true; q.xpEstimated=false
         end
         -- Approximate grey-quest reduction, explicitly remains an estimate.
         if not q.xpObserved then
@@ -82,5 +134,5 @@ function P.Quests(state,db)
         end
         result[#result+1]=q
     end
-    return result
+    return result,notices
 end

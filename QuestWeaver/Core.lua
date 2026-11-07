@@ -8,6 +8,12 @@ function C.Copy(t)
     return r
 end
 
+-- All discovered destinations must share the starter map's coordinate space.
+function C.IsLocal(pos)
+    return type(pos)=="table" and type(pos.x)=="number" and type(pos.y)=="number"
+        and pos.x>=.50 and pos.x<=.65 and pos.y>=.23 and pos.y<=.50
+end
+
 function C.Distance(a, b)
     if not a or not b then return 0 end
     return math.sqrt((a.x-b.x)^2 + (a.y-b.y)^2)
@@ -21,6 +27,7 @@ end
 function C.Eligible(q, s)
     if s.done[q.id] or s.skip[q.id] then return false end
     if s.log[q.id] then return true end
+    if q.acceptedOnly then return false end
     if q.disabled or (q.minLevel or 1) > s.level then return false end
     for _, id in ipairs(q.all or {}) do if not s.done[id] then return false end end
     if q.any and #q.any > 0 then
