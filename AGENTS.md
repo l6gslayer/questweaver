@@ -1,5 +1,9 @@
 # QuestWeaver contributor instructions
 
+- Read `HANDOFF.md` before continuing the current installation/playtest work.
+  It records the feature branch, implementation status, verification boundaries
+  and the remaining steps. Local machine details belong outside this public repo.
+
 - Public repository: never add machine-specific absolute paths, personal names,
   email addresses, credentials, account/character identifiers, game saves, logs,
   screenshots, or copied parent-workspace instructions.
