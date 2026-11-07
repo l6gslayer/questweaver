@@ -10,5 +10,6 @@ Trips.lua
 Shadowglen.lua
 Provider.lua
 Gear.lua
+Navigation.lua
 Runtime.lua
 UI.lua

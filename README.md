@@ -20,16 +20,17 @@ part of producing the 0.2.0 package.
 
 No dependency is required. Optional **QuestieDB** supplies quest names,
 requirements, prerequisites and giver positions; use its matching Forever
-package. Optional **TomTom** supplies waypoints. Otherwise QuestWeaver tries the
-built-in waypoint API and finally prints coordinates. Waypoints act only when
-requested. Third-party addons and databases are not bundled.
+package. Optional **TomTom** supplies an arrow and waypoints. Automatic TomTom guidance defaults to on
+when TomTom is available. Without it, the Waypoint button tries the built-in
+waypoint API and finally prints coordinates; these fallbacks remain manual. Third-party addons and databases are not bundled.
 
 ## Window controls
 
 - **Drag the title bar** to move the window. Movement is enabled by default.
 - **Lock / Unlock** controls title dragging in either layout.
 - **- / +** minimizes to the next action or expands the full trip plan.
-- **Waypoint** targets the first outstanding destination in the current action.
+- **Waypoint** targets or reselects the first outstanding destination.
+- **Auto: On / Off** controls automatic TomTom guidance in either layout.
 - **x** hides the window; `/qw` brings it back in its saved layout.
 - `/qw resetposition` recenters an offscreen window.
 
@@ -42,6 +43,46 @@ Compact mode shows only the current action, its member quests/objectives,
 available live progress, destination and waypoint control. Expand to see all
 members when a stop contains more than three. Unknown progress says **check
 quest log**, rather than pretending an unmatched objective is complete.
+
+## TomTom arrow guidance
+
+Install and enable [TomTom](https://www.curseforge.com/wow/addons/tomtom) for your
+Forever client separately. The current official release lists Forever support;
+compatibility of the integration still needs an actual client playtest.
+
+**Auto: On** creates one temporary, silent QuestWeaver waypoint and selects
+TomTom's directional arrow. TomTom supplies the direction and distance display;
+its own `/tomtom` settings control arrow visibility, position, scale and style.
+QuestWeaver does not change those global settings. If TomTom is missing, the
+planner remains usable and displays its availability status.
+
+- The destination follows the first outstanding member of the current action,
+  including grouped pickups, objectives and turn-ins.
+- Accepting, finishing, skipping or turning in quests changes the destination
+  on the next planner refresh. Guidance continues with the tracker minimized
+  or hidden. QuestWeaver does not advance just because you reach coordinates.
+- The waypoint is replaced only when its action, coordinates or label changes,
+  not recreated every second. It is not saved across logins.
+- Turning Auto off, ending the route, leaving the supported area or leaving the
+  world for a loading transition removes only QuestWeaver's owned TomTom point.
+  Cleanup never uses a global waypoint reset. TomTom may resume another arrow
+  according to its own settings.
+- If you manually select another TomTom arrow, QuestWeaver leaves it alone while
+  its destination is unchanged. Click Waypoint to reselect the quest destination;
+  the next new automatic action will select its new destination.
+- With Auto off, Waypoint sets a single manual destination; it is cleared when
+  that action changes, without automatically creating a replacement.
+- Cave, upstairs and timed-delivery hints appear where relevant, including the
+  arrow label. An arrow points toward a coordinate, not a terrain-safe route.
+- `IsValidWaypoint` and `SetCrazyArrow` are used only when available. A manually
+  removed waypoint can be restored on a later automatic refresh if validity
+  checks are supported. API errors are caught and shown in the tracker status.
+- Automatic mode only drives TomTom. The built-in native-pin/chat fallback is
+  still invoked manually, and native pin behavior is unchanged.
+
+Use `/qw auto on`, `/qw auto off`, or `/qw auto` to toggle. Your preference is
+saved per character (schema 3); existing compact/lock and route preferences are
+kept. Reaching a cave pin may require finding its entrance or another floor.
 
 ## How trips work
 
@@ -118,7 +159,8 @@ with one-handed items remains unscored. There is no Pawn integration.
 | `/qw expand` | Show the full trip plan |
 | `/qw lock` / `/qw unlock` | Disable/enable title dragging |
 | `/qw resetposition` | Recenter the window |
-| `/qw way` | Set a waypoint for the current destination |
+| `/qw way` | Set or reselect a waypoint for the current destination |
+| `/qw auto on` / `/qw auto off` | Enable/disable automatic TomTom guidance |
 | `/qw mode balanced` / `xp` / `gear` | Set routing mode |
 | `/qw profile melee` / `ranged` / `caster` / `healer` / `tank` | Set stat weights |
 | `/qw budget 10` | Set gear allowance in minutes |
@@ -150,7 +192,8 @@ steps include IDs to support targeting a different member.
   spawn competition, measured drop rates and personal combat pace are not
   modeled. A same-level XP observation from the quest window replaces the
   fallback estimate; changed buffs may still make that observation stale.
-- UI refresh/planning runs at most once a second while shown or after events.
+- UI refresh/planning runs at most once a second while shown, while TomTom
+  guidance is active, or after events.
   No bindings, CVars, normal quest tracker, automatic quest accepts or movement
   are changed.
 - Settings, quest IDs and reward IDs/XP stay in per-character SavedVariables.

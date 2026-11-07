@@ -93,6 +93,10 @@ function U.Create()
     U.nextText=label(f,"GameFontNormal"); U.nextText:SetPoint("TOPLEFT",14,-48)
     U.current=label(f); U.current:SetPoint("TOPLEFT",U.nextText,"BOTTOMLEFT",0,-10)
     U.way=button(f,"Waypoint",92,function() Q.Runtime.Waypoint() end); U.way:SetPoint("BOTTOMLEFT",14,12)
+    U.auto=button(f,"Auto: On",112,function()
+        Q.Navigation.SetAutomatic(not Q.db.autoWaypoint); Q.Runtime.Refresh()
+    end); U.auto:SetPoint("BOTTOMLEFT",114,12)
+    U.navStatus=label(f); U.navStatus:SetPoint("BOTTOMLEFT",14,42); U.navStatus:SetWidth(332); U.navStatus:SetHeight(18)
     U.summary=label(f); U.summary:SetPoint("TOPLEFT",14,-208); U.summary:SetWidth(472)
     U.mode=button(f,"Balanced",116,function()
         Q.db.mode=({balanced="xp",xp="gear",gear="balanced"})[Q.db.mode]; Q.previous=nil; Q.Runtime.Refresh()
@@ -107,10 +111,10 @@ function U.Create()
     U.restore=button(f,"Restore skips",116,function() Q.db.skip={}; Q.db.pin=nil; Q.previous=nil; Q.Runtime.Refresh() end)
     U.restore:SetPoint("TOPLEFT",270,-264)
     U.scroll=CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
-    U.scroll:SetPoint("TOPLEFT",14,-304); U.scroll:SetPoint("BOTTOMRIGHT",-36,90)
+    U.scroll:SetPoint("TOPLEFT",14,-304); U.scroll:SetPoint("BOTTOMRIGHT",-36,110)
     U.child=CreateFrame("Frame",nil,U.scroll); U.child:SetHeight(1); U.scroll:SetScrollChild(U.child)
     U.body=label(U.child); U.body:SetPoint("TOPLEFT")
-    U.footer=label(f); U.footer:SetPoint("BOTTOMLEFT",14,48); U.footer:SetWidth(472)
+    U.footer=label(f); U.footer:SetPoint("BOTTOMLEFT",14,72); U.footer:SetWidth(472)
     U.footer:SetText("Drag the title to move; Lock fixes its position. +/- changes layout.\n/qw resetposition recenters. Coordinates and times are estimates.")
     U.Layout()
     if Q.db.hidden then f:Hide() end
@@ -122,6 +126,8 @@ function U.Render()
     U.lock:SetText(Q.db.locked and "Unlock" or "Lock")
     U.drag:EnableMouse(not Q.db.locked)
     U.mode:SetText(({xp="Fastest XP",balanced="Balanced",gear="Gear focused"})[Q.db.mode])
+    U.auto:SetText(Q.db.autoWaypoint and "Auto: On" or "Auto: Off")
+    U.navStatus:SetText(Q.Navigation.Status())
     U.nextText:SetText(U.Instruction(step))
     local lines={}
     if step then
@@ -136,10 +142,12 @@ function U.Render()
         if n>1 then lines[#lines+1]=n.." quests share this stop" end
         local trip=Q.trips and Q.trips[1]
         if trip and trip.urgent then lines[#lines+1]="Timed quest: avoid detours" end
+        local destination=Q.Navigation.Destination(step)
+        if destination and destination.hint then lines[#lines+1]=destination.hint end
     else lines[1]=Q.status or "Reading quest progress..." end
     U.current:SetText(table.concat(lines,"\n"))
     U.way:SetEnabled(step~=nil)
-    local height=math.min(340,math.max(190,144+U.current:GetStringHeight()))
+    local height=math.min(360,math.max(190,162+math.min(190,U.current:GetStringHeight())))
     U.current:SetHeight(Q.db.compact and 190 or 100)
     if Q.db.compact then U.frame:SetHeight(height); return end
     local trip=Q.trips and Q.trips[1]

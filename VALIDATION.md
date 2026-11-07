@@ -2,8 +2,8 @@
 
 ## 0.2.0 — 2026-11-07
 
-**68 tests passed** under an existing embedded Lua 5.1 runtime in a separate
-headless process. All seven addon Lua sources compiled. No dependency was
+**91 tests passed** under an existing embedded Lua 5.1 runtime in a separate
+headless process. All eight addon Lua sources compiled. No dependency was
 installed to run these checks. Window tests simulate frame APIs; they do not
 render the actual Forever UI or prove client compatibility.
 
@@ -18,6 +18,10 @@ Coverage includes:
 - Timed deliveries, known log capacity, pins/skips, abandonment, changed progress,
   candidate determinism, forecast limits and state immutability.
 - Whole-trip gear budgets, mode differences, known chain rewards and hysteresis.
+- TomTom auto/manual modes, idempotent updates, grouped target changes, owned
+  cleanup, hidden-window updates, loading/zone transitions, API failure handling,
+  missing dependency, cave-label scope, instance replacement, saved auto preference
+  and preservation of the manual native fallback.
 - Visible movement/lock controls, minimizing/expanding, stable top-left position,
   legacy-position migration, offscreen reset, compact content, reload preferences
   and slash controls.
@@ -61,9 +65,17 @@ until user playtesting is complete.
    Recommendations should reflect the actual quest log.
 10. Test timed antidote delivery without optional detours. Check the warning
     against the actual Forever quest; the addon does not read a countdown.
-11. Set waypoints in both layouts, with and without TomTom where available.
-    Confirm the destination is the first outstanding member of the action.
-12. Check out-of-zone messaging, combat, event bursts, and movement near a route
+11. Install/enable the matching TomTom version. Confirm Auto: On shows its arrow
+    and distance, tracks the first outstanding grouped member and keeps working
+    while the tracker is minimized or hidden. Check the cave/upstairs hints.
+12. Accept/complete/skip/turn in quests. Check that the arrow updates once to the
+    new target, not every second. Arriving alone must not complete a quest.
+13. Set an unrelated TomTom waypoint, then toggle Auto off or leave Shadowglen.
+    Confirm only QuestWeaver's marker is removed. Test loading transitions.
+14. Test Auto off plus manual Waypoint, `/qw auto on|off`, saved preference across
+    reload, and the status/manual fallback when TomTom is disabled. Verify that
+    arrow visibility/style/scale remain under TomTom's own settings.
+15. Check out-of-zone messaging, combat, event bursts, and movement near a route
     boundary. Report repeated direction reversals or perceptible stalls.
 
 No 0.2.0 installation into the live AddOns directory, in-game rendering check,

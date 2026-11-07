@@ -37,4 +37,7 @@ for _,q in ipairs(Q.Pack.quests) do
         {label="Gather Webwood Ichor",match="ichor",target={x=.575,y=.328},minutes=2,combatKey="webwood-spiders"},
     } end
     if q.id==3522 then q.timed=true end
+    if q.id==917 then q.navigationNote="Cave: use the entrance"; q.navigationActions={DO=true} end
+    if q.id==920 then q.navigationNote="Upstairs: use the ramp"; q.navigationActions={DO=true,["TURN IN"]=true} end
+    if q.id==3522 then q.navigationNote="Timed delivery: avoid detours" end
 end

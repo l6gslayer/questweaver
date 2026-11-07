@@ -93,7 +93,7 @@ test("compact mode and lock preference survive simulated reload",function()
     QuestWeaverDB=Q.db
     assert(loadfile("QuestWeaver/Runtime.lua"))("QuestWeaver",Q)
     Q.events:GetScript("OnEvent")(nil,"ADDON_LOADED","QuestWeaver")
-    assert(Q.db.schema==2 and Q.db.compact and Q.db.locked and not U.frame:IsShown())
+    assert(Q.db.schema==3 and Q.db.autoWaypoint and Q.db.compact and Q.db.locked and not U.frame:IsShown())
     assert(U.frame:GetWidth()==360 and not U.drag.mouse)
 end)
 test("slash controls change layout, lock and reset position",function()

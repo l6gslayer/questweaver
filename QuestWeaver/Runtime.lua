@@ -56,7 +56,9 @@ function R.Refresh()
     if not Q.db then return end
     local s=R.Snapshot()
     Q.state=s
-    if s.map~=Q.Pack.mapID or not s.pos then
+    if Q.inWorld==false then
+        Q.route={}; Q.status="Waiting for the world to load."
+    elseif s.map~=Q.Pack.mapID or not s.pos then
         Q.route={}; Q.status="Travel to Shadowglen in Teldrassil to use this starter pack."
     elseif s.classID==nil or not s.raceID then
         Q.route={}; Q.status="Waiting for character information."
@@ -72,15 +74,18 @@ function R.Refresh()
     local first=Q.route[1]
     Q.previous=first and {tripKey=first.tripKey,nextKey=first.key} or nil
     if not first then Q.trips={} end
+    Q.Navigation.Sync(first)
     if Q.UI then Q.UI.Render() end
 end
 function R.Waypoint()
     local next=Q.route and Q.route[1]
     if not next then return end
-    if TomTom and TomTom.AddWaypoint then
-        if Q.waypoint and TomTom.RemoveWaypoint then TomTom:RemoveWaypoint(Q.waypoint) end
-        Q.waypoint=TomTom:AddWaypoint(Q.Pack.mapID,next.target.x,next.target.y,{title=next.action..": "..next.name,persistent=false,minimap=true,world=true})
-    elseif C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
+    if Q.Navigation.Available() then
+        Q.Navigation.Show(next,true)
+        if Q.UI then Q.UI.Render() end
+        return
+    end
+    if C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
         C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(Q.Pack.mapID,next.target.x,next.target.y))
         if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then C_SuperTrack.SetSuperTrackedUserWaypoint(true) end
     else
@@ -92,7 +97,10 @@ local f=CreateFrame("Frame")
 Q.events=f
 f:SetScript("OnEvent",function(_,event,...)
     if event=="ADDON_LOADED" then
-        if ...~="QuestWeaver" then return end
+        if ...~="QuestWeaver" then
+            if ...=="TomTom" then Q.dirty=true end
+            return
+        end
         QuestWeaverDB=type(QuestWeaverDB)=="table" and QuestWeaverDB or {}
         Q.db=QuestWeaverDB
         local db=Q.db
@@ -107,9 +115,12 @@ f:SetScript("OnEvent",function(_,event,...)
         db.budget=math.max(0,math.min(30,tonumber(db.budget) or 10))
         if type(db.locked)~="boolean" then db.locked=false end
         db.compact=db.compact==true
-        db.schema=2
+        if type(db.autoWaypoint)~="boolean" then db.autoWaypoint=true end
+        db.schema=3
         Q.UI.Create()
     elseif Q.db then
+        if event=="PLAYER_LEAVING_WORLD" then Q.inWorld=false; Q.Navigation.Clear() end
+        if event=="PLAYER_ENTERING_WORLD" then Q.inWorld=true end
         if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then Q.Gear.Capture(Q.db) end
         if event=="QUEST_TURNED_IN" then
             local id=...
@@ -118,7 +129,7 @@ f:SetScript("OnEvent",function(_,event,...)
         Q.dirty=true
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","QUEST_LOG_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end
@@ -127,7 +138,7 @@ f:SetScript("OnUpdate",function(_,dt)
     elapsed=elapsed+dt
     if elapsed<1 then return end
     elapsed=0
-    if Q.db and (Q.dirty or (Q.UI.frame and Q.UI.frame:IsShown())) then
+    if Q.db and (Q.dirty or Q.Navigation.NeedsUpdates() or (Q.UI.frame and Q.UI.frame:IsShown())) then
         Q.dirty=false; R.Refresh()
     end
 end)
@@ -154,12 +165,14 @@ SlashCmdList.QUESTWEAVER=function(text)
     elseif cmd=="unpin" then Q.db.pin=nil
     elseif cmd=="restore" then Q.db.skip={}; Q.db.pin=nil
     elseif cmd=="way" then R.Waypoint()
+    elseif cmd=="auto" and (arg=="on" or arg=="off" or arg=="") then
+        Q.Navigation.SetAutomatic(arg=="on" or (arg=="" and not Q.db.autoWaypoint))
     elseif cmd=="unlock" then Q.db.locked=false
     elseif cmd=="lock" then Q.db.locked=true
     elseif cmd=="minimize" or cmd=="compact" then Q.UI.SavePosition(); Q.db.compact=true; Q.UI.Layout()
     elseif cmd=="expand" then Q.UI.SavePosition(); Q.db.compact=false; Q.UI.Layout()
     elseif cmd=="resetposition" then Q.UI.ResetPosition()
-    else print("QuestWeaver: /qw show|hide|way|unlock|lock|minimize|expand|resetposition; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
+    else print("QuestWeaver: /qw show|hide|way|unlock|lock|minimize|expand|resetposition; auto on|off; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
     if cmd~="" and cmd~="show" and cmd~="hide" and cmd~="way" and cmd~="lock" and cmd~="unlock" then Q.previous=nil end
     R.Refresh()
 end

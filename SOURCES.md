@@ -3,6 +3,18 @@
 Reviewed 2026-11-07. External source descriptions are evidence about their own
 projects, not proof of QuestWeaver compatibility in a particular game build.
 
+- [TomTom official project](https://www.curseforge.com/wow/addons/tomtom) and
+  [v4.4.1 release](https://www.curseforge.com/wow/addons/tomtom/files/9493883):
+  current Forever support listing and navigation capabilities. Install separately.
+  The official Source tab lists a CurseForge Git repository; its source could
+  not be retrieved in this environment.
+- [Historical TomTom author-documentation mirror](https://github.com/Pjort/TomTom/blob/master/README.md)
+  and its TomTom.lua implementation: the AddWaypoint/RemoveWaypoint options
+  contract (`crazy`, `cleardistance`, `persistent`, `source`) and ownership UID.
+  This is historical supporting evidence, not an exact v4.4.1/Forever reference.
+  Optional methods are checked at runtime and API calls are protected. No
+  third-party code or assets are copied or bundled.
+
 - [QuestieDB public API](https://github.com/Questie/QuestieDB/blob/master/docs/api.md):
   optional runtime `QuestDB.Get` and NPC/object spawn lookup contract.
 - [QuestieDB quest schema](https://github.com/Questie/QuestieDB/blob/master/src/meta/questMeta.lua):

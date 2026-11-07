@@ -2,6 +2,14 @@
 
 ## 0.2.0 — Shadowglen trip planning
 
+- Automatic optional TomTom arrow guidance for the next outstanding action,
+  with Auto: On/Off in both layouts and `/qw auto on|off`.
+- One temporary waypoint updated only when the destination changes; owned-point
+  cleanup on route end, leaving the supported area, loading transitions or turning
+  automation off. Hidden/compact tracking continues. Manual fallback remains.
+- Cave, upstairs and timed-delivery navigation hints; arriving at a waypoint
+  does not complete quests. External TomTom waypoints/settings are preserved.
+
 - Movable by default; visible Lock/Unlock and minimize/expand controls.
 - Compact next-action tracker with grouped quest progress and a waypoint button.
 - Normalized saved position, legacy-position migration and reset-position command.
