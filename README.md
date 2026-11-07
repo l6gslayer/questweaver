@@ -195,6 +195,31 @@ Use `/qw auto on`, `/qw auto off`, or `/qw auto` to toggle. Your preference is
 saved per character (schema 3); existing compact/lock and route preferences are
 kept. Reaching a cave pin may require finding its entrance or another floor.
 
+## Nearby work before a shared return
+
+Accepted nearby quests with a shared return area can now stay in the same outing
+when doing so saves modeled travel/time versus completing separate return trips.
+This comparison runs after normal trip selection, so a nearly finished quest's
+high instantaneous XP/minute does not automatically split off its companion.
+Within a selected outing, nearby accepted objective work precedes the shared
+return phase; accepting a locked follow-up still requires its real prerequisite
+turn-in first. Completing Moss in the field can therefore lead to Totems next,
+then the common recipient, rather than an extra return between objectives.
+
+The companion pass considers at most four total quests, returns within .02
+normalized map units and remaining tasks within .06 of an original accepted
+quest's area. It permits at most six extra estimated work minutes in total,
+requires positive XP or a known gear improvement, genuine modeled travel/time
+savings, no increased risk, and preserved gear allowance/capacity/pins. These
+are bounded heuristics, not terrain measurements or a globally optimal route.
+Missing locations, skipped/failed quests, unresolved stages and unconfirmed
+finished requirements are not treated as free companion work.
+
+Accepted timed deliveries and ready turn-ins already beside you retain their
+priority. Merely passing an estimated coordinate never completes a quest; the
+next refresh still depends on live quest progress. Both quests must actually
+be accepted with usable destination data for this new companion behavior.
+
 ## How trips work
 
 The planner evaluates complete trips through currently eligible quests:

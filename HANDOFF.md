@@ -13,7 +13,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch class introduction/Dolanaar handoff follow-up
+- Latest addon implementation: current feature-branch shared-return batching follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **149 tests passed** under an existing embedded Lua 5.1 runtime; all eight
+- **162 tests passed** under an existing embedded Lua 5.1 runtime; all eight
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -147,6 +147,20 @@ This does not author every Dolanaar quest; accepted corridor quests can join.
 149 tests passed, including simulated extended-area navigation. Actual Forever
 class gates, destinations, road routing and Dolanaar behavior need playtesting.
 Stay on feature/0.2.0-trip-planning. No PR, merge or push is authorized.
+
+## Shared-return batching correction
+
+The user confirmed Moss and Nature's Call were both accepted. Investigation
+reproduced solo-XP/minute selection rejecting the companion and greedy ordering
+returning between the two objectives even in a forced combined trip. Trips.lua
+now holds nearby accepted work ahead of a shared return and supplements the
+chosen trip using combined-versus-separate completion savings. It is bounded
+by six added work minutes, four quests, .02 return/.06 objective proximity,
+known destinations, no risk increase and preserved gear/capacity/pin rules.
+Actual near-ready turn-ins and urgent deliveries retain priority. No estimated
+spawn coordinate or shared combat savings were added. All 162 tests passed.
+The user authorized rebuilding/installing 0.2.0 for playtesting; no PR, merge or
+push is authorized. Keep feature/0.2.0-trip-planning and preserve main.
 
 ## Immediate next task: install for user playtesting
 

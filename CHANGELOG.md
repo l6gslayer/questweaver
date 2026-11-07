@@ -72,3 +72,12 @@ estimates, static timing flags and travel geometry still require Forever testing
 - Extend runtime, discovery and automatic guidance bounds down the road into
   Dolanaar (map 1438, x 50–65%, y 23–65%). Broader Dolanaar pickup coverage
   remains outside this authored pack; accepted local quests can join trips.
+
+### 0.2.0 shared-return batching correction
+
+- Keep nearby accepted objective work before its shared return instead of
+  greedily returning between objectives.
+- Add useful accepted companions by combined-versus-separate trip cost, so
+  partial progress and solo XP/minute do not split Moss/Totem-style outings.
+- Preserve ready nearby turn-ins, urgent deliveries, prerequisites, pins, gear
+  allowance and capacity; bound companion work/risk/travel and four-quest size.

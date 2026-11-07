@@ -199,3 +199,32 @@ and inside Dolanaar. Accept a local Dolanaar quest and check dynamic discovery.
 Return priority beside recipients should still work. This is not a complete
 Dolanaar quest pack, and all fallback positions/work/XP need Forever checking.
 No in-game playtest or automated character action was performed by the agent.
+
+## 0.2.0 shared-return batching correction — 2026-11-07
+
+**162 tests passed** under embedded Lua 5.1, including compilation of all eight
+addon Lua files. Thirteen new regressions cover forced Moss/Totem ordering,
+progress at 0/50/80/95%, shared-return travel/time savings, previous solo-route
+stickiness, Moss becoming complete in the field, actual recipient proximity,
+far/excessive work exclusion, skipped/failed/unaccepted/unlocated companions,
+timed delivery and pin preservation, multiple objective tasks, separate nearby
+stops, prerequisite-cycle avoidance, unconfirmed finished rows and increased risk.
+All previous class/Dolanaar/runtime/navigation ownership cases also pass.
+
+The reported failure is addressed in both route ordering and candidate selection.
+Only snapshot-accepted independent work participates in shared-return barriers;
+locked child pickups cannot block their prerequisite's return. Companion
+insertion compares combined completion cost against the existing trip followed
+by the other quest from that trip's endpoint, requires strictly less walking
+and more than .01 estimated minute saved, and adds at most six estimated work
+minutes without raising risk. Bounds are product heuristics, not client timing
+measurements. No combat savings were invented for Fel Moss versus Totems.
+
+Playtest pending: with both Woodland Protector and Nature's Call accepted and
+live locations available, collect Moss partway, then finish it away from the
+recipient. Totems should remain in the current outing before the shared return.
+Check live arrow advancement and grouped returns. Standing beside an actually
+ready recipient or carrying an urgent timed delivery should retain priority.
+Test another nearby accepted pair when these one-time quests are already done;
+no quest abandonment/reset is required or automated. In-game behavior remains
+unverified by the agent.

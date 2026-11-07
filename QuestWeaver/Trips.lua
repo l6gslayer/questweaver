@@ -86,6 +86,23 @@ function T.Build(selected,s)
             end
             if node.action=="TURN IN" then
                 for _,other in ipairs(nodes) do if other.id==node.id and other.action~="TURN IN" then ready=false end end
+                -- Accepted independent work near this quest's objective shares
+                -- the return phase. Do not greedily visit the hub between its
+                -- objectives, or let previous-step stickiness force that visit.
+                -- Only snapshot-accepted quests participate, so a prerequisite
+                -- turn-in can never be blocked by its still-locked child.
+                local log=s.log[node.id]
+                local immediate=log and log.complete and s.pos and C.Distance(s.pos,node.target)<=.008
+                if log and not immediate and not node.quest.timed and not node.quest.stageOnly and not node.quest.pendingAction then
+                    local area=log.complete and s.pos or node.quest.objective
+                    for _,other in ipairs(nodes) do
+                        local otherLog=s.log[other.id]
+                        if other.id~=node.id and other.action=="DO" and otherLog and accepted[other.id]
+                            and not other.quest.timed and not other.quest.stageOnly and not other.quest.pendingAction
+                            and area and other.quest.finish and C.Distance(node.target,other.quest.finish)<=.02
+                            and C.Distance(area,other.target)<=.06 then ready=false end
+                    end
+                end
             end
             if ready then
                 local cost=C.Travel(position,node.target)
@@ -183,6 +200,72 @@ local function chainGear(trip,quests,s)
     local endPoint=trip.steps[#trip.steps].lastTarget
     for _,q in ipairs(trip.quests) do if not q.stageOnly then visit(q.id,endPoint,0,3,{}) end end
     return best,extra
+end
+
+-- Once a useful trip is chosen, consider already-accepted companions by
+-- combined-versus-separate completion cost rather than instantaneous XP/min.
+-- Near-complete quests otherwise become impossible to batch with slower work.
+local function batchCompanions(best,available,s,fastest)
+    if best.stageOnly or best.urgent or best.nearbyReturns then return best end
+    for _,q in ipairs(best.quests) do if q.timed then return best end end
+    local anchors=C.Copy(best.quests)
+    local addedWork=0
+    for _=1,3 do
+        if #best.quests>=4 then break end
+        local addition,saving,chosenWork
+        for _,q in ipairs(available) do
+            local log=s.log[q.id]
+            if log and not log.complete and not log.failed and usable(q,s) and not contains(best,q.id)
+                and not q.timed and not q.pendingAction and not q.stageOnly and q.finish and q.objective
+                and ((q.xp or 0)>0 or (q.gearKnown and (q.gear or 0)>=.1)) then
+                local work,near,unfinished=0,false,false
+                for _,anchor in ipairs(anchors) do
+                    local anchorLog=s.log[anchor.id]
+                    if anchorLog and not anchor.stageOnly and not anchor.pendingAction and anchor.finish
+                        and C.Distance(q.finish,anchor.finish)<=.02 then
+                        local area=anchorLog.complete and s.pos or anchor.objective
+                        local fits=area~=nil
+                        for _,task in ipairs(T.Tasks(q)) do
+                            local progress=T.Progress(q,task,log)
+                            if progress<1 and (not task.target or not area or C.Distance(area,task.target)>.06) then fits=false end
+                        end
+                        if fits then near=true end
+                    end
+                end
+                for _,task in ipairs(T.Tasks(q)) do
+                    local progress=T.Progress(q,task,log)
+                    if progress<1 then unfinished=true end
+                    work=work+(task.minutes or q.minutes or 5)*(1-progress)
+                end
+                -- A six-minute total companion-work allowance bounds delayed
+                -- reward collection. No new higher-risk combat is introduced.
+                if near and unfinished and addedWork+work<=6 then
+                    local selected=C.Copy(best.quests); selected[#selected+1]=q
+                    if slotsOK(selected,s) then
+                        local combined=T.Build(selected,s)
+                        local separateState=C.Copy(s)
+                        separateState.pos=best.steps[#best.steps].lastTarget; separateState.previous=nil
+                        local separate=T.Build({q},separateState)
+                        local budgetOK=not best.gearDetour or (combined and combined.minutes+(best.gearExtra or 0)-fastest.minutes<=(s.budget or 10))
+                        local saved=combined and separate and best.minutes+separate.minutes-combined.minutes or 0
+                        if combined and separate and budgetOK and combined.risk<=best.risk and saved>.01
+                            and combined.walking+.000001<best.walking+separate.walking
+                            and (not addition or saved>saving or (saved==saving and q.id<addition.quests[#addition.quests].id)) then
+                            addition,saving,chosenWork=combined,saved,work
+                        end
+                    end
+                end
+            end
+        end
+        if not addition then break end
+        addition.batchedReturn=true
+        addition.batchSavings=(best.batchSavings or 0)+saving
+        addition.gear=math.max(addition.gear,best.gear)
+        addition.gearExtra=best.gearExtra; addition.gearDetour=best.gearDetour
+        addition.priority=addition.score*(best.score>0 and best.priority/best.score or 1)
+        best=addition; addedWork=addedWork+chosenWork
+    end
+    return best
 end
 
 function T.Choose(quests,s)
@@ -326,7 +409,7 @@ function T.Choose(quests,s)
         if s.previous and trip.key==s.previous.tripKey then previous=trip end
     end
     if previous and previous.priority>=bestScore*.85 and (not s.pin or contains(previous,s.pin)) then best=previous end
-    return best
+    return batchCompanions(best,available,s,fastest)
 end
 
 function T.Plan(quests,state,limit)
