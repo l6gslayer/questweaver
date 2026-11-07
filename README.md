@@ -1,125 +1,179 @@
 # QuestWeaver
 
 An adaptive quest planner for **WoW Forever**, starting with a 12-quest
-**Shadowglen** pack in the Night Elf starting area. Version 0.1.0 is an alpha;
-it has not been tested inside the game.
+**Shadowglen** pack. **0.2.0** is a test build awaiting in-game acceptance.
 
-## Install
+## Install or update
 
-1. Unzip the release. Copy its single `QuestWeaver` folder into your **Forever**
-   client's `Interface/AddOns` directory. The result must contain
-   `QuestWeaver/QuestWeaver.toc` directly.
-2. Enable QuestWeaver in the character selection AddOns list. The manifest
-   targets Interface 16001; confirm the interface version with `GetBuildInfo()`
-   if the client has updated.
-3. Enter Shadowglen and type `/qw`. The panel becomes active within the starter
-   area of Teldrassil. Other zones intentionally show an out-of-scope message.
+1. Extract `QuestWeaver-0.2.0.zip`. Its single `QuestWeaver` folder belongs in
+   the Forever client's `Interface/AddOns` directory. Check that
+   `QuestWeaver/QuestWeaver.toc` exists directly, without another nested folder.
+2. When updating, replace the old addon source folder. Keep your game-managed
+   SavedVariables; skips, reward observations and preferences are migrated.
+3. Enable QuestWeaver and enter Shadowglen. Type `/qw` to show the tracker.
+   Use `/reload` if the addon is already enabled and its source was updated.
+   A newly installed addon may require returning to character selection.
 
-No dependency is required. **QuestieDB** is optional for current quest names,
-requirements, prerequisites and giver positions. **TomTom** is optional for a
-waypoint arrow. When available, the built-in waypoint API is the fallback;
-otherwise coordinates are printed to chat. A waypoint is set only on request.
-QuestieDB should be the matching Forever package. It is not bundled.
+The manifest targets Interface 16001. Recheck `GetBuildInfo()` after client
+updates. No game restart, live installation or in-game test was performed as
+part of producing the 0.2.0 package.
 
-## What it does
+No dependency is required. Optional **QuestieDB** supplies quest names,
+requirements, prerequisites and giver positions; use its matching Forever
+package. Optional **TomTom** supplies waypoints. Otherwise QuestWeaver tries the
+built-in waypoint API and finally prints coordinates. Waypoints act only when
+requested. Third-party addons and databases are not bundled.
 
-- Replans from your current position, level, accepted quests, objective counts,
-  completed quests, equipment, and preferences.
-- Produces up to 12 actions: pickup, objectives, turn-in, then newly unlocked
-  quests. Only the first action is current; subsequent actions are projections
-  assuming the preceding actions are completed.
-- Scores estimated quest XP per minute through the turn-in, with bounded
-  preference for overlapping accepted objectives and quests unlocking a chain.
-- Looks up to three simple prerequisite links ahead for learned gear rewards,
-  including the estimated future work in the gear allowance calculation.
-- Offers **Balanced** (default), **Fastest XP**, and **Gear focused** modes.
-- Allows a 0-30 minute gear allowance, default 10. It compares estimated time to
-  reward against the fastest current candidate; this is a local heuristic, not
-  a guarantee about the total route's detour or globally fastest leveling.
-- Explains each step and permits pinning/skipping. Failed quests are excluded.
+## Window controls
 
-## Gear advice
+- **Drag the title bar** to move the window. Movement is enabled by default.
+- **Lock / Unlock** controls title dragging in either layout.
+- **- / +** minimizes to the next action or expands the full trip plan.
+- **Waypoint** targets the first outstanding destination in the current action.
+- **x** hides the window; `/qw` brings it back in its saved layout.
+- `/qw resetposition` recenters an offscreen window.
 
-Rewards are learned when you open a quest's offer/reward window. The addon
-stores only reward item IDs, observed quest XP and the level of that observation.
-It recalculates a basic **stat score** against your currently equipped gear using
-the selected role profile. Cached XP is used only at the same character level.
-For unknown rewards it explicitly says the gear is not yet known. Early quests
-can therefore have no gear-aware routing until their rewards have been seen.
+Position, compact/expanded state and lock preference survive reloads through
+per-character SavedVariables. Legacy 0.1.0 pixel positions are accepted, then
+saved as normalized coordinates when moved or the layout is toggled. Both
+layouts remain clamped to the screen.
 
-An improvement of at least 10% in this simple score may receive a bounded
-priority bonus within your detour allowance. This percentage is **not** a DPS,
-healing or survival increase. Default profiles are rough leveling weights;
-choose your profile explicitly, especially for hybrid classes. Effects, procs,
-set bonuses, weapon damage/speed, dual-wield loadouts and custom Forever stats
-are not modeled. Weapon swaps that require replacing a two-handed loadout with
-one-handed items are left unscored. There is no Pawn integration in this alpha.
-No rewards are chosen or items equipped automatically.
+Compact mode shows only the current action, its member quests/objectives,
+available live progress, destination and waypoint control. Expand to see all
+members when a stop contains more than three. Unknown progress says **check
+quest log**, rather than pretending an unmatched objective is complete.
+
+## How trips work
+
+The planner evaluates complete trips through currently eligible quests:
+
+1. **Collect compatible quests** at the hub before leaving when combining them
+   improves estimated quest XP per minute.
+2. **Work objective areas together**, including individual gathering areas.
+3. **Return and turn in** nearby completed quests together when the route fits.
+
+Each modeled leg contributes travel once. Combat work is reduced only when
+pack tasks explicitly identify the same creature source. Being near another
+quest does not by itself reduce the estimated kills or gathering work.
+
+A bounded greedy search starts with each eligible quest and tests inserting
+up to three others, for at most four quests per trip. It forecasts up to three
+trips and 24 displayed actions. Follow-up quests may be inserted in the same trip, but their pickups stay
+blocked until the required projected turn-ins. The first instruction reflects current state; the rest assumes you
+perform the preceding work. Replanning follows real accepts, progress,
+turn-ins, skips, equipment changes and movement.
+
+The expanded view shows the current trip, its total estimated time/quest XP,
+and subsequent projected trips. Adjacent pickups, objective work and returns
+are grouped. A grouped waypoint points at the first member; accepting or
+completing that member lets the next refresh advance to the next destination.
+
+Useful exceptions:
+
+- A nearby turn-in can happen early instead of forcing a complete hub loop.
+- The starter pack's timed antidote delivery, once accepted, takes priority
+  over elective detours and pins. Its timer is not read; the warning is based
+  on the pack's unverified timed-quest flag.
+- Quest-log capacity is respected when the client supplies its maximum. The
+  planner conservatively requires room for planned pickups up front.
+- Previous trips are retained within 15% of the best priority, and small
+  destination changes receive hysteresis to avoid repeated direction changes.
+- **Skip first quest** removes only the first quest of a grouped action from
+  recommendations. It never abandons quests. Restore clears skips and pins.
+
+## XP and gear modes
+
+| Mode | Priority |
+| --- | --- |
+| Balanced (default) | Estimated quest XP/time with bounded gear preference |
+| Fastest XP | Estimated quest XP/time without gear bonuses |
+| Gear focused | Stronger gear preference within the same allowance |
+
+Rewards are learned when their offer/reward window is opened. Unknown rewards
+remain unknown. Known rewards are compared to current equipment using rough
+melee, ranged, caster, healer or tank stat weights. Choose a profile explicitly
+for your leveling role, especially on hybrid classes.
+
+A known stat-score improvement of at least 10% may favor a trip if its estimated
+extra time fits your allowance (default 10 minutes, range 0-30). The comparison
+uses the **whole candidate trip**, plus estimated future work for a known reward
+up to three simple prerequisite links ahead. The comparator is the best current
+XP/time trip, which may contain a different set of quests. This is a local
+heuristic, not a guarantee of total route detour or globally optimal leveling.
+Pins override elective scoring but never prerequisites, skips or accepted timed
+quests. The addon never chooses rewards or equips gear for you.
+
+The gear percentage is a basic **stat-score** change, not a DPS/healing/survival
+prediction. Weapon damage/speed, procs, set bonuses, custom Forever stats and
+complete dual-wield loadouts are not modeled. Replacing a two-handed loadout
+with one-handed items remains unscored. There is no Pawn integration.
 
 ## Commands
 
 | Command | Action |
 | --- | --- |
-| `/qw` or `/qw show` | Open the planner |
-| `/qw hide` | Close it |
-| `/qw mode balanced` | Favor XP with bounded gear detours |
-| `/qw mode xp` | Use XP/time scoring without gear bonuses |
-| `/qw mode gear` | Stronger gear preference within the allowance |
-| `/qw profile melee` | Set melee weights |
-| `/qw profile ranged` | Set ranged weights |
-| `/qw profile caster` | Set caster weights |
-| `/qw profile healer` | Set healer weights |
-| `/qw profile tank` | Set tank weights |
-| `/qw budget 10` | Set gear allowance in minutes (0-30) |
-| `/qw pin 916` | Prioritize this quest when eligible |
+| `/qw` or `/qw show` | Show the tracker in its saved layout |
+| `/qw hide` | Hide it |
+| `/qw minimize` or `/qw compact` | Show the next action only |
+| `/qw expand` | Show the full trip plan |
+| `/qw lock` / `/qw unlock` | Disable/enable title dragging |
+| `/qw resetposition` | Recenter the window |
+| `/qw way` | Set a waypoint for the current destination |
+| `/qw mode balanced` / `xp` / `gear` | Set routing mode |
+| `/qw profile melee` / `ranged` / `caster` / `healer` / `tank` | Set stat weights |
+| `/qw budget 10` | Set gear allowance in minutes |
+| `/qw pin 916` | Prioritize an eligible quest |
 | `/qw unpin` | Clear the pin |
-| `/qw skip 916` | Stop recommending this quest; does not abandon it |
-| `/qw unskip 916` | Restore this quest |
-| `/qw restore` | Clear all skips and the pin |
-| `/qw way` | Place a waypoint for the current next action |
-| `/qw unlock` / `/qw lock` | Enable/disable title-bar dragging |
+| `/qw skip 916` / `/qw unskip 916` | Exclude/restore a quest |
+| `/qw restore` | Clear skips and pin |
 
-Skip/pin without an ID applies to the next recommended quest. The panel also
-has mode, waypoint, skip-next and restore buttons. Preferences and position
-are SavedVariables **per character**; no character/account names are recorded
-by the addon. WoW itself stores per-character files in its own directories.
-Nothing is sent over the network.
+Pin/skip/unskip without an ID uses the first quest of the next action. Expanded
+steps include IDs to support targeting a different member.
 
-## Scope and uncertainty
+## Limits and data quality
 
-- The pack is an original approximation of the Classic Shadowglen starter
-  chains. It is **not a verified Forever route**. Added/changed Forever quests
-  and class quests are outside this first pack. A missing recommendation does
-  not prove no quest is available.
-- QuestieDB can replace names, prerequisites and giver positions, but objective
-  locations, XP baselines and timings remain starter estimates. No quest or
-  route dataset is copied or shipped from another addon.
-- Travel is scaled geometric distance with a conservative multiplier. It does
-  not understand mountains, cave entrances, buildings, transport or walkable
-  terrain. Cave and upstairs steps have warnings. The addon never moves you.
-- Objective groups are treated as one area per quest; multiple distant
-  objectives are not separately routed. Kill XP, rested XP, spawn competition,
-  drop rates and your personal combat pace are not yet modeled.
-- Time-to-reward is recomputed for each action; summing the displayed estimates
-  would double-count future quest work. Treat them as per-candidate estimates.
-- The manifest/API choices need actual Forever-client validation, including
-  startup, cold login, reload, combat, quest updates and SavedVariables.
-- The planner refreshes at most once per second while visible or after an
-  event. It does not change the normal quest tracker, bindings or CVars.
+- The pack covers a subset of Shadowglen's Classic starter chains, not all
+  Forever additions or class quests. It does not infer availability of quests
+  outside the pack. The panel is scoped to Shadowglen, not all Teldrassil.
+- Starter objective coordinates, XP baselines and work times are **unverified
+  estimates**. QuestieDB can replace selected metadata and giver positions,
+  but not these objective areas. No paid routes or third-party datasets are
+  copied or redistributed.
+- Travel uses scaled geometric distance and a conservative multiplier. It does
+  not understand walkable terrain, transport, building floors or cave paths.
+  Cave/upstairs warnings remain visible in the expanded view.
+- Mushroom/lily/spider task matching currently uses English objective tokens.
+  Unmatched/localized data stays unresolved until the client confirms quest
+  completion. If all known tasks are done but the client says incomplete, the
+  tracker asks you to check remaining requirements instead of claiming a turn-in.
+- XP is credited once per quest in the trip estimate. Kill XP, rested bonuses,
+  spawn competition, measured drop rates and personal combat pace are not
+  modeled. A same-level XP observation from the quest window replaces the
+  fallback estimate; changed buffs may still make that observation stale.
+- UI refresh/planning runs at most once a second while shown or after events.
+  No bindings, CVars, normal quest tracker, automatic quest accepts or movement
+  are changed.
+- Settings, quest IDs and reward IDs/XP stay in per-character SavedVariables.
+  The addon records no character/account names and sends nothing over a network.
 
-## Development and validation
-
-From the repository root, using Lua 5.1 (or LuaJIT):
+## Development and review
 
 ```sh
 lua tests/run.lua
 python3 scripts/package.py
 ```
 
-The package script validates manifest references, scans the publishable file
-set for common private information, and creates `dist/QuestWeaver-0.1.0.zip`
-with one addon folder at its root. Source code, tests, docs, workflow and build
-script belong in Git; generated ZIPs, saves and local settings do not.
+Lua 5.1/LuaJIT is required for the test suite. Tests cover planner and runtime
+logic plus simulated window behavior; UI stubs are not actual game rendering.
+The frozen 0.1.0 planner lives only in `tests/reference_planner.lua` for baseline
+regressions and is not shipped in the addon.
 
-See [VALIDATION.md](VALIDATION.md) for actual checks performed and a playtest
-checklist. See [SOURCES.md](SOURCES.md) for research references.
+The package script checks the public source set, privacy signatures, manifest
+references and single-folder ZIP integrity, producing `dist/QuestWeaver-0.2.0.zip`.
+GitHub Actions repeats Lua syntax checks, tests and packaging when the branch is
+pushed. Generated packages, logs, local settings and game saves are ignored.
+
+0.2.0 is developed on a feature branch. It is ready for user playtesting before
+opening a PR to `main`. See [VALIDATION.md](VALIDATION.md) for the test record and
+playtest checklist, [CHANGELOG.md](CHANGELOG.md) for changes and
+[SOURCES.md](SOURCES.md) for research boundaries.

@@ -25,3 +25,16 @@ Q.Pack={mapID=1438, name="Shadowglen", quests={
     quest(3522,"Iverron's Antidote",4,2,360,2,{x=.609,y=.420},{x=.546,y=.329},{x=.546,y=.329},{3521},
         "Delivery to Iverron. Check the quest timer before taking a detour."),
 }}
+
+-- Separate gathering areas; tokens reconcile English live objectives. Unknown
+-- or localized text stays unresolved until the quest is complete. Locations
+-- remain unverified estimates for this alpha.
+for _,q in ipairs(Q.Pack.quests) do
+    if q.id==916 then q.tasks={{label="Gather Webwood Venom",match="venom",target=q.objective,minutes=6,combatKey="webwood-spiders"}} end
+    if q.id==3521 then q.tasks={
+        {label="Gather Hyacinth Mushrooms",match="hyacinth",target={x=.578,y=.397},minutes=2},
+        {label="Gather Moonpetal Lilies",match="moonpetal",target={x=.575,y=.373},minutes=2},
+        {label="Gather Webwood Ichor",match="ichor",target={x=.575,y=.328},minutes=2,combatKey="webwood-spiders"},
+    } end
+    if q.id==3522 then q.timed=true end
+end

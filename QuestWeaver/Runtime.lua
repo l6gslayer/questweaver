@@ -10,7 +10,7 @@ function R.Snapshot()
     local _,class,classID=UnitClass("player")
     local _,_,raceID=UnitRace("player")
     local s={level=UnitLevel("player"),class=class,classID=classID,raceID=raceID,
-        done={},log={},skip=Q.db.skip,pin=Q.db.pin,mode=Q.db.mode,budget=Q.db.budget}
+        done={},log={},skip=Q.db.skip,pin=Q.db.pin,mode=Q.db.mode,budget=Q.db.budget,previous=Q.previous}
     s.map=call(C_Map and C_Map.GetBestMapForUnit,"player")
     local pos=call(C_Map and C_Map.GetPlayerMapPosition,s.map,"player")
     if pos then s.pos={x=pos.x,y=pos.y} end
@@ -35,13 +35,19 @@ function R.Snapshot()
             local text={}
             for _,o in ipairs(objectives or {}) do if o.text then text[#text+1]=o.text end end
             s.log[id]={complete=complete,failed=info.isComplete==-1 or info.isFailed,
-                text=table.concat(text,"; "),progress=complete and 1 or (total>0 and fulfilled/total or 0)}
+                objectives=objectives,text=table.concat(text,"; "),progressKnown=complete or total>0,
+                progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end
     end
     for _,q in ipairs(Q.Pack.quests) do
         local done=call(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,q.id)
         if done==nil then done=call(IsQuestFlaggedCompleted,q.id) end
         s.done[q.id]=done or Q.db.completed[q.id] or false
+    end
+    if type(MAX_QUESTLOG_QUESTS)=="number" then
+        local active=0
+        for _ in pairs(s.log) do active=active+1 end
+        s.freeSlots=math.max(0,MAX_QUESTLOG_QUESTS-active)
     end
     return s
 end
@@ -60,9 +66,12 @@ function R.Refresh()
         Q.route={}; Q.status="Shadowglen pack: return to the starting area (northeast Teldrassil)."
     else
         Q.quests=Q.Provider.Quests(s,Q.db)
-        Q.route=Q.Core.Plan(Q.quests,s,12)
-        Q.status=#Q.route>0 and "Next action is live; later steps are a projection." or "No eligible quests remain in this pack. Check your level, skips, and prerequisites."
+        Q.route,Q.trips=Q.Trips.Plan(Q.quests,s,24)
+        Q.status=#Q.route>0 and "Next action is live. Later steps assume you complete this trip." or "No eligible quests remain in this pack. Check your level, skips, and prerequisites."
     end
+    local first=Q.route[1]
+    Q.previous=first and {tripKey=first.tripKey,nextKey=first.key} or nil
+    if not first then Q.trips={} end
     if Q.UI then Q.UI.Render() end
 end
 function R.Waypoint()
@@ -96,7 +105,9 @@ f:SetScript("OnEvent",function(_,event,...)
             db.profile=({HUNTER="ranged",MAGE="caster",WARLOCK="caster",PRIEST="caster",DRUID="caster",SHAMAN="caster"})[class] or "melee"
         end
         db.budget=math.max(0,math.min(30,tonumber(db.budget) or 10))
-        db.schema=1
+        if type(db.locked)~="boolean" then db.locked=false end
+        db.compact=db.compact==true
+        db.schema=2
         Q.UI.Create()
     elseif Q.db then
         if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then Q.Gear.Capture(Q.db) end
@@ -143,8 +154,12 @@ SlashCmdList.QUESTWEAVER=function(text)
     elseif cmd=="unpin" then Q.db.pin=nil
     elseif cmd=="restore" then Q.db.skip={}; Q.db.pin=nil
     elseif cmd=="way" then R.Waypoint()
-    elseif cmd=="unlock" then Q.unlocked=true
-    elseif cmd=="lock" then Q.unlocked=false
-    else print("QuestWeaver: /qw show|hide|way|unlock|lock; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
+    elseif cmd=="unlock" then Q.db.locked=false
+    elseif cmd=="lock" then Q.db.locked=true
+    elseif cmd=="minimize" or cmd=="compact" then Q.UI.SavePosition(); Q.db.compact=true; Q.UI.Layout()
+    elseif cmd=="expand" then Q.UI.SavePosition(); Q.db.compact=false; Q.UI.Layout()
+    elseif cmd=="resetposition" then Q.UI.ResetPosition()
+    else print("QuestWeaver: /qw show|hide|way|unlock|lock|minimize|expand|resetposition; mode balanced|xp|gear; profile melee|ranged|caster|healer|tank; budget 0-30; skip|unskip|pin [questID]; unpin; restore") end
+    if cmd~="" and cmd~="show" and cmd~="hide" and cmd~="way" and cmd~="lock" and cmd~="unlock" then Q.previous=nil end
     R.Refresh()
 end

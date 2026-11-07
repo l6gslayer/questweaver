@@ -1,40 +1,78 @@
 # Validation record
 
-Version 0.1.0, 2026-11-07.
+## 0.2.0 — 2026-11-07
 
-## Automated and package checks
+**68 tests passed** under an existing embedded Lua 5.1 runtime in a separate
+headless process. All seven addon Lua sources compiled. No dependency was
+installed to run these checks. Window tests simulate frame APIs; they do not
+render the actual Forever UI or prove client compatibility.
 
-- Lua planner/adapter regression suite: **30 tests passed** using an existing
-  embedded Lua 5.1 runtime in a separate headless process. No standalone Lua
-  command was available; no dependencies were installed to run these checks.
-- All six addon Lua files compiled successfully under that Lua 5.1 runtime.
-- Manifest references, privacy scan and ZIP integrity/layout: run with
-  `python3 scripts/package.py`; the release package is created only if these pass.
-- GitHub Actions workflow: prepared for Lua 5.1 tests and packaging; not run
-  until the repository is published and a workflow run completes.
+Coverage includes:
 
-The regression run caught and fixed an action-target fallback that could point
-a pickup at an objective when its giver coordinate was absent. These are mocked
-logic/adapter tests, not a test of game rendering or actual client APIs.
+- Pickup batches before departure; objective batches; nearby grouped turn-ins.
+- Shared travel without double-counted quest XP, explicit shared combat sources,
+  and a bound on how far one grouped stop can stretch.
+- Separate mushroom/lily/spider tasks, partial progress, unmatched/localized
+  objective text and incomplete quests with all known tasks done.
+- Turn-in prerequisites enforced even when child quests are in the same trip.
+- Timed deliveries, known log capacity, pins/skips, abandonment, changed progress,
+  candidate determinism, forecast limits and state immutability.
+- Whole-trip gear budgets, mode differences, known chain rewards and hysteresis.
+- Visible movement/lock controls, minimizing/expanding, stable top-left position,
+  legacy-position migration, offscreen reset, compact content, reload preferences
+  and slash controls.
+- Retained 0.1.0 baseline planner, gear/provider and modern/legacy API regressions.
 
-## In-game acceptance checklist (all pending)
+A deterministic two-quest synthetic fixture uses less than **70% of the travel**
+of separate out-and-back trips. This is a geometric regression scenario, not a
+measured in-game speedup. Twenty complete Shadowglen forecasts took about
+**0.14 seconds** total in this local test runtime; this is not an in-game FPS or
+latency guarantee.
 
-- Cold login and `/reload` load without Lua errors on the current Forever build.
-- The window is readable at normal UI scale, scrolls and remembers its position.
-- Out-of-zone and out-of-pack messages suppress invalid routing.
-- At level 1, available pickups match actual Shadowglen quest givers.
-- Each objective's progress updates; finishing changes DO to TURN IN.
-- Turning in updates prerequisites and unlocks the correct next quest.
-- Skipping, restoring, pinning and abandoning a quest produce sensible plans.
-- Confirm all 12 starter IDs, locations, levels, XP rewards and chain edges.
-- Check cave entrance/ramp warnings and replace inaccurate target coordinates.
-- Opening quest offer/reward windows captures actual XP/reward IDs.
-- Cached/missing item data never shows an invented upgrade.
-- Role profiles, level restrictions, armor usability and weapon-loadout handling
-  do not recommend unusable items.
-- Waypoint button works with/without TomTom and only acts when requested.
-- Combat and item/quest event bursts do not cause errors or noticeable stalls.
-- Settings survive logout/login; separate characters do not share skips/pins.
+Manifest references, the public source privacy scan and ZIP integrity/layout
+are checked by `python3 scripts/package.py`. A separate staged-file review checks
+for the local username and credential-like assignments before committing.
 
-No successful game installation, client startup, quest run, combat test or
-SavedVariables persistence test is claimed by this record.
+GitHub Actions for 0.2.0 is pending branch publication. No PR to main is opened
+until user playtesting is complete.
+
+## Playtest checklist for 0.2.0 (pending)
+
+1. Replace the 0.1.0 source with the 0.2.0 package, preserving SavedVariables.
+   Confirm the tracker loads without Lua errors and existing preferences remain.
+2. Drag its title, click Lock, verify it stays fixed, then click Unlock and move
+   it again. Test in both expanded and compact layouts.
+3. Click - to compact and + to expand. Position should remain at the same top-left
+   corner, except for screen clamping. Check readability at your normal UI scale.
+4. Use `/qw resetposition`. Toggle compact/lock, `/reload`, and confirm those
+   preferences and the position survive. Close and reopen with `/qw`.
+5. With multiple compatible quests available, confirm the first action lists
+   nearby pickups before sending you away. Accept one at a time and watch the
+   list update without requiring you to complete each quest separately.
+6. With Webwood Venom and Iverron's Antidote both accepted, check grouped spider
+   work. Verify mushroom/lily objectives disappear individually when finished.
+   Check all new gathering coordinates against actual Forever spawns.
+7. Complete a quest while another remains nearby. Confirm the route continues
+   sensible nearby work or returns for a useful unlock, rather than automatically
+   taking a separate hub trip for every quest.
+8. Turn quests in individually; completed quests should disappear and follow-ups
+   should become real pickup recommendations only after their prerequisites.
+9. Test a skipped/pinned quest, Restore, and a quest abandoned outside the addon.
+   Recommendations should reflect the actual quest log.
+10. Test timed antidote delivery without optional detours. Check the warning
+    against the actual Forever quest; the addon does not read a countdown.
+11. Set waypoints in both layouts, with and without TomTom where available.
+    Confirm the destination is the first outstanding member of the action.
+12. Check out-of-zone messaging, combat, event bursts, and movement near a route
+    boundary. Report repeated direction reversals or perceptible stalls.
+
+No 0.2.0 installation into the live AddOns directory, in-game rendering check,
+quest run, combat test or SavedVariables persistence test has been performed
+by the agent. The user reported using 0.1.0; this does not establish 0.2.0 behavior.
+
+## Previous baseline
+
+0.1.0 passed 30 Lua tests. GitHub Actions run 42410645167 passed syntax checks,
+planner tests, privacy/package validation and artifact upload on the initial
+main commit. The old planner is retained only in `tests/reference_planner.lua`
+for regression comparisons and is not loaded by the 0.2.0 manifest.
