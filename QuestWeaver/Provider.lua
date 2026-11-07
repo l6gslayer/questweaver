@@ -55,6 +55,18 @@ function P.Quests(state,db)
                 if state.done[id] or state.log[id] then q.disabled=true end
             end
         else q.metadata="Unverified Classic starter baseline" end
+        local log=state.log[q.id]
+        if log and not log.failed and log.location then
+            if log.complete then
+                q.finish=Q.Core.Copy(log.location)
+            else
+                q.objective=Q.Core.Copy(log.location)
+                -- The client supplies one current quest destination. It does
+                -- not identify which static gathering task owns that point.
+                -- Use a single live-stage action, not duplicate task pins.
+                q.tasks=nil
+            end
+        end
         local observed=db.rewards[q.id]
         if observed and observed.level==state.level and observed.xp and observed.xp>0 then
             q.xp=observed.xp; q.xpObserved=true

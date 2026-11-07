@@ -13,7 +13,8 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: `18e628d` (automatic TomTom integration).
+- Latest addon implementation: current feature-branch objective-location follow-up
+  (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
 - Source: nested `QuestWeaver/` directory; eight Lua files plus its manifest.
@@ -90,15 +91,15 @@ and supplied a screenshot showing the compact tracker and TomTom guidance.
 TomTom v4.4.1-release was subsequently found installed. See VALIDATION.md for
 evidence boundaries. The installation instructions below are historical context.
 
-Next, investigate objective waypoint accuracy for quest 457, The Balance of
-Nature. It uses one fixed point (57.9, 41.2) for both mob objectives; unlike the
-antidote quest, it has no separate tasks. The screenshot shows only Mangy
-Nightsabers remaining. Navigation faithfully forwards the fixed point, and
-QuestieDB does not replace objective locations. Confirm actual Forever spawn
-areas before choosing replacement coordinates; the player's location alone
-is not spawn evidence. No gameplay fix or replacement package is included in
-this documentation update. User playtesting continues; no PR or merge is
-approved by this feedback.
+The objective-location follow-up is implemented: Runtime reads optional WoW
+next-waypoint, map-specific waypoint and matching quest map points; Provider
+uses the current live quest stage for accepted quests and live return points
+when complete. Static gathering tasks remain the fallback when live data is
+missing. UI labels live objectives/areas versus starter estimates. No new
+coordinates were guessed from screenshots. All 100 Lua 5.1 tests passed.
+The rebuilt 0.2.0 needs user playtesting against the blue quest area; API data
+availability/accuracy is still unverified in Forever. See README and VALIDATION.
+No PR, merge or push is authorized.
 
 ## Immediate next task: install for user playtesting
 

@@ -35,3 +35,14 @@ Starter quest IDs/names identify in-game content. Coordinates, XP and timing
 constants in `Shadowglen.lua` are explicitly unverified estimates, authored as
 a small starter baseline, not extracted from a paid guide. Confirm them in
 Forever before treating this as a dependable speed-leveling route.
+
+## Current quest location API follow-up
+
+- [Blizzard-generated quest log API documentation mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/QuestLogDocumentation.lua):
+  signatures for `GetNextWaypoint(questID)` returning map/x/y,
+  `GetNextWaypointForMap(questID, uiMapID)` returning x/y, and
+  `GetQuestsOnMap(uiMapID)`. The live branch is supporting documentation, not an
+  exact Forever build reference. All reads are optional and protected.
+- The locally installed TomTom v4.4.1-release `modules/poi.lua` independently
+  uses next-waypoint reads followed by quest map positions. Inspected as local
+  compatibility evidence only; no third-party implementation was copied.

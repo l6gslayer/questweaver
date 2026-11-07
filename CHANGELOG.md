@@ -33,3 +33,11 @@ estimates, static timing flags and travel geometry still require Forever testing
 - Original 12-quest Shadowglen pack, single-action scoring, learned reward stat
   comparisons, optional QuestieDB/TomTom integration and basic tracker.
 - 30 Lua tests and initial GitHub Actions validation passed.
+
+### 0.2.0 objective-location follow-up
+
+- Prefer guarded WoW current quest waypoint/map-area data for accepted quests;
+  use live return points after completion and retain labeled starter estimates
+  when location data is unavailable.
+- Show destination provenance in both tracker layouts. Live quest stages do
+  not duplicate static gathering-task pins or change the player's tracked quest.

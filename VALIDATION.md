@@ -111,3 +111,23 @@ by this documentation update.
 planner tests, privacy/package validation and artifact upload on the initial
 main commit. The old planner is retained only in `tests/reference_planner.lua`
 for regression comparisons and is not loaded by the 0.2.0 manifest.
+
+## 0.2.0 current quest destinations — 2026-11-07
+
+**100 tests passed** under the existing embedded Lua 5.1 runtime, including
+compilation of all eight addon sources. Nine new cases cover waypoint priority,
+map-specific coordinate spaces, quest-area fallback, absent/failing APIs,
+invalid/foreign coordinates, live destination changes reaching navigation,
+no duplicate gathering pins or seed mutation, completed return points, fallback
+estimates, and snapshot refresh/map-query count. Existing planner, UI and
+navigation ownership regressions also pass.
+
+The implementation now reads current quest locations through guarded optional
+APIs rather than substituting guessed spawn coordinates. It labels live points
+and estimates in the tracker. The earlier waypoint investigation above describes
+the previous package. This updated build still requires a Forever playtest:
+reload, check The Balance of Nature against the blue area, confirm a live source
+label, then finish an objective and check the destination refresh. If it says
+starter estimate, the client did not expose valid location data via these reads.
+Test completion/return and a multi-objective gathering quest too. A quest-area
+point is not an individual mob spawn or an objective-indexed location.

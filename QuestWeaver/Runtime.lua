@@ -6,6 +6,29 @@ local function call(fn,...)
     local ok,a,b,c=pcall(fn,...)
     if ok then return a,b,c end
 end
+-- Quest-level positions describe the client's current stage, not every task
+-- or a projected follow-up. Only accept coordinates in the planner's map space.
+local function location(x,y,source)
+    if type(x)=="number" and type(y)=="number" and x==x and y==y
+        and x>=0 and x<=1 and y>=0 and y<=1 and not (x==0 and y==0) then
+        return {x=x,y=y,source=source}
+    end
+end
+function R.QuestLocation(id,map,pois)
+    local api=C_QuestLog or {}
+    local nextMap,x,y=call(api.GetNextWaypoint,id)
+    local pos=nextMap==map and location(x,y,"WoW objective")
+    if pos then return pos end
+    x,y=call(api.GetNextWaypointForMap,id,map)
+    pos=location(x,y,"WoW objective")
+    if pos then return pos end
+    for _,poi in ipairs(type(pois)=="table" and pois or {}) do
+        if type(poi)=="table" and poi.questID==id then
+            pos=location(poi.x,poi.y,"WoW quest area")
+            if pos then return pos end
+        end
+    end
+end
 function R.Snapshot()
     local _,class,classID=UnitClass("player")
     local _,_,raceID=UnitRace("player")
@@ -14,6 +37,7 @@ function R.Snapshot()
     s.map=call(C_Map and C_Map.GetBestMapForUnit,"player")
     local pos=call(C_Map and C_Map.GetPlayerMapPosition,s.map,"player")
     if pos then s.pos={x=pos.x,y=pos.y} end
+    local pois=call(C_QuestLog and C_QuestLog.GetQuestsOnMap,Q.Pack.mapID)
     local count=call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or call(GetNumQuestLogEntries) or 0
     for i=1,count do
         local info=call(C_QuestLog and C_QuestLog.GetInfo,i)
@@ -35,6 +59,7 @@ function R.Snapshot()
             local text={}
             for _,o in ipairs(objectives or {}) do if o.text then text[#text+1]=o.text end end
             s.log[id]={complete=complete,failed=info.isComplete==-1 or info.isFailed,
+                location=R.QuestLocation(id,Q.Pack.mapID,pois),
                 objectives=objectives,text=table.concat(text,"; "),progressKnown=complete or total>0,
                 progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end
@@ -129,7 +154,7 @@ f:SetScript("OnEvent",function(_,event,...)
         Q.dirty=true
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end

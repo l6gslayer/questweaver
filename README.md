@@ -44,6 +44,28 @@ available live progress, destination and waypoint control. Expand to see all
 members when a stop contains more than three. Unknown progress says **check
 quest log**, rather than pretending an unmatched objective is complete.
 
+## Live quest destinations
+
+For accepted quests, QuestWeaver prefers WoW's current next waypoint, then a
+map-specific waypoint, then the quest's map point/area on the Teldrassil map.
+The tracker labels these **WoW objective** or **WoW quest area**. They refresh
+with quest progress and regular updates, including while Auto runs hidden.
+Completed quests use the live return destination when available. Pickups and
+projected follow-ups still use starter data.
+
+If the client exposes no valid location on the supported map, the tracker
+labels its fallback **starter estimate**. Missing APIs, errors, other-map points
+and invalid coordinates do not stop planning. QuestWeaver does not select a
+quest, alter tracking or change the open map to obtain coordinates.
+
+A live point describes the current quest stage, not individual spawn positions.
+For quests with separate gathering tasks, one live-stage destination replaces
+the static task pins while live data is available. The client decides which
+remaining area to identify; the addon does not infer that area from your position.
+Quest-area centers and routing waypoints are guidance, not terrain-safe paths
+or a guarantee that a mob is standing at the pin. Exact Forever API behavior
+still needs playtesting.
+
 ## TomTom arrow guidance
 
 Install and enable [TomTom](https://www.curseforge.com/wow/addons/tomtom) for your

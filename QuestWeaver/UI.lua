@@ -137,7 +137,7 @@ function U.Render()
             if i<=3 then lines[#lines+1]=U.MemberText(m) end
         end
         if #step.members>3 then lines[#lines+1]="+"..(#step.members-3).." more: expand for details" end
-        lines[#lines+1]=string.format("Destination %.1f, %.1f",step.target.x*100,step.target.y*100)
+        lines[#lines+1]=string.format("Destination %.1f, %.1f (%s)",step.target.x*100,step.target.y*100,step.target.source or "starter estimate")
         local n=0; for _ in pairs(ids) do n=n+1 end
         if n>1 then lines[#lines+1]=n.." quests share this stop" end
         local trip=Q.trips and Q.trips[1]
