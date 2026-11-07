@@ -78,9 +78,32 @@ until user playtesting is complete.
 15. Check out-of-zone messaging, combat, event bursts, and movement near a route
     boundary. Report repeated direction reversals or perceptible stalls.
 
-No 0.2.0 installation into the live AddOns directory, in-game rendering check,
-quest run, combat test or SavedVariables persistence test has been performed
-by the agent. The user reported using 0.1.0; this does not establish 0.2.0 behavior.
+### Installation and initial user playtest — 2026-11-07
+
+The existing 0.2.0 package, including Navigation.lua, was installed into the
+Forever addon folder after a verified full backup of the previous addon.
+All 14 installed release files were byte-compared with the ZIP successfully,
+including a subsequent readback. SavedVariables and other addons were untouched.
+The agent did not restart the game or run an in-game reload command.
+
+The user subsequently reported that the build is working. Their screenshot
+shows the compact tracker, Auto: On, a ready navigation status and a TomTom
+arrow for The Balance of Nature. A subsequent filesystem inspection found
+TomTom v4.4.1-release with Interface 16001 among its declared targets. This
+establishes initial user-reported operation and visible rendering, not completion
+of the checklist above. Persistence, cleanup, combat and full quest progression
+remain unverified.
+
+The screenshot also exposes an outstanding objective-waypoint accuracy issue:
+the tracker targets 57.9, 41.2 while Mangy Nightsabers remain and the other mob
+objective is complete. Source inspection confirms quest 457 has one fixed,
+unverified objective point and no per-mob tasks. The planner therefore retains
+the same point regardless of which mob objective remains. Navigation passes
+that point directly to TomTom. QuestieDB integration currently updates quest
+givers/metadata, not objective spawn locations. A corrected spawn area needs
+Forever evidence; no replacement coordinate has been inferred from the player's
+position or the quest-area marker. Gameplay code and package remain unchanged
+by this documentation update.
 
 ## Previous baseline
 

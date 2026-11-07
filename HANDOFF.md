@@ -82,6 +82,24 @@ profiles, modes, gear budgets, pins and skips.
   GitHub. Exact current-version compatibility is unverified; see SOURCES.md.
 - Mocked frame tests are not screenshots or proof of actual in-game layout.
 
+## Current follow-up — installation complete, waypoint investigation
+
+The authorized 0.2.0 installation completed on 2026-11-07 after a verified
+backup; all 14 release files matched the ZIP. The user reports it is working,
+and supplied a screenshot showing the compact tracker and TomTom guidance.
+TomTom v4.4.1-release was subsequently found installed. See VALIDATION.md for
+evidence boundaries. The installation instructions below are historical context.
+
+Next, investigate objective waypoint accuracy for quest 457, The Balance of
+Nature. It uses one fixed point (57.9, 41.2) for both mob objectives; unlike the
+antidote quest, it has no separate tasks. The screenshot shows only Mangy
+Nightsabers remaining. Navigation faithfully forwards the fixed point, and
+QuestieDB does not replace objective locations. Confirm actual Forever spawn
+areas before choosing replacement coordinates; the player's location alone
+is not spawn evidence. No gameplay fix or replacement package is included in
+this documentation update. User playtesting continues; no PR or merge is
+approved by this feedback.
+
 ## Immediate next task: install for user playtesting
 
 The user **explicitly authorized copying the latest build into the existing
