@@ -63,3 +63,28 @@ Forever before treating this as a dependable speed-leveling route.
   Githyiss cave source 56.6, 26.3 and Gilshalan return near 57.8, 41.6. Starter
   locations and time estimates remain approximate; live client data takes
   precedence. No third-party database/code is bundled.
+
+## Shadowglen coverage audit — 2026-11-07
+
+This bounded audit compared the 13 existing entries with Forever quest/zone and
+item records. Generic zone inventories are not exhaustive: some omit Forever
+additions or categorize local quests under Teldrassil, race or class instead.
+No licensed quest dataset, guide text or authored leveling route was copied.
+
+| Quest / item | Evidence and handling |
+| --- | --- |
+| Nature's Call 97977 | [Observed quest cache record](https://zephras.com/forever/enUS/quest/97977/): Tarindrella start/return near 57.7,45.1, four Gnarlpine Totems, base 250 XP. Added with actual NPC-offer/accepted evidence. |
+| Nature's Call objective area | [Community observations](https://foreverdb.net/quest/97977-natures-call) and [location listing](https://www.60.tools/quests/97977-natures-call) differ on area and prerequisite metadata. No objective coordinate or exact prerequisite is hard-coded; live client destination required. Totem 279082 is an objective item, not a starter. |
+| The Goddess Provides 97979 | [Observed quest record](https://zephras.com/forever/enUS/quest/97979/) and [Forever listing](https://www.60.tools/quests/97979-the-goddess-provides): Shanda near 59.2,40.5, base 40 XP, Elune's Light/Shadowmeld. Added for observed offers/accepted quests, with Night Elf gating and no assumed priest restriction. |
+| Welcome! 5842 / voucher 14648 | [Quest](https://www.60.tools/quests/5842-welcome) and [item](https://www.60.tools/items/14648-shadowglen-gift-voucher) records describe the conditional Collector's Edition voucher. Owned-item/accepted evidence only; no farming or entitlement assumption. Client return location required. |
+| Class introductions 3116-3120 | Simple, Etched, Encrypted, Hallowed and Verdant Sigils are absent as authored pickup candidates. [Forever index](https://www.oraclenewsnetwork.com/quests) lists them separately. Existing accepted/local discovery can include them; class/race/prerequisite data needs separate validation before proactive pickups. |
+| Crown of the Earth 928 / Dolanaar Delivery 2159 | [Crown](https://www.60.tools/quests/928-crown-of-the-earth) and [Delivery](https://www.60.tools/quests/2159-dolanaar-delivery) leave Shadowglen for Dolanaar. Deliberately recorded as exit-trip scope, not silently added to this local pack. |
+
+Fang of Githyiss remains the substantiated ordinary local mob-drop quest in this
+audit. Failure to find another is not proof that none exists in the live client.
+Community records are supporting evidence, not this project's in-game tests.
+
+The [Blizzard-generated quest API documentation mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/QuestLogDocumentation.lua)
+documents `ReadyForTurnIn(questID)`. The [gossip API mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/GossipInfoDocumentation.lua)
+documents available quest rows used for guarded NPC-offer reads. These mirrors
+are not an exact Forever build reference. No selection or acceptance API is used.

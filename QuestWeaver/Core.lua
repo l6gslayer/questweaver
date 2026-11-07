@@ -28,6 +28,8 @@ function C.Eligible(q, s)
     if s.done[q.id] or s.skip[q.id] then return false end
     if s.log[q.id] then return true end
     if q.acceptedOnly then return false end
+    if q.ownedOnly and not (s.itemStarts and s.itemStarts[q.id]) then return false end
+    if q.offeredOnly and not (s.offered and s.offered[q.id]) then return false end
     if q.disabled or (q.minLevel or 1) > s.level then return false end
     for _, id in ipairs(q.all or {}) do if not s.done[id] then return false end end
     if q.any and #q.any > 0 then

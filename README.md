@@ -1,6 +1,6 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, starting with a 13-quest
+An adaptive quest planner for **WoW Forever**, starting with a 16-entry
 **Shadowglen** pack. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
@@ -66,7 +66,37 @@ Quest-area centers and routing waypoints are guidance, not terrain-safe paths
 or a guarantee that a mob is standing at the pin. Exact Forever API behavior
 still needs playtesting.
 
+## Nearby ready turn-ins
+
+The planner refreshes using your current map position and quest log. A ready,
+accepted turn-in within a small geometric radius (0.008 normalized map units)
+now takes priority over elective departures, pickups, pins, gear scoring and
+route stickiness. Up to four nearby returns can share that stop. An accepted
+timed delivery still takes first priority. This radius is an approximate map
+proximity rule, not measured interaction range or terrain/floor detection.
+
+WoW's optional `ReadyForTurnIn` check supplies readiness when available, with
+completion-state fallbacks for older clients. Standing beside an NPC or having
+finished-looking objective rows does not manufacture quest completion.
+
 ## Nearby quests and quest-starting items
+
+The authored entries now include **Nature's Call** (97977) and **The Goddess
+Provides** (97979). Their precise availability gates are not assumed: pickup
+planning requires the quest to be offered in an open NPC conversation, or the
+quest must already be accepted. Talk to Tarindrella or Shanda normally. These
+offers are transient and disappear from eligibility when the conversation
+closes; nothing is automatically selected or accepted. The Goddess Provides
+uses a Night Elf race gate, with no assumed priest-only restriction. Both use
+live objective locations; missing location data asks you to check the log.
+
+**Welcome!** (5842) recognizes an owned Shadowglen Gift Voucher (14648), or an
+accepted quest. This conditional voucher is not a farmable mob drop. Its return
+uses client location data, and unavailable data is explained instead of guessed.
+**Gnarlpine Totems** for Nature's Call are objective items, not quest starters.
+Class introductions can join through accepted-quest discovery; outbound
+Dolanaar handoffs remain outside this bounded pack. The coverage audit in
+SOURCES.md lists those gaps and evidence limits.
 
 Fang of Githyiss (quest 97236, item 277190) is part of the pack. While Webwood
 Egg is accepted, or while you are near Githyiss's cave location, it can be

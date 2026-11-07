@@ -154,3 +154,29 @@ reminder, skip/pin and progression to its live return. Remote/unlocated quests
 must not gain fabricated local waypoints. Unlocated starters should explain
 that the bag item needs manual inspection. No full catalogue of unseen drops
 is implied. New discovery/API behavior requires actual Forever validation.
+
+## 0.2.0 nearby ready returns and coverage audit — 2026-11-07
+
+**142 tests passed** under the existing embedded Lua 5.1 runtime; all eight Lua
+addon sources compiled. The 17 new tests cover a nearby completed Fang versus
+farther high-value/pinned/previous plans, grouped actual returns, timed delivery
+precedence, movement across the near radius, no completion inferred from
+proximity/objective rows, failed/skipped/done exclusions, freed quest-log slots,
+discovered return coordinates, deterministic four-return bounds, offer-only
+pickups, live Nature's Call area and completion, missing-location notices,
+Night Elf/all-class gating, owned-only voucher behavior, readiness fallback,
+and clearing offers after a conversation closes.
+
+Source inspection shows the planner already samples current position; the
+reproduced fault was missing nearby-ready-return priority in trip selection.
+The user report does not establish which readiness API values the live client
+returned. The new guarded ReadyForTurnIn read addresses that additional boundary
+without assuming that item acceptance or proximity completes a quest.
+
+Playtest pending: reload beside Gilshalan with Fang accepted and ready, and
+confirm TURN IN precedes a farther pickup. Turn it in, move away, and confirm
+planning resumes from your current position. Check another ready local return,
+open Tarindrella/Shanda's conversation for newly offered quests, manually accept,
+and verify live objectives/returns. A voucher must never create an unowned loot
+suggestion. Class introductions remain accepted-discovery coverage; outbound
+Dolanaar trips remain separate. No new in-game or persistence test is claimed.

@@ -26,7 +26,7 @@ end
 
 local function usable(q,s)
     return C.Eligible(q,s) and not (s.log[q.id] and s.log[q.id].failed)
-        and q.start and q.objective and (q.finish or q.stageOnly)
+        and q.start and (q.objective or q.pendingAction) and (q.finish or q.stageOnly)
 end
 
 local function keyFor(ids)
@@ -197,6 +197,31 @@ function T.Choose(quests,s)
     -- Accepted timed deliveries outrank elective batching. Never add detours.
     if urgent then
         local trip=T.Build({urgent},s); trip.urgent=true
+        return trip
+    end
+    -- Cash in observed completed quests beside the player before scoring an
+    -- elective departure. Whole-trip XP/gear scores, pickup bonuses, pins and
+    -- previous-route hysteresis must not send the player away from this stop.
+    -- This small geometric radius is proximity evidence, not NPC interaction
+    -- range or proof that a quest is complete; completion comes from the log.
+    local nearby={}
+    for _,q in ipairs(available) do
+        local log=s.log[q.id]
+        if log and log.complete and not q.stageOnly and not q.pendingAction
+            and q.finish and s.pos and C.Distance(s.pos,q.finish)<=.008 then
+            nearby[#nearby+1]=q
+        end
+    end
+    if #nearby>0 then
+        table.sort(nearby,function(a,b)
+            local da,db=C.Distance(s.pos,a.finish),C.Distance(s.pos,b.finish)
+            if da~=db then return da<db end
+            return a.id<b.id
+        end)
+        while #nearby>4 do table.remove(nearby) end
+        local returnState=C.Copy(s); returnState.previous=nil
+        local trip=T.Build(nearby,returnState)
+        trip.nearbyReturns=true
         return trip
     end
     -- Consider nearby chain unlocks as insertions too. A child cannot form a

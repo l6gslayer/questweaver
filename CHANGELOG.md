@@ -52,3 +52,13 @@ estimates, static timing flags and travel geometry still require Forever testing
 - Support current-stage trips when the eventual return is unknown; do not
   fabricate turn-ins or unlock chains from unresolved stages. Label unknown XP,
   reserve conservative return cost, and bound large-log candidate evaluation.
+
+### 0.2.0 Shadowglen audit and nearby return correction
+
+- Prioritize observed ready turn-ins beside the current player position before
+  elective departures, pins and previous-route stickiness. Group up to four;
+  accepted timed deliveries keep first priority.
+- Read guarded WoW ready-for-turn-in state, falling back to completion flags.
+- Add Nature's Call and The Goddess Provides using actual NPC-offer/accepted
+  evidence and live objective destinations, plus owned-voucher/accepted Welcome!.
+- Record class-introduction and outbound Dolanaar coverage boundaries in SOURCES.

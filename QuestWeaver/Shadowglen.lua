@@ -26,12 +26,21 @@ Q.Pack={mapID=1438, name="Shadowglen", quests={
     quest(3521,"Iverron's Antidote",4,2,360,6,{x=.609,y=.420},{x=.573,y=.346},{x=.609,y=.420},{3519}),
     quest(3522,"Iverron's Antidote",4,2,360,2,{x=.609,y=.420},{x=.546,y=.329},{x=.546,y=.329},{3521},
         "Delivery to Iverron. Check the quest timer before taking a detour."),
+    quest(97977,"Nature's Call",3,1,250,4,{x=.577,y=.451},nil,{x=.577,y=.451},nil,
+        "Collect four Gnarlpine Totems. Pickup availability and objective location come from the client; no spawn area is guessed."),
+    quest(97979,"The Goddess Provides",1,1,40,1,{x=.592,y=.405},nil,{x=.592,y=.405},nil,
+        "Use Elune's Light and Shadowmeld yourself as directed by the quest. Night Elf racial introduction; not priest-only."),
+    quest(5842,"Welcome!",1,1,0,.15,hub,nil,nil,nil,
+        "Conditional Shadowglen Gift Voucher quest. Only consider an owned voucher or accepted quest; not a farmable drop."),
 }}
 
 -- Separate gathering areas; tokens reconcile English live objectives. Unknown
 -- or localized text stays unresolved until the quest is complete. Locations
 -- remain unverified estimates for this alpha.
 for _,q in ipairs(Q.Pack.quests) do
+    if q.id==97977 or q.id==97979 then q.offeredOnly=true end
+    if q.id==97979 then q.requiredRaceID=4 end
+    if q.id==5842 then q.itemStartID=14648; q.ownedOnly=true end
     if q.id==97236 then
         q.itemStartID=277190; q.dropCompanion=917
         q.navigationNote="Cave: use the entrance"; q.navigationActions={["LOOT ITEM"]=true}

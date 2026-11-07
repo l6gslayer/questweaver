@@ -84,6 +84,18 @@ function R.Snapshot()
     local pos=call(C_Map and C_Map.GetPlayerMapPosition,s.map,"player")
     if pos then s.pos={x=pos.x,y=pos.y} end
     local pois=call(C_QuestLog and C_QuestLog.GetQuestsOnMap,Q.Pack.mapID)
+    s.offered={}
+    if R.gossipOpen then
+        local offers=call(C_GossipInfo and C_GossipInfo.GetAvailableQuests)
+        for _,offer in ipairs(type(offers)=="table" and offers or {}) do
+            if type(offer)=="table" and positiveID(offer.questID) then s.offered[offer.questID]=true end
+        end
+        local n=boundedCount(call(GetNumAvailableQuests),0,40)
+        for i=1,n do
+            local id=call(GetAvailableQuestID,i)
+            if positiveID(id) then s.offered[id]=true end
+        end
+    end
     local count=call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or call(GetNumQuestLogEntries) or 0
     for i=1,count do
         local info=call(C_QuestLog and C_QuestLog.GetInfo,i)
@@ -94,7 +106,10 @@ function R.Snapshot()
         if info and not info.isHeader and info.questID and info.questID>0 then
             local id=info.questID
             local complete=call(C_QuestLog and C_QuestLog.IsComplete,id)
-            if complete==nil then complete=info.isComplete==true or info.isComplete==1 end
+            local ready=call(C_QuestLog and C_QuestLog.ReadyForTurnIn,id)
+            if ready~=nil then complete=ready==true or ready==1
+            elseif complete==nil then complete=info.isComplete==true or info.isComplete==1
+            else complete=complete==true or complete==1 end
             local objectives=call(C_QuestLog and C_QuestLog.GetQuestObjectives,id)
             local fulfilled,total=0,0
             for _,o in ipairs(objectives or {}) do
@@ -207,6 +222,8 @@ f:SetScript("OnEvent",function(_,event,...)
         db.schema=3
         Q.UI.Create()
     elseif Q.db then
+        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true end
+        if event=="GOSSIP_CLOSED" or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
         if event=="PLAYER_LEAVING_WORLD" then Q.inWorld=false; Q.Navigation.Clear() end
         if event=="PLAYER_ENTERING_WORLD" then Q.inWorld=true end
         if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then Q.Gear.Capture(Q.db) end
@@ -217,7 +234,7 @@ f:SetScript("OnEvent",function(_,event,...)
         Q.dirty=true
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end

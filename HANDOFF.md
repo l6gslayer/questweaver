@@ -13,7 +13,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch nearby quest/item-start follow-up
+- Latest addon implementation: current feature-branch Shadowglen audit/nearby return follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
@@ -35,7 +35,7 @@ before claiming publication; preserve generic commit author/committer metadata.
   projected turn-ins. Shared travel counts once; combat savings require explicit
   shared-source metadata. Handles known log capacity, timed delivery, pin/skip,
   partial progress, gear-chain lookahead and modest route hysteresis.
-- `Shadowglen.lua`: 13 starter quests; separate mushroom/lily/spider tasks for
+- `Shadowglen.lua`: 16 entries, including conditional NPC-offer/voucher quests; separate mushroom/lily/spider tasks for
   Iverron's Antidote, conservative English-token progress matching, and relevant
   cave/upstairs/timed-delivery hints.
 - `Provider.lua` / `Gear.lua`: optional QuestieDB metadata and learned reward
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **125 tests passed** under an existing embedded Lua 5.1 runtime; all eight
+- **142 tests passed** under an existing embedded Lua 5.1 runtime; all eight
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -115,6 +115,23 @@ See README for exact evidence/fallback boundaries and VALIDATION for the new
 125-test result and user checklist. The rebuilt package was installed after a verified backup; all fourteen release
 files matched the ZIP. In-game discovery remains unverified;
 no PR, merge or push is authorized. Preserve the feature branch and main.
+
+## Shadowglen audit and nearby return follow-up
+
+The user reported accepted Fang being skipped for a farther pickup while beside
+the recipient. Current-position sampling already existed; trip selection now
+prioritizes observed ready nearby returns before elective departures, pins and
+hysteresis, retaining accepted timed delivery precedence. Runtime reads optional
+ReadyForTurnIn with completion fallback; proximity alone never proves readiness.
+
+Added Nature's Call 97977 and The Goddess Provides 97979 with actual open-NPC
+quest-offer/accepted evidence and live objective positions. Welcome! 5842 uses
+owned voucher 14648 or accepted evidence only. The pack now has sixteen entries.
+Class intro pickups and outbound Dolanaar trips are recorded scope gaps; no
+additional ordinary drop quest was substantiated by this bounded audit. See
+SOURCES.md for the evidence table and uncertainty. All 142 tests passed; actual
+Forever priority/readiness/new-offer behavior remains pending user playtesting.
+No PR, merge or push is authorized. Keep the feature branch and main unchanged.
 
 ## Immediate next task: install for user playtesting
 

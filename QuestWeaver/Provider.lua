@@ -85,6 +85,13 @@ function P.Quests(state,db)
         else q.metadata=q.dynamic and "Discovered nearby quest" or "Unverified starter baseline" end
         local log=state.log[q.id]
         local item=(state.itemStarts or {})[q.id]
+        if q.requiredRaceID and state.raceID~=q.requiredRaceID then q.disabled=true end
+        if q.offeredOnly then
+            if not log then
+                q.pendingAction="PICK UP"; q.pendingLabel="Accept "..q.name.." (offered by NPC)"
+                q.stageOnly=true; q.minutes=.15
+            elseif log.complete then q.objective=Q.Core.Copy(q.finish) end
+        end
         if (q.itemStartID or item) and not log then
             q.stageOnly=true
             if item then
@@ -94,12 +101,14 @@ function P.Quests(state,db)
                 if not state.skip[q.id] and not state.done[q.id] then notices[#notices+1]=q.pendingLabel end
             else
                 q.pendingAction="LOOT ITEM"
-                q.pendingLabel="Loot Githyiss's fang: "..q.name
+                q.pendingLabel="Loot quest starter: "..q.name
+                if q.ownedOnly then q.disabled=true end
                 -- This is an outing opportunity, not a prerequisite claim.
                 q.disabled=q.disabled or (not state.log[q.dropCompanion]
                     and Q.Core.Distance(state.pos,q.start)>.025)
             end
         end
+        if q.ownedOnly and log then q.stageOnly=not q.finish end
         if q.id==97236 and log then q.minutes=.15 end
         if q.dynamic then
             if not Q.Core.IsLocal(q.finish) then q.finish=nil end
@@ -115,6 +124,12 @@ function P.Quests(state,db)
                 -- Use a single live-stage action, not duplicate task pins.
                 q.tasks=nil
             end
+        end
+        if q.ownedOnly and log and log.complete and q.finish then
+            q.stageOnly=false; q.objective=Q.Core.Copy(q.finish)
+        end
+        if log and not log.failed and (q.offeredOnly or q.ownedOnly) and not q.objective then
+            notices[#notices+1]=q.name..": current destination unavailable; check quest log."
         end
         local observed=db.rewards[q.id]
         if observed and observed.level==state.level and observed.xp and observed.xp>0 then
