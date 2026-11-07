@@ -77,8 +77,8 @@ No licensed quest dataset, guide text or authored leveling route was copied.
 | Nature's Call objective area | [Community observations](https://foreverdb.net/quest/97977-natures-call) and [location listing](https://www.60.tools/quests/97977-natures-call) differ on area and prerequisite metadata. No objective coordinate or exact prerequisite is hard-coded; live client destination required. Totem 279082 is an objective item, not a starter. |
 | The Goddess Provides 97979 | [Observed quest record](https://zephras.com/forever/enUS/quest/97979/) and [Forever listing](https://www.60.tools/quests/97979-the-goddess-provides): Shanda near 59.2,40.5, base 40 XP, Elune's Light/Shadowmeld. Added for observed offers/accepted quests, with Night Elf gating and no assumed priest restriction. |
 | Welcome! 5842 / voucher 14648 | [Quest](https://www.60.tools/quests/5842-welcome) and [item](https://www.60.tools/items/14648-shadowglen-gift-voucher) records describe the conditional Collector's Edition voucher. Owned-item/accepted evidence only; no farming or entitlement assumption. Client return location required. |
-| Class introductions 3116-3120 | Simple, Etched, Encrypted, Hallowed and Verdant Sigils are absent as authored pickup candidates. [Forever index](https://www.oraclenewsnetwork.com/quests) lists them separately. Existing accepted/local discovery can include them; class/race/prerequisite data needs separate validation before proactive pickups. |
-| Crown of the Earth 928 / Dolanaar Delivery 2159 | [Crown](https://www.60.tools/quests/928-crown-of-the-earth) and [Delivery](https://www.60.tools/quests/2159-dolanaar-delivery) leave Shadowglen for Dolanaar. Deliberately recorded as exit-trip scope, not silently added to this local pack. |
+| Class introductions 3116-3120 | Simple, Etched, Encrypted, Hallowed and Verdant Sigils were missing at audit time and are now included with observed-offer/class/race gates. [Forever index](https://www.oraclenewsnetwork.com/quests) lists them separately. Their inherited prerequisite metadata is not asserted as a live Forever fact; actual offers and accepted state provide availability evidence. |
+| Crown of the Earth 928 / Dolanaar Delivery 2159 | [Crown](https://www.60.tools/quests/928-crown-of-the-earth) and [Delivery](https://www.60.tools/quests/2159-dolanaar-delivery) leave Shadowglen for Dolanaar. Originally recorded as exit-trip scope; now explicitly included with the requested corridor expansion. |
 
 Fang of Githyiss remains the substantiated ordinary local mob-drop quest in this
 audit. Failure to find another is not proof that none exists in the live client.
@@ -88,3 +88,25 @@ The [Blizzard-generated quest API documentation mirror](https://github.com/Gethe
 documents `ReadyForTurnIn(questID)`. The [gossip API mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/GossipInfoDocumentation.lua)
 documents available quest rows used for guarded NPC-offer reads. These mirrors
 are not an exact Forever build reference. No selection or acceptance API is used.
+
+## Class introductions and Dolanaar extension — 2026-11-07
+
+- Class introduction records: [Simple Sigil 3116](https://www.60.tools/quests/3116-simple-sigil),
+  [Etched Sigil 3117](https://www.60.tools/quests/3117-etched-sigil),
+  [Encrypted Sigil 3118](https://www.60.tools/quests/3118-encrypted-sigil),
+  [Hallowed Sigil 3119](https://questing.wiki/wow-forever/quests/3119/),
+  [Verdant Sigil 3120](https://www.60.tools/quests/3120-verdant-sigil).
+  Supporting listings give Ilthalaine near 58.7,44.3, class-specific trainers
+  in/around Aldrassil, and level-1 / 40-XP baselines. Parts of these listings
+  inherit Classic details, so pickup requires a real NPC offer rather than an
+  asserted prerequisite 456. Matching class/race fallback gates do not override
+  an already accepted quest. No guide route or dataset is copied.
+- [Crown of the Earth 928](https://www.60.tools/quests/928-crown-of-the-earth):
+  fallback Tenaron 59.1,39.5 to Corithras 56.1,61.7, following quest 921, base
+  225 XP. [Dolanaar Delivery 2159](https://www.60.tools/quests/2159-dolanaar-delivery):
+  fallback Porthannius 61.2,47.6 to Innkeeper Keldamyr 55.6,59.8, base 110 XP.
+  These are supporting metadata, not new measurements in the actual client.
+  Live location and XP reads take precedence; estimates remain labeled.
+- Supplied sigils, vessel and delivery package are not starter items; the new
+  entries intentionally have no itemStartID. Expanded map bounds are a product
+  scope decision for this test build, not evidence of terrain-safe routing.

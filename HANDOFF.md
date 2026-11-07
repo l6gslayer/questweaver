@@ -13,7 +13,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch Shadowglen audit/nearby return follow-up
+- Latest addon implementation: current feature-branch class introduction/Dolanaar handoff follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
@@ -35,7 +35,7 @@ before claiming publication; preserve generic commit author/committer metadata.
   projected turn-ins. Shared travel counts once; combat savings require explicit
   shared-source metadata. Handles known log capacity, timed delivery, pin/skip,
   partial progress, gear-chain lookahead and modest route hysteresis.
-- `Shadowglen.lua`: 16 entries, including conditional NPC-offer/voucher quests; separate mushroom/lily/spider tasks for
+- `Shadowglen.lua`: 23 entries, including conditional NPC-offer/voucher quests; separate mushroom/lily/spider tasks for
   Iverron's Antidote, conservative English-token progress matching, and relevant
   cave/upstairs/timed-delivery hints.
 - `Provider.lua` / `Gear.lua`: optional QuestieDB metadata and learned reward
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **142 tests passed** under an existing embedded Lua 5.1 runtime; all eight
+- **149 tests passed** under an existing embedded Lua 5.1 runtime; all eight
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -132,6 +132,21 @@ additional ordinary drop quest was substantiated by this bounded audit. See
 SOURCES.md for the evidence table and uncertainty. All 142 tests passed; actual
 Forever priority/readiness/new-offer behavior remains pending user playtesting.
 No PR, merge or push is authorized. Keep the feature branch and main unchanged.
+
+## Class introductions and Dolanaar extension
+
+The user explicitly requested and authorized this 0.2.0 update/install. Five
+class introductions 3116–3120 now have matching class/race and actual-offer
+pickup gates, with accepted routes to individual trainers. Crown 928 follows
+921, and Dolanaar Delivery 2159 can share the trip south. They use NPC-provided
+items, not item-started quest modeling. Live locations/XP override estimates.
+
+Pack bounds now cover map 1438, x 50–65%, y 23–65%; Runtime and discovery use
+Core.IsLocal consistently so guidance remains active along the road/at Dolanaar.
+This does not author every Dolanaar quest; accepted corridor quests can join.
+149 tests passed, including simulated extended-area navigation. Actual Forever
+class gates, destinations, road routing and Dolanaar behavior need playtesting.
+Stay on feature/0.2.0-trip-planning. No PR, merge or push is authorized.
 
 ## Immediate next task: install for user playtesting
 

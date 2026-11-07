@@ -93,7 +93,7 @@ test("starter pack identifiers are unique and bounded",function()
         assert(not ids[q.id]); ids[q.id]=true
         for _,pos in ipairs({q.start,q.objective,q.finish}) do assert(pos.x>0 and pos.x<1 and pos.y>0 and pos.y<1) end
     end
-    assert(#Q.Pack.quests==16)
+    assert(#Q.Pack.quests==23)
 end)
 test("gear profiles distinguish intellect and strength",function()
     local stats={ITEM_MOD_INTELLECT_SHORT=10}
@@ -106,7 +106,7 @@ end)
 test("provider operates without optional database",function()
     local s=state(); s.classID=1; s.raceID=4
     local q=Q.Provider.Quests(s,{rewards={},profile="melee"})
-    assert(#q==16 and not q[1].xpObserved and q[1].metadata:find("Unverified"))
+    assert(#q==23 and not q[1].xpObserved and q[1].metadata:find("Unverified"))
 end)
 test("observed XP is used only at matching level",function()
     local db={rewards={[456]={xp=999,level=5,items={}}},profile="melee"}
@@ -202,4 +202,5 @@ assert(loadfile("tests/runtime_discovery_test.lua"))(Q,test)
 assert(loadfile("tests/discovery_planner_test.lua"))(Q,test)
 assert(loadfile("tests/nearby_return_test.lua"))(Q,test)
 assert(loadfile("tests/coverage_test.lua"))(Q,test)
+assert(loadfile("tests/handoffs_test.lua"))(Q,test)
 print(string.format("%d tests passed",count))

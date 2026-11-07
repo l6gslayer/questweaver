@@ -180,3 +180,22 @@ open Tarindrella/Shanda's conversation for newly offered quests, manually accept
 and verify live objectives/returns. A voucher must never create an unowned loot
 suggestion. Class introductions remain accepted-discovery coverage; outbound
 Dolanaar trips remain separate. No new in-game or persistence test is claimed.
+
+## 0.2.0 class introductions and Dolanaar handoffs — 2026-11-07
+
+**149 tests passed** under the existing embedded Lua 5.1 runtime; all eight addon
+Lua files compiled. Seven new cases cover each class/race/offer gate, accepted
+trainer routes and completion, Crown handoff prerequisite order, shared delivery
+travel with pickup precedence, full-log handoff constraints, dynamic quest/live
+return discovery in Dolanaar, and a simulated runtime/TomTom transition beyond
+the old Shadowglen bound with cleanup outside the new supported corridor.
+Existing nearby-return/timed priority and ownership tests still pass.
+
+Playtest pending: talk to Ilthalaine with the appropriate Night Elf class and
+confirm only its offered sigil is recommended; accept/read manually, then check
+the correct trainer. After Crown 921, take 928 and/or Dolanaar Delivery; verify
+pickup/return destinations, shared trip logic, and arrow refresh on the road
+and inside Dolanaar. Accept a local Dolanaar quest and check dynamic discovery.
+Return priority beside recipients should still work. This is not a complete
+Dolanaar quest pack, and all fallback positions/work/XP need Forever checking.
+No in-game playtest or automated character action was performed by the agent.

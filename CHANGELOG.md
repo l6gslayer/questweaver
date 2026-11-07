@@ -62,3 +62,13 @@ estimates, static timing flags and travel geometry still require Forever testing
 - Add Nature's Call and The Goddess Provides using actual NPC-offer/accepted
   evidence and live objective destinations, plus owned-voucher/accepted Welcome!.
 - Record class-introduction and outbound Dolanaar coverage boundaries in SOURCES.
+
+### 0.2.0 class introductions and Dolanaar handoffs
+
+- Add five Night Elf class introductions with class/race gates and actual NPC
+  offer evidence, plus full accepted routes to the individual trainers.
+- Add Crown of the Earth 928 after 921 and Dolanaar Delivery 2159; evaluate
+  shared southbound pickup/return trips with existing capacity/priority rules.
+- Extend runtime, discovery and automatic guidance bounds down the road into
+  Dolanaar (map 1438, x 50–65%, y 23–65%). Broader Dolanaar pickup coverage
+  remains outside this authored pack; accepted local quests can join trips.

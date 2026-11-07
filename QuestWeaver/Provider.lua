@@ -86,6 +86,7 @@ function P.Quests(state,db)
         local log=state.log[q.id]
         local item=(state.itemStarts or {})[q.id]
         if q.requiredRaceID and state.raceID~=q.requiredRaceID then q.disabled=true end
+        if q.requiredClassID and state.classID~=q.requiredClassID then q.disabled=true end
         if q.offeredOnly then
             if not log then
                 q.pendingAction="PICK UP"; q.pendingLabel="Accept "..q.name.." (offered by NPC)"

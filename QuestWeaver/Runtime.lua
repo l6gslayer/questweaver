@@ -161,13 +161,13 @@ function R.Refresh()
     if Q.inWorld==false then
         Q.route={}; Q.status="Waiting for the world to load."
     elseif s.map~=Q.Pack.mapID or not s.pos then
-        Q.route={}; Q.status="Travel to Shadowglen in Teldrassil to use this starter pack."
+        Q.route={}; Q.status="Travel to the Shadowglen-Dolanaar area in Teldrassil to use this pack."
     elseif s.classID==nil or not s.raceID then
         Q.route={}; Q.status="Waiting for character information."
     elseif UnitFactionGroup("player")~="Alliance" then
         Q.route={}; Q.status="This starter pack is for Alliance characters."
-    elseif s.pos.x<.50 or s.pos.x>.65 or s.pos.y<.23 or s.pos.y>.50 then
-        Q.route={}; Q.status="Shadowglen pack: return to the starting area (northeast Teldrassil)."
+    elseif not Q.Core.IsLocal(s.pos) then
+        Q.route={}; Q.status="Return to the supported Shadowglen-Dolanaar corridor in Teldrassil."
     else
         Q.quests,Q.notices=Q.Provider.Quests(s,Q.db)
         Q.notices=Q.notices or {}

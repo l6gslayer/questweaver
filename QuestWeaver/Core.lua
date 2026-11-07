@@ -10,8 +10,9 @@ end
 
 -- All discovered destinations must share the starter map's coordinate space.
 function C.IsLocal(pos)
+    local bounds=Q.Pack and Q.Pack.bounds or {minX=.50,maxX=.65,minY=.23,maxY=.65}
     return type(pos)=="table" and type(pos.x)=="number" and type(pos.y)=="number"
-        and pos.x>=.50 and pos.x<=.65 and pos.y>=.23 and pos.y<=.50
+        and pos.x>=bounds.minX and pos.x<=bounds.maxX and pos.y>=bounds.minY and pos.y<=bounds.maxY
 end
 
 function C.Distance(a, b)
@@ -27,6 +28,8 @@ end
 function C.Eligible(q, s)
     if s.done[q.id] or s.skip[q.id] then return false end
     if s.log[q.id] then return true end
+    if q.requiredClassID and s.classID~=q.requiredClassID then return false end
+    if q.requiredRaceID and s.raceID~=q.requiredRaceID then return false end
     if q.acceptedOnly then return false end
     if q.ownedOnly and not (s.itemStarts and s.itemStarts[q.id]) then return false end
     if q.offeredOnly and not (s.offered and s.offered[q.id]) then return false end

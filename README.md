@@ -1,7 +1,7 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, starting with a 16-entry
-**Shadowglen** pack. **0.2.0** is a test build awaiting in-game acceptance.
+An adaptive quest planner for **WoW Forever**, starting with a 23-entry
+**Shadowglen–Dolanaar** pack. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
 
@@ -10,7 +10,7 @@ An adaptive quest planner for **WoW Forever**, starting with a 16-entry
    `QuestWeaver/QuestWeaver.toc` exists directly, without another nested folder.
 2. When updating, replace the old addon source folder. Keep your game-managed
    SavedVariables; skips, reward observations and preferences are migrated.
-3. Enable QuestWeaver and enter Shadowglen. Type `/qw` to show the tracker.
+3. Enable QuestWeaver and enter Shadowglen or Dolanaar. Type `/qw` to show the tracker.
    Use `/reload` if the addon is already enabled and its source was updated.
    A newly installed addon may require returning to character selection.
 
@@ -94,9 +94,8 @@ live objective locations; missing location data asks you to check the log.
 accepted quest. This conditional voucher is not a farmable mob drop. Its return
 uses client location data, and unavailable data is explained instead of guessed.
 **Gnarlpine Totems** for Nature's Call are objective items, not quest starters.
-Class introductions can join through accepted-quest discovery; outbound
-Dolanaar handoffs remain outside this bounded pack. The coverage audit in
-SOURCES.md lists those gaps and evidence limits.
+Five class introductions and two Dolanaar handoffs are included as described
+below. The coverage audit in SOURCES.md records evidence and remaining limits.
 
 Fang of Githyiss (quest 97236, item 277190) is part of the pack. While Webwood
 Egg is accepted, or while you are near Githyiss's cave location, it can be
@@ -111,8 +110,8 @@ Fang can be identified by its known item ID if the optional quest-item API is
 missing. Other starters require the client to identify the quest ID.
 
 Accepted quests outside the authored pack enter planning when WoW exposes a
-current destination inside the existing Shadowglen bounds on map 1438
-(x 50-65%, y 23-50%). Discovered item starts require a local client destination
+current destination inside the Shadowglen–Dolanaar corridor on map 1438
+(x 50-65%, y 23-65%). Discovered item starts require a local client destination
 or a local QuestieDB return location before they enter routing; unlocated items
 remain bag reminders. QuestieDB remains optional. No remote destination is
 silently converted into local coordinates.
@@ -131,6 +130,30 @@ Large logs are shortlisted to sixteen candidates before whole-trip insertion,
 preserving prerequisite closure and eligible pins. Existing four-quest trips,
 three-trip forecasts and 24 displayed actions remain bounded. Arrival alone
 does not advance a quest. Pin/skip also work for discovered quests.
+
+## Class introductions and Dolanaar handoffs
+
+The pack includes Simple Sigil (warrior), Etched Sigil (hunter), Encrypted Sigil
+(rogue), Hallowed Sigil (priest), and Verdant Sigil (druid), quests 3116–3120.
+These Night Elf introductions require the matching class and an actual NPC
+quest offer before pickup is planned. Talk to Conservator Ilthalaine normally;
+read the supplied sigil yourself, then follow the trainer destination. Accepted
+quests remain supported even if client rules differ from the fallback gates.
+No reading, training or spell purchase is automated.
+
+Crown of the Earth (928) follows completion/turn-in of the first Crown quest
+(921): take Tenaron's vessel to Corithras at Dolanaar's moonwell. Dolanaar
+Delivery (2159) takes Porthannius's package to Innkeeper Keldamyr. The planner
+can collect both for a shared southbound trip when useful, respecting quest-log
+capacity, prerequisites and nearby ready returns. Supplied sigils, vessel and
+package are quest items, not item-starting drops.
+
+The supported area now includes the road and Dolanaar through y 65% on the same
+Teldrassil map. Live quest locations and automatic guidance keep refreshing
+after you leave Shadowglen, and accepted local quests in that corridor can join
+trips. This extension is not a complete authored Dolanaar quest catalogue.
+Outside the supported corridor, guidance clears as before. Fallback coordinates,
+XP and work times remain estimates; live locations/XP take precedence.
 
 ## TomTom arrow guidance
 
@@ -265,7 +288,8 @@ steps include IDs to support targeting a different member.
 - The authored pack covers a subset of Shadowglen quests, including Fang of
   Githyiss. Accepted quests and carried quest-starting items may be discovered
   dynamically as described above. This is not a complete catalogue of unseen
-  Forever drops/class quests. The panel remains scoped to Shadowglen.
+  Forever drops/class quests. The panel supports the Shadowglen–Dolanaar corridor,
+  rather than all of Teldrassil.
 - Starter objective coordinates, XP baselines and work times are **unverified
   estimates**. QuestieDB can replace selected metadata and giver positions,
   but not these objective areas. No paid routes or third-party datasets are
