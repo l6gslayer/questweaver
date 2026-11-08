@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — Shadowglen trip planning
+## 0.2.0 — 2026-11-07 — Adaptive trips and zone catalogues
 
 - Automatic optional TomTom arrow guidance for the next outstanding action,
   with Auto: On/Off in both layouts and `/qw auto on|off`.

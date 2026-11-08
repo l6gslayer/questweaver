@@ -435,3 +435,14 @@ Teldrassil when the actual next stage belongs there. Test compact/expanded label
 city offers and missing-location notices. Play then reload again before asking
 for feedback review; expected capture tag 0.2.0-route-feedback-8, cursor 211.
 No game restart/reload or character action is performed by the installer.
+
+## 0.2.0 release acceptance — 2026-11-07
+
+The maintainer approved the installed 0.2.0 build 8 as the release baseline and
+authorized integration into main after playtesting. This is owner acceptance,
+not proof of exhaustive quest/class/zone/API/UI coverage. Existing catalogue
+unknowns and geometric work/travel estimates remain explicit limitations.
+The release retains the tested Lua behavior and capture tag 0.2.0-route-feedback-8;
+release preparation updates documentation without changing the installed code.
+No additional game action or installation is required for this documentation.
+Future UI/UX work requires a new branch and its own independent reviews/playtest.

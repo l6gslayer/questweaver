@@ -10,21 +10,23 @@ Build an adaptive quest planner for WoW Forever, beginning with Shadowglen.
 The user requested efficient XP, worthwhile gear, multiple quests per outing,
 an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 
-- Active branch: `feature/0.2.0-trip-planning`.
-- Main/base: `f343cf4` (published 0.1.0 alpha).
+- Release integration target: `main`; originating branch: `feature/0.2.0-trip-planning`.
+- Previous main/base: `f343cf4` (0.1.0); approved 0.2.0 implementation: `be6d0b4`.
 - Trip-planning/UI implementation: `1966290`.
 - Latest addon implementation: Darnassus catalogue, cross-zone stage notices and
   visible version/build label. User explicitly authorized installation.
-- Version remains **0.2.0**, a test build, not a merged release.
+- Version **0.2.0**, build **8**, accepted for release after maintainer playtesting.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
 - Source: nested `QuestWeaver/` directory; thirteen Lua files plus its manifest.
 - Installable artifact: `dist/QuestWeaver-0.2.0.zip`, one addon folder at root.
 - Settings: `QuestWeaverDB`, per-character SavedVariables, schema 3.
 
-The user wants to **playtest before a PR to main**. No PR is open; do not merge
-or delete the feature branch without an explicit request. The last branch push
-attempt failed DNS in the previous agent session. Inspect current remote state
-before claiming publication; preserve generic commit author/committer metadata.
+The maintainer approved 0.2.0 for integration into main on 2026-11-07 after
+playtesting. This supersedes the historical no-PR/no-merge instructions below
+for this release only. Preserve the originating feature branch. The next UI/UX
+pass starts on a new branch from main and has separate approval gates. No new
+version, GitHub Release, third-party installation or live game action is implied.
+Commit metadata remains generic; all public material must stay privacy-safe.
 
 ## Implemented behavior
 

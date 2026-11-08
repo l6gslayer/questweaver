@@ -2,7 +2,8 @@
 
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
 for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
-conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
+conditional offers. **0.2.0** was approved for release after maintainer playtesting
+on 2026-11-07. The loaded tracker identifies it as **v0.2.0 | build 8**.
 
 ## Install or update
 
@@ -11,13 +12,14 @@ conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
    `QuestWeaver/QuestWeaver.toc` exists directly, without another nested folder.
 2. When updating, replace the old addon source folder. Keep your game-managed
    SavedVariables; skips, reward observations and preferences are migrated.
-3. Enable QuestWeaver and enter Shadowglen or Dolanaar. Type `/qw` to show the tracker.
+3. Enable QuestWeaver in Teldrassil, Darkshore or Darnassus. Type `/qw` to show the tracker.
    Use `/reload` if the addon is already enabled and its source was updated.
    A newly installed addon may require returning to character selection.
 
 The manifest targets Interface 16001. Recheck `GetBuildInfo()` after client
-updates. No game restart, live installation or in-game test was performed as
-part of producing the 0.2.0 package.
+updates. The packaged build was installed and file-verified, then approved by the
+maintainer after playtesting. This does not establish every quest, API, layout
+or character-specific path; see VALIDATION.md for the evidence boundaries.
 
 No dependency is required. Optional **QuestieDB** supplies quest names,
 requirements, prerequisites and giver positions; use its matching Forever
@@ -449,8 +451,8 @@ references and single-folder ZIP integrity, producing `dist/QuestWeaver-0.2.0.zi
 GitHub Actions repeats Lua syntax checks, tests and packaging when the branch is
 pushed. Generated packages, logs, local settings and game saves are ignored.
 
-0.2.0 is developed on a feature branch. It is ready for user playtesting before
-opening a PR to `main`. See [VALIDATION.md](VALIDATION.md) for the test record and
+0.2.0 is the approved release baseline for `main`. Further UI/UX work belongs on
+a new branch and requires its own playtest approval before integration. See [VALIDATION.md](VALIDATION.md) for the test record and
 playtest checklist, [CHANGELOG.md](CHANGELOG.md) for changes and
 [SOURCES.md](SOURCES.md) for research boundaries.
 
