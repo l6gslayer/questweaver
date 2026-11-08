@@ -2,7 +2,7 @@ local _, Q = ...
 Q.UI={}
 local U=Q.UI
 -- Presentation identity is separate from the unchanged planner/capture version.
-U.BUILD="v0.2.0 | UI dev 2"
+U.BUILD="v0.2.0 | UI dev 3"
 local function safe(text) return tostring(text or ""):gsub("|","||") end
 local function finite(n) return type(n)=="number" and n==n and n>-math.huge and n<math.huge end
 local function label(parent,font,color)

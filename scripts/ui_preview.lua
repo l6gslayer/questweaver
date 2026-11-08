@@ -74,7 +74,7 @@ local all={}
 for _,case in ipairs(cases) do
  nodes={}; UIParent=make("Root");UIParent:SetSize(case=="small-viewport" and 800 or 1280,case=="small-viewport" and 600 or 900)
  local Q={db={compact=case~="expanded-grouped" and case~="small-viewport",locked=false,hidden=false,autoWaypoint=true,mode="balanced",profile="melee",budget=10,skip={},feedbackReport="Synthetic playtest note\nNo private game information."},Pack={name="Teldrassil",mapID=1438},state={log={}},notices={}}
- Q.Feedback={BUILD="0.2.0-route-feedback-8"};Q.Runtime={Refresh=function() end,Waypoint=function() end,FeedbackAction=function() end}
+ Q.Feedback={BUILD="0.2.0-route-feedback-9"};Q.Runtime={Refresh=function() end,Waypoint=function() end,FeedbackAction=function() end}
  -- Real navigation presentation with a synthetic owner; no game APIs called.
  TomTom=case~="missing-tomtom" and {AddWaypoint=function() return "synthetic-owned-point" end,RemoveWaypoint=function() end} or nil
  assert(loadfile("QuestWeaver/Navigation.lua"))("QuestWeaver",Q)

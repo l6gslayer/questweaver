@@ -437,6 +437,40 @@ local function continueFieldWork(available,s)
     return trip
 end
 
+-- Revalidate the previous bounded outing independently of greedy insertion.
+-- A still-useful group may no longer be rediscovered by score-improving steps.
+local function rebuildPrevious(quests,s)
+    local key=s.previous and s.previous.tripKey
+    if type(key)~="string" or #key>64 then return nil end
+    local selected,seen,parts={},{},{}
+    local byID={}; for _,q in ipairs(quests) do byID[q.id]=q end
+    for token in key:gmatch("[^,]+") do
+        if not token:match("^%d+$") then return nil end
+        local id=tonumber(token)
+        if not id or id<=0 or id>=1000000000 or seen[id] or not byID[id] then return nil end
+        selected[#selected+1]=byID[id];seen[id]=true;parts[#parts+1]=token
+        if #selected>4 then return nil end
+    end
+    if #selected==0 or table.concat(parts,",")~=key or not slotsOK(selected,s) then return nil end
+    -- Project prerequisites only through currently usable, resolved members of
+    -- this same group. An unknown stage never manufactures a chain unlock.
+    local projected=C.Copy(s);local admitted,count={},0
+    for _=1,#selected do
+        local changed=false
+        for _,q in ipairs(selected) do
+            if #selected>1 and q.timed then return nil end
+            if not admitted[q.id] and usable(q,projected) then
+                admitted[q.id]=true;count=count+1;changed=true
+                if not q.stageOnly then projected.done[q.id]=true;projected.log[q.id]=nil end
+            end
+        end
+        if not changed then break end
+    end
+    if count~=#selected then return nil end
+    local trip=T.Build(selected,s)
+    return trip and trip.key==key and trip or nil
+end
+
 function T.Choose(quests,s)
     local available,urgent={},nil
     for _,q in ipairs(quests) do
@@ -562,6 +596,13 @@ function T.Choose(quests,s)
                 end
             end
         end
+    end
+    local retained=rebuildPrevious(quests,s)
+    if retained then
+        -- Prefer a fresh rebuild over an incidental duplicate. It reflects the
+        -- current log, capacity and metadata, not saved coordinates or scores.
+        for i=#candidates,1,-1 do if candidates[i].key==retained.key then table.remove(candidates,i) end end
+        candidates[#candidates+1]=retained
     end
     local fastest
     for _,trip in ipairs(candidates) do if not fastest or trip.score>fastest.score then fastest=trip end end

@@ -4,7 +4,32 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
-## UI dev 2 follow-up — current work
+## UI dev 3 — current work
+
+The maintainer authorized fixing planner stability and recent-pickup feedback
+attribution, rebuilding and installing UI dev 3 after a complete prior-addon
+backup. Manifest `0.2.0-ui-dev.3`; tracker `v0.2.0 | UI dev 3`; planner/capture
+`0.2.0-route-feedback-9`. See [dev 3 notes](docs/UI_DEV_3.md).
+The independent previous-group rebuild preserves the existing retention threshold
+and priority guards; feedback distinguishes recent recommendations from current
+matches without rewriting old observations. Validation passed: 314 Lua 5.1 tests (all thirteen addon sources compiled),
+17 Python reader tests, synthetic tag9 export/reader roundtrip, source privacy,
+manifest/package integrity and source-byte checks. Independent planner/feedback
+review found no remaining actionable source issue after resolving redundant
+source snapshots and late-step attribution. Review: `docs/reviews/ui-dev3-final.md`.
+
+Installation completed: all 22 installed files match the rebuilt package; seven
+files differed from UI dev 2. The complete prior 22-file addon backup was verified
+at `dist/install-backups/QuestWeaver-before-ui-dev-3-20261107-213336-193575.zip`.
+Package SHA256: `0e013c6495f0fdb5bcda574c558b864146aa82361d26261f9d3f3d4d9eae5899`.
+All package files matched source before installation. Ignored receipt:
+`dist/ui-dev-3-install-receipt.json`. SavedVariables, other addons, previous
+backups and packages were preserved. No game input/restart, push or PR occurred.
+The user must reload manually and playtest; actual dev3 planning/attribution and
+persistence remain unverified. This installation record did not rebuild the
+installed package. No game input/restart, push or PR authorized.
+
+## UI dev 2 follow-up — historical work
 
 The maintainer authorized correcting the drag jump and the UI dev 1 screenshot
 findings, rebuilding and installing UI dev 2 after a complete prior-addon backup.

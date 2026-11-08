@@ -1,3 +1,13 @@
+# Local UI preview — 0.2.0-ui-dev.3 (unreleased)
+
+Revalidate and rebuild a still-valid previous outing independently of greedy
+candidate discovery before applying the existing stability threshold. Attribute
+recently recommended pickups separately from immediate-plan matches, with bounded
+numeric source evidence and explicit expiry/reset rules. Capture tag advances
+to 0.2.0-route-feedback-9 while retaining historical records and identifiers.
+UI dev 2 dragging/presentation behavior, quest data and waypoint ownership remain.
+See docs/UI_DEV_3.md for safeguards, evidence and playtest steps.
+
 # Local UI preview — 0.2.0-ui-dev.2 (unreleased)
 
 Fix refresh-driven snapping while dragging; defer geometry until final position

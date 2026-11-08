@@ -1,9 +1,10 @@
 # QuestWeaver
 
-**Local UI development branch:** `0.2.0-ui-dev.2` shows **v0.2.0 | UI dev 2**.
-The approved release remains 0.2.0/build 8. UI dev 1 was installed and its
-in-game screenshot reviewed; dev 2 addresses the reported drag/presentation issues.
-This development UI still requires playtest acceptance. See [dev 2 notes](docs/UI_DEV_2.md). See [UI review and playtest brief](docs/UI_UX_PASS.md).
+**Local UI development branch:** `0.2.0-ui-dev.3` shows **v0.2.0 | UI dev 3**.
+The approved release remains 0.2.0/build 8. UI dev 2 fixed the refresh-driven
+drag jump according to maintainer playtesting. Dev 3 improves planner stability
+and recent-pickup feedback attribution; see [dev 3 notes](docs/UI_DEV_3.md).
+This development build still requires quest-planning playtest acceptance. See [UI review and playtest brief](docs/UI_UX_PASS.md).
 
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
 for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
@@ -212,7 +213,10 @@ review what you type before sharing. Notes are capped at 240 UTF-8 bytes and
 exports at under 481 KB, retaining newest complete entries when needed.
 
 An action may match the next step, appear later in the plan, be unplanned, or
-have insufficient comparison context. These labels describe differences only;
+have insufficient comparison context. An acceptance may instead be labeled
+**recently_recommended** when its pickup appeared in the preceding ten seconds
+and bounded recent observations on the same map. The export includes that
+earlier recommendation separately from the immediate event context. These labels describe differences only;
 they do not mean the player's route was better or worse. Grouped quest members
 are compared together. Loading/unavailable quest data suspends comparisons
 rather than manufacturing quest removals. Events keep the preceding plan for
