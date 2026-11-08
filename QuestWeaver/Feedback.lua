@@ -1,7 +1,7 @@
 local _, Q = ...
 Q.Feedback={}
 local F=Q.Feedback
-F.BUILD="0.2.0-route-feedback-7"
+F.BUILD="0.2.0-route-feedback-8"
 F.LIMIT=300
 local actions={["PICK UP"]=true,["DO"]=true,["TURN IN"]=true,["LOOT ITEM"]=true,["ACCEPT ITEM"]=true}
 local modes={xp=true,balanced=true,gear=true}
@@ -92,7 +92,7 @@ local function context(state,route)
             local loc=position(row.location)
             result.active[#result.active+1]={id=id,complete=row.complete==true,failed=row.failed==true,
                 progress=number(row.progress,0,1) and math.floor(row.progress*1000+.5)/1000 or nil,
-                xp=number(row.xp,0,1000000000),location=loc}
+                xp=number(row.xp,0,1000000000),location=loc,destinationMap=integer(row.destinationMap)}
         end
     end
     for _,step in ipairs(type(route)=="table" and route or {}) do
@@ -109,7 +109,7 @@ local function retainedContext(value)
     for index,row in ipairs(type(value.active)=="table" and value.active or {}) do
         if type(row)=="table" and integer(row.id) then
             state.log[row.id]={complete=row.complete==true,failed=row.failed==true,progress=number(row.progress,0,1),
-                xp=number(row.xp,0,1000000000),location=position(row.location)}
+                xp=number(row.xp,0,1000000000),location=position(row.location),destinationMap=integer(row.destinationMap)}
         end
         if index>=40 then break end
     end
@@ -306,7 +306,7 @@ function F.Report(db)
             for _,q in ipairs(c.active) do
                 local loc=q.location
                 active[#active+1]=q.id..":"..(q.failed and "failed" or q.complete and "ready" or tostring(q.progress or "unknown"))
-                    ..":xp="..tostring(q.xp or "?")..":loc="..(loc and coordinate(loc.x)..","..coordinate(loc.y) or "?")
+                    ..":xp="..tostring(q.xp or "?")..":destMap="..tostring(q.destinationMap or "?")..":loc="..(loc and coordinate(loc.x)..","..coordinate(loc.y) or "?")
             end
             part[#part+1]="Active: "..table.concat(active,";")
             local plan={}

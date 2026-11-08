@@ -154,3 +154,13 @@ array, guide prose or third-party dataset is imported. Current client stages
 remain authoritative; these sources do not establish live addon compatibility.
 Zone selection uses the existing guarded map APIs; AreaTable and UI map IDs
 remain separate. Unsupported maps pause routing.
+
+## Darnassus handoffs and city catalogue
+
+[DARNASSUS_CATALOGUE.md](DARNASSUS_CATALOGUE.md) links the 11 city records and
+player-observed NPC positions separately from primary game-cache identities,
+chains and requirements. City map 1457/area 1657 are never interchanged with
+Teldrassil percentages. Uncertain XP is estimated; incoming deliveries are
+accepted-only, and unpublished positions remain live/offer-only. No game prose,
+route or data dump is copied. The existing optional next-waypoint map result
+now also identifies foreign stages for transition notices/feedback.

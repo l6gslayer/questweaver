@@ -418,3 +418,20 @@ owned arrow switches and old outing/offer data do not leak. Try a conditional
 NPC offer and carried starter without accepting automatically; visit an
 unsupported area and confirm guidance pauses. Play and reload to save feedback
 with expected capture tag 0.2.0-route-feedback-7. Last reviewed cursor remains 211.
+
+## 0.2.0 Darnassus / build label — 2026-11-07
+
+All 273 Lua tests passed under embedded Lua 5.1; all thirteen addon sources
+compiled. All 17 Python reader tests passed. Eight new tests cover city records/
+accepted-only deliveries, live return replacement, named outward stages,
+uncatalogued foreign stages, foreign-map projection safety, actual Runtime
+entry/return, build label in both layouts and sanitized destination-map feedback.
+Read-only review found no actionable issue. City positions are source sightings,
+not local verification; UI stubs do not establish visual rendering in Forever.
+
+After installation, reload and check **v0.2.0 | build 8** below the title. Enter
+Darnassus with a city turn-in and check city catalogue/owned arrow; return to
+Teldrassil when the actual next stage belongs there. Test compact/expanded labels,
+city offers and missing-location notices. Play then reload again before asking
+for feedback review; expected capture tag 0.2.0-route-feedback-8, cursor 211.
+No game restart/reload or character action is performed by the installer.

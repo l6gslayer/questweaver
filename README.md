@@ -1,7 +1,7 @@
 # QuestWeaver
 
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
-for Teldrassil and Darkshore, including prerequisites, quest-starting drops and
+for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
 conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
@@ -524,3 +524,19 @@ the same pickup-only/observed-offer safeguards. Each zone is expanded through
 source research and playtest review. Neither catalogue claims exhaustive quests
 or measured optimal travel. Darkshore still uses geometric travel
 estimates rather than terrain-aware paths or measured movement times.
+
+### Darnassus and visible build identification
+
+[Darnassus has its own city catalogue](DARNASSUS_CATALOGUE.md), including incoming
+Teldrassil deliveries and city follow-ups. The active map selects the catalogue.
+Live city turn-in points override reference NPC sightings. A stage outside the
+current zone names its target area when known and waits for travel there; it
+never treats forest or Darkshore percentages as city positions or projects an
+out-of-zone objective as completed locally. This does not automate travel or
+provide a terrain/portal path.
+
+Below the tracker title, compact and expanded layouts show the loaded version,
+build and active catalogue, for example **v0.2.0 | build 8 | Darnassus**. This
+comes from the same capture build identifier used in feedback. After updating,
+reload to load the new files and check this line; play and reload again to save
+observations from the running build.

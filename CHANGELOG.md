@@ -166,3 +166,12 @@ estimates, static timing flags and travel geometry still require Forever testing
   item-only guesses.
 - Keep version 0.2.0 and bump capture tag to 0.2.0-route-feedback-7. Rebuilt package
   is ready for requested installation; no game files were changed by this work.
+
+### 0.2.0 Darnassus handoffs and visible build
+
+- Add 11 city records on Darnassus map 1457/area 1657; incoming forest deliveries
+  stay accepted-only and live city turn-ins override reference NPC positions.
+- Name known cross-zone stages and prevent projected completion/waypoints on
+  the wrong map. Preserve destination map IDs in sanitized feedback.
+- Display version/build/current catalogue below the title in both layouts,
+  derived from capture tag 0.2.0-route-feedback-8.

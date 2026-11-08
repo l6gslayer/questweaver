@@ -25,6 +25,11 @@ local function restricted(mask,index)
     return bit.band(mask,2^(index-1))==0
 end
 
+local function transition(name,map)
+    local pack=Q.Catalogues and Q.Catalogues.packs[map]
+    return tostring(name)..": next stage is in "..(pack and pack.name or "another area")..". Travel there to continue."
+end
+
 function P.Quests(state,db)
     local result,notices,seeds,known={},{},{},{}
     for _,seed in ipairs(Q.Pack.quests) do seeds[#seeds+1]=seed; known[seed.id]=true end
@@ -66,7 +71,8 @@ function P.Quests(state,db)
         elseif item and not state.done[id] and not state.skip[id] then
             notices[#notices+1]="Bag quest: use "..(item.name or ("item for quest "..id)).." to inspect/accept; local destination unknown."
         elseif log and not log.failed and not log.location and not state.skip[id] then
-            notices[#notices+1]="Quest "..id..": location unavailable; check quest log."
+            notices[#notices+1]=log.destinationMap and log.destinationMap~=Q.Pack.mapID
+                and transition(log.title or ("Quest "..id),log.destinationMap) or ("Quest "..id..": location unavailable; check quest log.")
         end
     end
     for _,seed in ipairs(seeds) do
@@ -188,13 +194,22 @@ function P.Quests(state,db)
                 q.tasks=nil
             end
         end
+        local stageMap=log and (log.destinationMap or (not log.location
+            and (log.complete and q.returnMap or q.objectiveMap)))
+        local foreignStage=stageMap and stageMap~=Q.Pack.mapID
+        if log and foreignStage then
+            -- A foreign map's percentages never become a point on this map.
+            q.objective=nil;q.finish=nil;q.tasks=nil;q.pendingAction=nil;q.stageOnly=true
+        end
         if q.catalogue and log and log.complete and q.finish then
             q.stageOnly=false;q.objective=Q.Core.Copy(q.finish)
         end
         if q.ownedOnly and log and log.complete and q.finish then
             q.stageOnly=false; q.objective=Q.Core.Copy(q.finish)
         end
-        if log and not log.failed and (q.offeredOnly or q.ownedOnly or q.catalogue) and not q.objective then
+        if log and not log.failed and not state.skip[q.id] and foreignStage then
+            notices[#notices+1]=transition(q.name,stageMap)
+        elseif log and not log.failed and (q.offeredOnly or q.ownedOnly or q.catalogue) and not q.objective then
             notices[#notices+1]=q.name..": current destination unavailable; check quest log."
         end
         local observed=db.rewards[q.id]

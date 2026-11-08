@@ -11,6 +11,7 @@ Shadowglen.lua
 Teldrassil.lua
 Catalogues.lua
 Darkshore.lua
+Darnassus.lua
 Provider.lua
 Gear.lua
 Navigation.lua

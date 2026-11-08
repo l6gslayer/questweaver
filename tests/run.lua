@@ -4,7 +4,7 @@ local function test(name,fn)
     fn(); count=count+1; print("PASS "..name)
 end
 local function load(name) assert(loadfile("QuestWeaver/"..name..".lua"))("QuestWeaver",Q) end
-load("Core"); load("Trips"); load("Shadowglen"); load("Teldrassil"); load("Catalogues"); load("Darkshore"); load("Gear"); load("Provider"); load("Navigation"); load("Feedback")
+load("Core"); load("Trips"); load("Shadowglen"); load("Teldrassil"); load("Catalogues"); load("Darkshore"); load("Darnassus"); load("Gear"); load("Provider"); load("Navigation"); load("Feedback")
 assert(loadfile("tests/reference_planner.lua"))("QuestWeaver",Q)
 local C=Q.Core
 local p={x=.58,y=.44}
@@ -189,7 +189,7 @@ test("legacy quest log fallback preserves complete state",function()
 end)
 
 test("all addon source files compile as Lua",function()
-    for _,name in ipairs({"Core","Trips","Shadowglen","Teldrassil","Catalogues","Darkshore","Provider","Gear","Navigation","Feedback","Runtime","UI"}) do
+    for _,name in ipairs({"Core","Trips","Shadowglen","Teldrassil","Catalogues","Darkshore","Darnassus","Provider","Gear","Navigation","Feedback","Runtime","UI"}) do
         assert(loadfile("QuestWeaver/"..name..".lua"))
     end
 end)
@@ -216,4 +216,5 @@ assert(loadfile("tests/outing_context_test.lua"))(Q,test)
 assert(loadfile("tests/catalogue_test.lua"))(Q,test)
 assert(loadfile("tests/zones_test.lua"))(Q,test)
 assert(loadfile("tests/darkshore_test.lua"))(Q,test)
+assert(loadfile("tests/darnassus_test.lua"))(Q,test)
 print(string.format("%d tests passed",count))

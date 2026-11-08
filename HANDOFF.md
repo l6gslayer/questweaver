@@ -13,11 +13,11 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: zone registry and initial Darkshore catalogue.
-  This newest package has NOT been installed; live addon remains the Teldrassil build.
+- Latest addon implementation: Darnassus catalogue, cross-zone stage notices and
+  visible version/build label. User explicitly authorized installation.
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
-- Source: nested `QuestWeaver/` directory; twelve Lua files plus its manifest.
+- Source: nested `QuestWeaver/` directory; thirteen Lua files plus its manifest.
 - Installable artifact: `dist/QuestWeaver-0.2.0.zip`, one addon folder at root.
 - Settings: `QuestWeaverDB`, per-character SavedVariables, schema 3.
 
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **265 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **273 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -397,3 +397,33 @@ Capture tag 0.2.0-route-feedback-7 retains prior history. Last review cursor 211
 Source/privacy/manifest/ZIP checks passed. The rebuilt 0.2.0 is NOT installed;
 no live game/addon/SavedVariables change or game action. Keep feature branch;
 main unchanged, no push/PR/merge. Actual Darkshore behavior needs playtesting.
+
+## Darnassus / visible build follow-up
+
+User reported city unsupported guidance, requested city catalogue/transitions,
+then explicitly requested visible version/build and installation of this build.
+Darnassus.lua registers map 1457/area 1657 with 11 initial handoff/city records.
+Incoming 922/935/940/98391 cannot be picked up in the wrong zone; city 923/2498,
+Temple chain 2519/2518/2520,952 and conditional 98067 cover useful next steps.
+Sources/observed NPC positions and uncertainty are in DARNASSUS_CATALOGUE.md.
+
+Runtime retains foreign next-map identity; Provider gives named transition
+notices and refuses to project foreign work/returns as local completion.
+Known objective/return map metadata supports handoffs when live positions are
+missing. No portal path or character movement is automated. Live city return
+points override reference sightings. Feedback preserves destination map IDs.
+UI shows version/build/current catalogue in compact and expanded headers, derived
+from the capture identifier: v0.2.0 | build 8. Tag 0.2.0-route-feedback-8 preserves
+history; last reviewed cursor 211. User must reload after installation to load.
+
+All 273 Lua tests/17 reader tests passed; thirteen addon sources compiled. Eight
+new tests cover city/forest transitions, accepted-only handoffs, live returns,
+foreign projections/missing positions, UI build label and feedback destination
+retention. Read-only review found no actionable issue; actual in-game behavior
+still needs testing. Keep feature branch and main; no push/PR/merge.
+
+Authorized build 8 installation completed after source/ZIP comparison and verified
+backup. All 22 installed release files match ZIP, no nested folder; TomTom present.
+SavedVariables/other addons untouched. This also installs the previously local
+Darkshore/zone-registry work. No game restart/reload/action performed. User must
+reload, check v0.2.0 | build 8, test city transitions, then reload again for logs.

@@ -17,18 +17,23 @@ end
 function R.QuestLocation(id,map,pois)
     local api=C_QuestLog or {}
     local nextMap,x,y=call(api.GetNextWaypoint,id)
+    local targetMap=type(nextMap)=="number" and nextMap>0 and nextMap<1000000000
+        and nextMap==math.floor(nextMap) and nextMap or map
     local pos=nextMap==map and location(x,y,"WoW objective")
-    if pos then return pos end
+    if pos then return pos,map end
     x,y=call(api.GetNextWaypointForMap,id,map)
     pos=location(x,y,"WoW objective")
-    if pos then return pos end
+    if pos then return pos,targetMap end
     for _,poi in ipairs(type(pois)=="table" and pois or {}) do
         if type(poi)=="table" and poi.questID==id then
             pos=location(poi.x,poi.y,"WoW quest area")
-            if pos then return pos end
+            if pos then return pos,targetMap end
         end
     end
+    if type(nextMap)=="number" and nextMap>0 and nextMap<1000000000
+        and nextMap==math.floor(nextMap) and nextMap~=map then return nil,nextMap end
 end
+
 local function positiveID(value)
     return type(value)=="number" and value>0 and value<math.huge and value==math.floor(value)
 end
@@ -161,11 +166,13 @@ function R.Snapshot()
             local xp=call(GetQuestLogRewardXP,id)
             local level=info.level or call(C_QuestLog and C_QuestLog.GetQuestDifficultyLevel,id)
             local title=info.title or call(C_QuestLog and C_QuestLog.GetTitleForQuestID,id)
+            local taskLocation,destinationMap
+            if map then taskLocation,destinationMap=R.QuestLocation(id,map,pois) end
             s.log[id]={complete=complete,failed=info.isComplete==-1 or info.isFailed,
                 title=type(title)=="string" and title or nil,
                 level=type(level)=="number" and level>0 and level or s.level,
                 xp=type(xp)=="number" and xp>=0 and xp<math.huge and xp or nil,
-                location=map and R.QuestLocation(id,map,pois),
+                location=taskLocation,destinationMap=destinationMap,
                 objectives=objectives,text=table.concat(text,"; "),progressKnown=complete or total>0,
                 progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end

@@ -43,7 +43,7 @@ add(918,"Timberling Seeds",7,4,630,den,den,{997},
 add(919,"Timberling Sprouts",7,4,790,den,den,{997},
     {prerequisiteEvidence="Conservative community gate; actual offer overrides"})
 -- Rellian is in Darnassus: city coordinates are NOT Teldrassil coordinates.
-add(922,"Rellian Greenspyre",7,4,315,den,nil,{918},{destinationMap=1457})
+add(922,"Rellian Greenspyre",7,4,315,den,nil,{918},{destinationMap=1457,objectiveMap=1457,returnMap=1457})
 add(923,"Tumors",9,1,nil,nil,nil,{922},{offeredOnly=true,destinationMap=1457,
     unresolved="City pickup and requirements need client confirmation"})
 delivery(2498,"Return to Denalan",9,4,80,nil,den,{923},{offeredOnly=true})
@@ -62,14 +62,14 @@ add(99053,"Escaping Ban'ethil",10,4,840,nil,nil,nil,
 add(929,"Crown of the Earth",5,1,335,cor,cor,{928})
 add(933,"Crown of the Earth",9,1,780,cor,cor,{929})
 add(7383,"Crown of the Earth",11,1,nil,cor,cor,{933},{offeredOnly=true})
-add(935,"Crown of the Earth",11,1,nil,cor,nil,{7383},{offeredOnly=true})
+add(935,"Crown of the Earth",11,1,nil,cor,nil,{7383},{offeredOnly=true,objectiveMap=1457,returnMap=1457})
 add(937,"The Enchanted Glade",11,1,nil,arynia,arynia,nil,{offeredOnly=true})
 add(938,"Mist",12,1,nil,nil,arynia,nil,{offeredOnly=true,unresolved="Escort availability and exact start not established"})
 add(98392,"Darkness in the Glade",12,6,910,arynia,arynia,{937},
     {prerequisiteEvidence="Forever quest series records the added step after 937"})
 add(98398,"The Oracle Tree",12,6,90,arynia,pos(37,34.1),{98392})
 add(940,"Teldrassil",11,1,nil,pos(37,34.1),nil,{98398},
-    {offeredOnly=true,destinationMap=1457,unresolved="Confirm current city handoff and minimum level"})
+    {offeredOnly=true,destinationMap=1457,objectiveMap=1457,returnMap=1457,unresolved="Confirm current city handoff and minimum level"})
 -- Forever additions: locations have distinct cache / community provenance.
 add(87288,"Soft Saber Pelts",7,4,630,pos(55.5,57.2),pos(55.5,57.2))
 add(490,"Bounty: Gnarlpine Furbolg",8,1,nil,pos(40.5,50.7),pos(40.5,50.7),nil,
@@ -78,7 +78,7 @@ add(99046,"The Lost Runner",9,4,80,pos(56,59.5),eralya)
 add(99047,"Not Dead Yet",9,4,80,eralya,byancie,{99046})
 add(99050,"The Great Tree Provides",10,4,840,byancie,byancie,{99047})
 add(98391,"The Sisterhood of Elune",10,5,85,pos(55.5,56.7),nil,nil,
-    {offeredOnly=true,destinationMap=1457,unresolved="Confirm current handoff availability"})
+    {offeredOnly=true,destinationMap=1457,objectiveMap=1457,returnMap=1457,unresolved="Confirm current handoff availability"})
 add(99073,"Easing Suffering",10,4,85,byancie,eralya,nil,
     {offeredOnly=true,unresolved="No explicit previous quest established; use actual offer"})
 -- True bag starter: rare availability is not modeled as a guaranteed farm.

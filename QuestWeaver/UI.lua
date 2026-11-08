@@ -91,6 +91,7 @@ function U.Create()
     U.drag:SetScript("OnDragStart",function() if not Q.db.locked then f:StartMoving() end end)
     U.drag:SetScript("OnDragStop",function() f:StopMovingOrSizing(); U.SavePosition() end)
     U.title=label(U.drag,"GameFontNormalLarge"); U.title:SetPoint("TOPLEFT",6,-10); U.title:SetText("QuestWeaver")
+    U.build=label(f);U.build:SetPoint("TOPLEFT",14,-32);U.build:SetWidth(332);U.build:SetHeight(12)
     U.lock=button(f,"Lock",60,function() Q.db.locked=not Q.db.locked; U.Render() end)
     U.lock:SetPoint("TOPRIGHT",-78,-8)
     U.toggle=button(f,"-",28,function() U.SavePosition(); Q.db.compact=not Q.db.compact; U.Layout(); U.Render() end)
@@ -175,6 +176,8 @@ end
 function U.Render()
     if not U.frame then return end
     local step=Q.route and Q.route[1]
+    local version,build=Q.Feedback.BUILD:match("^(%d+%.%d+%.%d+)%-route%-feedback%-(%d+)$")
+    U.build:SetText("v"..(version or "?").." | build "..(build or "?").." | "..Q.Pack.name)
     U.lock:SetText(Q.db.locked and "Unlock" or "Lock")
     U.drag:EnableMouse(not Q.db.locked)
     U.mode:SetText(({xp="Fastest XP",balanced="Balanced",gear="Gear focused"})[Q.db.mode])
