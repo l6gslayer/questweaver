@@ -126,3 +126,14 @@ estimates, static timing flags and travel geometry still require Forever testing
   greeting or leaving the world; keep observed and accepted stages distinct.
 - Preserve normal pickup safeguards; use no hard-coded availability for quest 489.
 - Capture tag 0.2.0-route-feedback-4 preserves earlier history and counters.
+
+### 0.2.0 confirmed offers and retained outings
+
+- Allow actual open quest offers across Teldrassil, including outside the authored
+  corridor. Treat them as manual pickup-only stages; unseen pickups stay bounded.
+- Retain accepted quests sharing current work through singleton replans and UI
+  reloads using bounded numeric outing context. Prune stale/removed/skipped work.
+- Finish nearby retained work before elective returns with up to six estimated
+  work minutes, preserving urgent/nearby-return/pin and risk safeguards. Unknown
+  recipients remain unknown until observed.
+- Capture tag is 0.2.0-route-feedback-5; existing feedback is preserved.

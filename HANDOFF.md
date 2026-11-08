@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **228 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **239 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -314,3 +314,30 @@ Authorized installation completed after verified backup. All 15 installed
 release files match the latest ZIP; SavedVariables and other addons untouched,
 TomTom present and no nested directory. Reload to load this build, then play
 and reload again before feedback review. No game action was performed.
+
+## Confirmed offers outside the corridor and retained outing context
+
+User authorized these two follow-ups and updated 0.2.0 installation. Provider
+now allows actual same-map open offers beyond the authored corridor, including
+known pack quests, as manual pickup-only actions at the interaction position.
+Unseen pickups and speculative future work remain blocked there. Existing class/
+race, skip/done/capacity and urgent/nearby-return safeguards remain.
+
+Trips.RetainOuting records at most four accepted IDs that share the first current
+DO step, plus a map/area center. Runtime saves this numeric per-character context
+and reloads it through validation. Singleton replans preserve it; removals, skips,
+failures, map changes and distance beyond .12 prune/clear it. Retained companions
+within .06 current map distance can finish before elective returns with <=6 total
+estimated work minutes, known progress and no increased modeled combat risk.
+Unknown recipients never get fabricated completion/turn-ins/chain unlocks.
+The old previous-trip fallback retains its narrower half-done/two-minute bounds.
+
+All 239 Lua tests passed, all nine sources compiled and 17 reader tests passed.
+Capture tag 0.2.0-route-feedback-5 preserves history; last review cursor 211.
+Actual new pickup/outing/reload behavior needs playtesting. Stay on feature
+branch; main unchanged, no PR/merge/push.
+
+Authorized installation completed after inspection and verified backup; all 15
+installed release files match the rebuilt ZIP. SavedVariables and other addons
+untouched; TomTom present; no nested directory. Reload to load this build, play,
+and reload again to save new observations. No game action was performed.

@@ -44,8 +44,46 @@ end)
 test("offer disappearance removes unaccepted candidate and no saved availability is inferred",function()
     local s=offered();assert(find(provider(s),90001))
     s.offered={};assert(not find(provider(s),90001))
-    s.offered[90001]=true;s.pos={x=.2,y=.2};assert(not find(provider(s),90001))
+    s.offered[90001]=true;s.pos={x=.2,y=.2}
+    local q=find(provider(s),90001);assert(q and Q.Core.Eligible(q,s) and q.pendingAction=="PICK UP")
     s.pos={x=.576,y=.566};s.map=999;assert(not find(provider(s),90001))
+end)
+test("confirmed outside-corridor offers stay manual and preserve pickup safeguards",function()
+    local s=offered();s.pos={x=.61,y=.69}
+    for _,source in ipairs({"Observed NPC offer","Observed quest detail"}) do
+        s.offerDetails[90001].source=source
+        local q=find(provider(s),90001)
+        assert(Q.Core.Eligible(q,s) and q.pendingAction=="PICK UP" and q.start.source==source)
+        assert(q.start.y==.69 and q.stageOnly and not q.objective and not q.finish)
+        local route,trips=Q.Trips.Plan({q},s)
+        assert(#route==1 and route[1].action=="PICK UP" and not trips[1].completed[90001])
+        s.freeSlots=0;assert(#Q.Trips.Plan({q},s)==0);s.freeSlots=35
+        s.skip[90001]=true;assert(not Q.Core.Eligible(q,s));s.skip={}
+        s.done[90001]=true;assert(not Q.Core.Eligible(q,s));s.done={}
+    end
+    s.offered={};assert(not find(provider(s),90001))
+end)
+test("observed authored offers outside corridor do not project seed work or bypass class gates",function()
+    local s=state();s.pos={x=.61,y=.69};s.offered[3117]=true
+    local q=find(provider(s),3117)
+    assert(Q.Core.Eligible(q,s) and q.pendingAction=="PICK UP" and q.start.x==s.pos.x)
+    assert(q.stageOnly and not q.objective and not q.finish and not q.tasks)
+    local route,trips=Q.Trips.Plan({q},s)
+    assert(#route==1 and not trips[1].completed[3117])
+    s.classID=1;assert(not Q.Core.Eligible(find(provider(s),3117),s))
+    s.classID=3;s.raceID=1;assert(not Q.Core.Eligible(find(provider(s),3117),s))
+    s.raceID=4;s.offered={};assert(not Q.Core.Eligible(find(provider(s),3117),s))
+end)
+test("outside offers require valid same-map position and retain return priorities",function()
+    local s=offered();s.pos={x=.61,y=.69}
+    for _,pos in ipairs({{x=0,y=0},{x=0/0,y=.69},{x=math.huge,y=.69}}) do
+        s.pos=pos;assert(not find(provider(s),90001))
+    end
+    s.pos={x=.61,y=.69};s.map=999;assert(not find(provider(s),90001))
+    s.map=1438;s.log[90002]={complete=true,location=Q.Core.Copy(s.pos),xp=100}
+    local qs=provider(s);local route=Q.Trips.Plan({find(qs,90001),find(qs,90002)},s)
+    assert(route[1].action=="TURN IN" and route[1].id==90002)
+    assert(route[2].action=="PICK UP" and route[2].id==90001)
 end)
 test("accepting an offered quest transitions to one live objective candidate",function()
     local s=offered();s.log[90001]={title="A confirmed local task",level=6,xp=410,location={x=.577,y=.567}}

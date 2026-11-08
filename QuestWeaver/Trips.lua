@@ -350,14 +350,54 @@ local function pickupsAlongRoute(best,quests,s,fastest)
     return best
 end
 
--- Keep a small amount of observed, previously grouped field work ahead of
--- an elective return. Unknown recipients cannot satisfy shared-return matching;
+-- Numeric, bounded outing context survives a singleton replan and UI reload.
+-- Only actually accepted quests sharing current objective work can establish it.
+function T.RetainOuting(old,s,route)
+    if s.map~=Q.Pack.mapID or not C.IsMapPoint(s.pos) or s.logAvailable==false then return nil end
+    local function retain(value)
+        if type(value)~="table" or value.map~=s.map or not C.IsMapPoint(value.center)
+            or C.Distance(s.pos,value.center)>.12 then return nil end
+        local ids,seen={},{}
+        for i,id in ipairs(type(value.ids)=="table" and value.ids or {}) do
+            if i>4 then break end
+            if type(id)=="number" and id>0 and id<1000000000 and id==math.floor(id)
+                and not seen[id] and s.log[id] and not s.log[id].failed
+                and not (s.done or {})[id] and not (s.skip or {})[id] then
+                ids[#ids+1]=id;seen[id]=true
+            end
+        end
+        if #ids<2 then return nil end
+        return {map=s.map,center={x=value.center.x,y=value.center.y},ids=ids}
+    end
+    local first=route and route[1]
+    if first and first.action=="DO" and C.IsMapPoint(first.target) then
+        local ids={}
+        for _,member in ipairs(first.members or {}) do
+            local log=s.log[member.id]
+            if log and not log.complete then ids[#ids+1]=member.id end
+        end
+        if #ids>=2 then
+            local current=retain({map=s.map,center=first.target,ids=ids})
+            if current then return current end
+        end
+    end
+    return retain(old)
+end
+
+-- Retained field outings allow up to six estimated work minutes before an
+-- elective return; legacy previous-trip evidence keeps its tighter limit. Unknown recipients cannot satisfy shared-return matching;
 -- this policy uses prior accepted grouping and present work proximity instead.
 -- It never projects completion/chain unlocks for a companion with no recipient.
 local function continueFieldWork(available,s)
-    if not s.previous or type(s.previous.tripKey)~="string" or not s.pos then return nil end
+    local outing=T.RetainOuting(s.outing,s)
+    if not outing and (not s.previous or type(s.previous.tripKey)~="string" or not s.pos) then return nil end
     local prior={}
-    for id in s.previous.tripKey:gmatch("%d+") do prior[tonumber(id)]=true end
+    if outing then
+        for _,id in ipairs(outing.ids) do prior[id]=true end
+    else
+        for id in s.previous.tripKey:gmatch("%d+") do prior[tonumber(id)]=true end
+    end
+    local workLimit,range=outing and 6 or 2,outing and .06 or .04
     if s.pin and not prior[s.pin] then return nil end
     local returns,companions={},{}
     local work=0
@@ -366,18 +406,18 @@ local function continueFieldWork(available,s)
         if prior[q.id] and log and not log.failed and not q.timed and not q.pendingAction then
             if log.complete and q.finish and not q.stageOnly then
                 returns[#returns+1]=q
-            elseif not log.complete and q.stageOnly and not q.finish and log.progressKnown~=false
-                and type(log.progress)=="number" and log.progress>=.5 and log.progress<1
+            elseif not log.complete and (outing or (q.stageOnly and not q.finish)) and log.progressKnown~=false
+                and type(log.progress)=="number" and log.progress>=(outing and 0 or .5) and log.progress<1
                 and (q.level or 1)<=s.level+1 and (q.risk or 0)<=0 then
                 local fits=true
                 local remaining=0
                 for _,task in ipairs(T.Tasks(q)) do
                     local progress,known=T.Progress(q,task,log)
-                    if not known or (progress<1 and (not task.target or C.Distance(s.pos,task.target)>.04)) then fits=false end
+                    if not known or (progress<1 and (not task.target or C.Distance(s.pos,task.target)>range)) then fits=false end
                     remaining=remaining+(task.minutes or q.minutes or 5)*(1-progress)
                 end
-                if fits and remaining>0 and work+remaining<=2 then
-                    local copy=C.Copy(q);copy.fieldCompanion=true
+                if fits and remaining>0 and work+remaining<=workLimit then
+                    local copy=C.Copy(q);copy.fieldCompanion=true;copy.fieldContinuation=true
                     companions[#companions+1]=copy;work=work+remaining
                 end
             end

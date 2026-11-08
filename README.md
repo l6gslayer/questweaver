@@ -238,8 +238,8 @@ The supported area now includes the road and Dolanaar through y 65% on the same
 Teldrassil map. Live quest locations and automatic guidance keep refreshing
 after you leave Shadowglen. Accepted quests with located current stages can
 continue across Teldrassil without dropping at the corridor boundary. Outside
-the corridor, only accepted quests are eligible; new authored pickups and
-speculative follow-ups wait until you return. Guidance clears on other maps
+the corridor, accepted quests and actual open quest offers are eligible;
+unseen authored pickups and speculative follow-ups wait until you return. Guidance clears on other maps
 or when player coordinates are unavailable. This is not a complete authored
 Teldrassil quest catalogue. Missing quest locations remain quest-log reminders.
 Fallback coordinates,
@@ -459,14 +459,20 @@ the pickup corridor boundary. Other maps and missing player coordinates still
 pause guidance. Unlocated accepted quests ask you to check the quest log;
 unknown objectives or recipients are never invented.
 
-When an outing already grouped accepted work, a ready quest can now wait for
-an unknown-return companion that is at least halfway done, has known progress,
-and has at most two estimated work minutes remaining in total. Remaining work
-must be within .04 map distance of your current position and have no increased
-modeled combat risk. Up to four quests remain grouped. Timed deliveries, actual
-nearby turn-ins, skips and pins retain their priority. This is bounded field
-continuation, not a claim that both quests share a recipient. Once the companion
-is ready, the client-provided return location drives replanning.
+When accepted quests share the current objective step, QuestWeaver saves a small
+outing context (at most four quest IDs, map and area center). It survives
+singleton replans and UI reloads while those quests remain accepted in the same
+area. Completed/removed, skipped and failed members are pruned; leaving the map
+or moving more than .12 map distance from that area clears the context.
+
+Before an elective return, nearby companions in that outing can finish first
+with up to six total estimated work minutes remaining, known progress, remaining
+objectives within .06 map distance and no increased modeled combat risk. The
+recipient may still be unknown; it is never invented. Timed deliveries, actual
+nearby turn-ins and explicit pins retain priority. Once the companion is ready,
+its observed return location drives replanning. Without retained outing context,
+the previous-trip fallback still requires at least half completion and at most
+two work minutes within .04 map distance.
 
 ### Direct quest offers
 
@@ -475,6 +481,8 @@ QuestWeaver now reads that open offer immediately and can recommend accepting it
 manually. This handles quests outside the authored pack without guessing their
 availability, objectives or recipient. The offer is transient: accepting it,
 closing the quest dialog, switching to progress/rewards or opening another
-interaction clears it. Existing skips, completion, capacity, corridor limits
-for new pickups and urgent/nearby-return priorities still apply. Discovery starts
+interaction clears it. Confirmed offers can become manual pickups anywhere on
+Teldrassil, including outside the authored corridor, with no guessed later work
+or recipient. Skips, completion, capacity, class/race safeguards and urgent/
+nearby-return priorities still apply. Unseen pickups remain corridor-limited. Discovery starts
 when the client exposes the offer; it cannot predict an unseen NPC's quests.

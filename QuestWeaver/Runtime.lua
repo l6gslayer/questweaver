@@ -176,6 +176,7 @@ function R.Snapshot()
         for _ in pairs(s.log) do active=active+1 end
         s.freeSlots=math.max(0,MAX_QUESTLOG_QUESTS-active)
     end
+    s.outing=Q.Trips.RetainOuting(Q.db.outing,s)
     return s
 end
 
@@ -214,10 +215,12 @@ function R.Refresh()
         Q.quests,Q.notices=Q.Provider.Quests(s,Q.db)
         Q.notices=Q.notices or {}
         Q.route,Q.trips=Q.Trips.Plan(Q.quests,s,24)
+        Q.db.outing=Q.Trips.RetainOuting(s.outing,s,Q.route)
         Q.status=#Q.route>0 and "Next action is live. Later steps assume you complete this trip."
             or (not Q.Core.IsLocal(s.pos) and "No located accepted quests here. Check your quest log; new pickups use the Shadowglen-Dolanaar corridor."
             or "No eligible quests remain in this pack. Check your level, skips, and prerequisites.")
     end
+    if Q.inWorld~=false and s.map and s.map~=Q.Pack.mapID then Q.db.outing=nil end
     local first=Q.route[1]
     Q.previous=first and {tripKey=first.tripKey,nextKey=first.key} or nil
     if not first then Q.trips={} end

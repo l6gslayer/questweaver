@@ -53,7 +53,7 @@ function P.Quests(state,db)
                 stageOnly=not complete and (item~=nil or not finish),
                 note="Discovered nearby quest. Work time is estimated; unknown rewards are not assumed to be gear upgrades."}
         elseif (state.offered or {})[id]==true and not log and not item
-            and Q.Core.IsLocal(state.pos) and (not state.map or state.map==Q.Pack.mapID) then
+            and Q.Core.IsMapPoint(state.pos) and (not state.map or state.map==Q.Pack.mapID) then
             local info=(state.offerDetails or {})[id] or {}
             local title=type(info.title)=="string" and info.title or ("Quest "..id)
             local level=type(info.level)=="number" and info.level>0 and info.level<1000 and info.level or state.level
@@ -99,10 +99,22 @@ function P.Quests(state,db)
         else q.metadata=q.dynamic and "Discovered nearby quest" or "Unverified starter baseline" end
         local log=state.log[q.id]
         local item=(state.itemStarts or {})[q.id]
+        local confirmedOutside=not Q.Core.IsLocal(state.pos) and Q.Core.IsMapPoint(state.pos)
+            and (not state.map or state.map==Q.Pack.mapID)
+            and (state.offered or {})[q.id]==true and not log and not item
+        if confirmedOutside then
+            -- An actual open offer is valid outside authored coverage too.
+            -- It authorizes only this manual pickup, never the seed's future
+            -- objective/recipient or a speculative continuation through it.
+            q.dynamicOffer=true;q.offeredOnly=true;q.acceptedOnly=nil;q.ownedOnly=nil
+            q.itemStartID=nil;q.objective=nil;q.finish=nil;q.tasks=nil
+            q.stageOnly=true;q.minutes=.15
+        end
         if q.dynamicOffer and (state.offered or {})[q.id]==true then
             -- The client is offering this quest now. Inherited optional database
             -- restrictions must not replace that availability evidence.
             q.disabled=false;q.all=nil;q.any=nil;q.minLevel=1
+            q.objective=nil;q.finish=nil;q.tasks=nil
             local detail=(state.offerDetails or {})[q.id] or {}
             q.name=type(detail.title)=="string" and detail.title or seed.name
             q.level=type(detail.level)=="number" and detail.level>0 and detail.level<1000 and detail.level or seed.level
@@ -173,9 +185,9 @@ function P.Quests(state,db)
             q.gear,q.gearKnown=Q.Gear.Evaluate(observed.items,db.profile)
             if observed.incomplete then q.gearKnown=false end
         end
-        -- Leaving the corridor continues accepted work, without suggesting new
-        -- authored pickups or speculative follow-ups across the whole zone.
-        if not Q.Core.IsLocal(state.pos) then q.acceptedOnly=true end
+        -- Outside the authored corridor only accepted work and actual open
+        -- offers are eligible. No unseen pickup or future seed route is inferred.
+        if not Q.Core.IsLocal(state.pos) and not confirmedOutside then q.acceptedOnly=true end
         result[#result+1]=q
     end
     return result,notices

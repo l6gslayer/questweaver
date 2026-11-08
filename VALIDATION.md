@@ -341,3 +341,27 @@ Then accept another and check transition to objective work. Existing urgent or
 nearby ready returns may still take priority. If quest 489 is already complete,
 use another direct offer rather than abandoning a quest. Play, mark/write
 feedback, then reload again to save capture tag 0.2.0-route-feedback-4.
+
+## 0.2.0 confirmed offers and retained outings — 2026-11-07
+
+All 239 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python reader tests passed. Eleven new regressions
+cover outside-corridor unknown/authored confirmed offers, no invented future
+work, invalid-map/position and priority safeguards, retained accepted grouping,
+singleton stability, quarter-complete and zero-progress work within six minutes,
+unknown/known recipients, context pruning and bounded validation, pins/timed/
+near-ready/task-distance limits, exclusion of unaccepted forecasts and Runtime
+saved-context restoration after a simulated reload. Review found no actionable
+outing regression. No raw saved logs or notes were copied into fixtures.
+
+After reload, open a quest offer outside the authored corridor on Teldrassil;
+it should become a manual pickup suggestion, subject to existing priorities.
+Close it without accepting and ensure the unaccepted suggestion disappears.
+For a newly grouped accepted pair, finish one while its nearby companion remains
+unfinished. The retained outing can hold the elective return for up to six
+estimated work minutes; both unknown and known recipients remain correctly
+modeled. Test a reload while both are accepted and still in the same area.
+Timed deliveries/turn-ins beside you still take precedence, and unknown objective
+requirements remain a quest-log check. Play, mark/write feedback, then reload
+again before asking for a review. Expected capture tag 0.2.0-route-feedback-5.
+Mocked tests and file installation do not establish actual Forever behavior.
