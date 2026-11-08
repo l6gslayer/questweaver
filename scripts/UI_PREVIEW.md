@@ -1,0 +1,76 @@
+# Offline UI frame previews
+
+This harness executes the real `UI.lua` against a small synthetic frame API and
+serializes text, anchors, dimensions, visibility and colors. The Pillow renderer
+uses those traces rather than a separately authored layout. It never loads the
+game, Runtime, SavedVariables, private feedback, account data or character data.
+All generated material stays under ignored `build/ui-preview/`.
+
+With Lua 5.1 and Python/Pillow available, from the repository root:
+
+```sh
+mkdir -p build/ui-preview
+git show 593f879:QuestWeaver/UI.lua > build/ui-preview/baseline.lua
+lua -e 'QW_PREVIEW_SOURCE="build/ui-preview/baseline.lua"; QW_PREVIEW_OUTPUT="build/ui-preview/before.json"; dofile("scripts/ui_preview.lua")'
+lua -e 'QW_PREVIEW_SOURCE="QuestWeaver/UI.lua"; QW_PREVIEW_OUTPUT="build/ui-preview/after.json"; dofile("scripts/ui_preview.lua")'
+python3 scripts/render_ui_preview.py build/ui-preview/before.json
+python3 scripts/render_ui_preview.py build/ui-preview/after.json
+```
+
+The implementation session used an existing embedded Lua 5.1 runtime and an
+isolated Pillow installation. These are execution-environment substitutions,
+not dependencies added to the addon.
+
+The harness executes seventeen fixtures, defined by `local cases` in
+`scripts/ui_preview.lua`:
+
+| Fixture | Synthetic state |
+| --- | --- |
+| `compact-grouped` | Compact grouped objectives |
+| `expanded-grouped` | Expanded grouped objectives and forecast |
+| `grouped-pickups` | Grouped quest pickups |
+| `grouped-returns` | Grouped quest turn-ins |
+| `item-start` | Manual bag-item acceptance |
+| `long-localized` | Long German/French names, reminder and timed warning |
+| `missing-location` | Missing-location notice with no routable plan |
+| `missing-other-location` | Missing-location notice beside a valid current plan |
+| `invalid-target` | Defensive invalid current destination |
+| `missing-tomtom` | Guidance without TomTom |
+| `loading` | World-loading state |
+| `empty` | No eligible plan |
+| `zone-handoff` | Cross-zone handoff notice |
+| `feedback` | Local note and export panel |
+| `single-live` | One quest with unfinished/finished live objective rows |
+| `options` | Open secondary-control tray |
+| `small-viewport` | Expanded tracker in an 800×600 viewport |
+
+Standalone PNGs retain the viewport. Contact sheets crop to the panels for
+comparison. Panel crops are also saved separately. Rendering `after.json` after
+`before.json` produces `before-after-comparison.png` for compact, expanded and
+feedback states. The baseline source is the approved main commit preceding this
+branch. After traces should be regenerated after UI changes.
+
+The defensive invalid-target fixture is deliberately outside normal planner
+output. The baseline throws while formatting its destination; that error is
+preserved visibly in the evidence and console. The new UI can display the
+unavailable-location state without throwing. An expected baseline error must
+not be confused with a successful baseline render for that fixture.
+
+## Evidence limits
+
+These are **offline simulations, not game screenshots**. Fonts and wrapping,
+Blizzard templates, textures, z-order, scrolling, focus, clamping and inherited
+scaling are approximated. The harness provides evidence of actual source text,
+visibility, anchors and assigned dimensions under synthetic data. It cannot
+establish Forever rendering, correct client API support, combat behavior,
+mouse/keyboard behavior or SavedVariables persistence. In particular, UI scale
+must still be checked in the actual client; the small-viewport fixture checks
+available layout space, not a faithful UI-scale implementation.
+
+## UI dev 2 comparison
+
+The current harness adds single-live and Options fixtures (17 total). The local
+follow-up comparison uses UI dev 1 at `75c1bb5` as before-source and current
+UI dev 2 as after-source, with output isolated under ignored `build/ui-dev2/`.
+The single-live fixture uses synthetic unfinished/finished objective rows and
+generic catalogue boilerplate; it contains no private screenshot-derived data.

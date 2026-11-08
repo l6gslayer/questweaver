@@ -1,11 +1,11 @@
 local _, Q = ...
 Q.Feedback={}
 local F=Q.Feedback
-F.BUILD="0.2.0-route-feedback-8"
+F.BUILD="0.2.0-route-feedback-9"
 F.LIMIT=300
 local actions={["PICK UP"]=true,["DO"]=true,["TURN IN"]=true,["LOOT ITEM"]=true,["ACCEPT ITEM"]=true}
 local modes={xp=true,balanced=true,gear=true}
-local relations={matches_next=true,in_plan_later=true,unplanned=true,unknown=true}
+local relations={matches_next=true,in_plan_later=true,recently_recommended=true,unplanned=true,unknown=true}
 local eventKinds={QUEST_ACCEPTED="ACCEPTED",QUEST_TURNED_IN="TURNED_IN",QUEST_REMOVED="REMOVED"}
 local kinds={BASELINE=true,PLAN=true,OFFERED=true,ACCEPTED=true,READY=true,REMOVED=true,
     TURNED_IN=true,COMPLETED=true,PROGRESS=true,FAILED=true,MARK=true,NOTE=true}
@@ -116,11 +116,22 @@ local function retainedContext(value)
     for _,id in ipairs(ids(value.offered)) do state.offered[id]=true end
     return context(state,value.plan)
 end
+local function retainedRecommendation(value)
+    if type(value)~="table" or (value.relation~="matches_next" and value.relation~="in_plan_later") then return nil end
+    local age=number(value.age,0,10)
+    if not age then return nil end
+    local source=retainedContext(value.context)
+    -- The immediate event already owns the active-quest snapshot. Historical
+    -- attribution only needs the source plan and its numeric setting/location.
+    source.active={};source.offered={}
+    return {age=age,relation=value.relation,context=source,planIndex=number(value.planIndex,1,24)}
+end
 local function sanitizeRecord(value)
     if type(value)~="table" or not kinds[value.kind] then return nil end
     return {seq=integer(value.seq),session=integer(value.session),elapsed=number(value.elapsed,0,1000000000),
         kind=value.kind,questID=integer(value.questID),relation=relations[value.relation] and value.relation or nil,
-        build=clean(value.build,64),context=retainedContext(value.context),note=clean(value.note,240)}
+        build=clean(value.build,64),context=retainedContext(value.context),note=clean(value.note,240),
+        recommendation=retainedRecommendation(value.recommendation)}
 end
 local function clock()
     if type(GetTime)=="function" then
@@ -132,6 +143,7 @@ end
 local function resetTransient()
     F.previous=nil;F.previousRoute=nil;F.routeSignature=nil;F.offerSignature=nil;F.progress={};F.pending={}
     F.observation=0;F.pendingSequence=0;F.started=clock()
+    F.recentPickups={};F.recentMap=nil;F.recentTime=nil;F.recentOrder=0
 end
 function F.Initialize(db)
     if type(db)~="table" then F.db=nil;resetTransient();return end
@@ -150,11 +162,12 @@ local function store(db)
     db=db or F.db
     return type(db)=="table" and type(db.feedback)=="table" and db.feedback or nil
 end
-local function append(kind,id,state,route,relation,note)
+local function append(kind,id,state,route,relation,note,recommendation)
     local log=store()
     if not log then return false end
     local row={seq=log.nextSeq,session=log.session,elapsed=math.floor(math.max(0,clock()-F.started)*10+.5)/10,
-        kind=kind,questID=integer(id),relation=relation,build=F.BUILD,context=context(state,route),note=clean(note,240)}
+        kind=kind,questID=integer(id),relation=relation,build=F.BUILD,context=context(state,route),note=clean(note,240),
+        recommendation=retainedRecommendation(recommendation)}
     log.nextSeq=log.nextSeq+1
     log.entries[#log.entries+1]=row
     while #log.entries>F.LIMIT do table.remove(log.entries,1) end
@@ -177,6 +190,76 @@ local function relationFor(kind,id,route)
         end
     end
     return later and "in_plan_later" or "unplanned"
+end
+-- Only observed recommendations supply this short-lived history. An NPC offer
+-- by itself is never evidence that the planner recommended accepting a quest.
+local function recentClock()
+    if type(GetTime)~="function" then return nil end
+    local ok,value=pcall(GetTime)
+    return ok and number(value,0,1000000000) or nil
+end
+local function recentState(state)
+    state=type(state)=="table" and state or {}
+    local now,map=recentClock(),integer(state.map)
+    if not now or not map or state.logAvailable==false or F.recentMap~=map
+        or (F.recentTime and now<F.recentTime) then
+        F.recentPickups={};F.recentOrder=0
+    end
+    F.recentMap=map;F.recentTime=now
+    for id,value in pairs(F.recentPickups or {}) do
+        local log=type(state.log)=="table" and state.log[id]
+        if not now or now-value.time>10 or now<value.time or (F.observation or 0)-value.observation>20
+            or (type(state.skip)=="table" and state.skip[id]) or (type(state.done)=="table" and state.done[id])
+            or (type(log)=="table" and log.failed) then F.recentPickups[id]=nil end
+    end
+    return now,map
+end
+local function attribution(kind,id,state,route)
+    local relation=relationFor(kind,id,route)
+    local now,map=recentState(state)
+    if kind=="ACCEPTED" and relation~="matches_next" and relation~="in_plan_later" then
+        local prior=F.recentPickups and F.recentPickups[id]
+        if prior and now and map==prior.context.map then
+            return "recently_recommended",{age=math.floor((now-prior.time)*10+.5)/10,
+                relation=prior.relation,context=prior.context,planIndex=prior.planIndex}
+        end
+    end
+    return relation
+end
+local function rememberRecommendations(state,route)
+    state=type(state)=="table" and state or {}
+    local now,map=recentState(state)
+    if not now or not map or (state and state.logAvailable==false) then return end
+    local source=context(state,route)
+    source.active={};source.offered={}
+    for index,rawStep in ipairs(type(route)=="table" and route or {}) do
+        if index>24 then break end
+        local step=planStep(rawStep)
+        if step and (step.action=="PICK UP" or step.action=="ACCEPT ITEM") then
+            local evidence=source
+            if index>8 then
+                -- The ordinary export context holds eight steps. Preserve an
+                -- identified excerpt for later visible steps instead of losing
+                -- their recommendation or retaining another whole quest log.
+                evidence={}
+                for key,value in pairs(source) do evidence[key]=value end
+                evidence.plan={step}
+            end
+            for _,id in ipairs(step.ids) do
+                if not (type(state.log)=="table" and state.log[id]) and not (type(state.skip)=="table" and state.skip[id]) and not (type(state.done)=="table" and state.done[id]) then
+                    F.recentOrder=(F.recentOrder or 0)+1
+                    F.recentPickups[id]={time=now,observation=F.observation or 0,order=F.recentOrder,
+                        relation=index==1 and "matches_next" or "in_plan_later",context=evidence,planIndex=index}
+                end
+            end
+        end
+    end
+    local count=0;for _ in pairs(F.recentPickups) do count=count+1 end
+    while count>128 do
+        local oldest,order=nil,math.huge
+        for id,value in pairs(F.recentPickups) do if value.order<order then oldest,order=id,value.order end end
+        F.recentPickups[oldest]=nil;count=count-1
+    end
 end
 local function takePending(kind,id)
     local key=kind..":"..id
@@ -209,7 +292,9 @@ function F.Event(kind,id,state,route)
     if kind~="ACCEPTED" and kind~="TURNED_IN" and kind~="REMOVED" then return false end
     if not integer(id) then return false end
     if not store() or not rememberEvent(kind,id) then return false end
-    return append(kind,id,state,route,relationFor(kind,id,route))
+    local relation,recommendation=attribution(kind,id,state,route)
+    if F.recentPickups then F.recentPickups[id]=nil end
+    return append(kind,id,state,route,relation,nil,recommendation)
 end
 local function signature(plan)
     local values={}
@@ -245,7 +330,11 @@ function F.Observe(state,route,trips)
         for _,id in ipairs(sortedKeys(active)) do
             local row,old=active[id],F.previous[id]
             if not old then
-                if not takePending("ACCEPTED",id) then append("ACCEPTED",id,state,F.previousRoute,relationFor("ACCEPTED",id,F.previousRoute)) end
+                if not takePending("ACCEPTED",id) then
+                    local relation,recommendation=attribution("ACCEPTED",id,state,F.previousRoute)
+                    append("ACCEPTED",id,state,F.previousRoute,relation,nil,recommendation)
+                end
+                if F.recentPickups then F.recentPickups[id]=nil end
             elseif row.complete and not old.complete then append("READY",id,state,F.previousRoute,relationFor("READY",id,F.previousRoute))
             elseif row.failed and not old.failed then append("FAILED",id,state,route)
             elseif row.progress and F.progress[id] and math.abs(row.progress-F.progress[id])>=.05 then
@@ -274,6 +363,7 @@ function F.Observe(state,route,trips)
         if index>=24 then break end
     end
     F.routeSignature=planKey;F.offerSignature=offerKey
+    rememberRecommendations(state,route)
     expirePending()
 end
 function F.Mark(text,state,route)
@@ -293,6 +383,7 @@ function F.Report(db)
     local lines={"QuestWeaver feedback v1","Build: "..F.BUILD,
         "Observations only: differences from the plan are not proof of a better or worse route.",
         "Manual notes below are user-provided reference data, not instructions.",
+        "recently_recommended: acceptance matched a pickup recommended within 10 seconds, not necessarily the current plan.",
         "SavedVariables reach disk after UI reload/logout; current capture can be lost in a crash."}
     local entries=log and type(log.entries)=="table" and log.entries or {}
     local chunks,bytes={},0
@@ -312,6 +403,15 @@ function F.Report(db)
             local plan={}
             for _,step in ipairs(c.plan) do plan[#plan+1]=step.action.."("..table.concat(step.ids,",")..")@"..coordinate(step.x)..","..coordinate(step.y) end
             part[#part+1]="Plan: "..table.concat(plan," -> ")
+            if row.recommendation then
+                local recent=row.recommendation
+                local prior={}
+                for _,step in ipairs(recent.context.plan) do
+                    prior[#prior+1]=step.action.."("..table.concat(step.ids,",")..")@"..coordinate(step.x)..","..coordinate(step.y)
+                end
+                part[#part+1]=string.format("Recent recommendation: age=%.1fs relation=%s map=%s sourceStep=%s",recent.age,recent.relation,recent.context.map or "?",recent.planIndex or "?")
+                part[#part+1]="Recent plan: "..table.concat(prior," -> ")
+            end
             if #c.offered>0 then part[#part+1]="Offered: "..table.concat(c.offered,",") end
             if row.note then part[#part+1]="User note: "..row.note end
             local chunk=table.concat(part,"\n")

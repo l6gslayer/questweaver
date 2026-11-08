@@ -1,8 +1,151 @@
 # QuestWeaver handoff
 
-Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
+Updated 2026-11-08. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
+
+## UI branch publication authorized — 2026-11-08
+
+The maintainer reports UI dev 3 looks good and authorized pushing
+`codex/ui-ux-pass` and opening a pull request against main. This is approval
+for branch/PR publication only: do not merge, tag, publish a release or change
+the installed addon as part of this handoff. The branch retains development
+version 0.2.0-ui-dev.3 / capture tag 9. Approved release 0.2.0/build 8 remains
+the release baseline. The installed dev 3 playtest and previous backups remain.
+Private screenshots, raw feedback, numeric replays and install receipts stay
+ignored and must not be included in public commits or the PR description.
+
+## Latest manual feedback review — tag 9 confirmed, 2026-11-08
+
+After the maintainer played with UI dev 3 active and reloaded again, the safe
+reader found a fresh, continuous tag 9 playtest window. Both lead and independent
+read-only review found no recurrence of the old refresh-by-refresh oscillation.
+Changes in the reviewed timeline coincide with progression, offers, ready returns
+or zone context rather than repeated unchanged-state reversal.
+
+Recent-pickup attribution is observed in real saved data: both a previously-next
+pickup and a previously-later pickup were correctly labeled recently_recommended,
+with matching same-map source plans within the time limit. Other unplanned
+acceptances have no recent recommendation in the exported context. All observed
+turn-ins in this window matched the next recommendation. The bounded evidence
+supports these fixes, not exhaustive planner/quest/UI acceptance or optimality.
+New capture data persisted and was readable; other preferences/persistence paths
+were not separately retested. No code, package, installation, SavedVariables or
+game controls were changed; only sanitized local documentation was updated.
+
+## Earlier manual feedback review — tag 9 evidence previously unavailable
+
+The maintainer reported playtesting UI dev 3 and reloading, then requested a
+read-only stability/attribution review. The fresh saved export and its structured
+capture-version fields still identify tag 8; no tag 9 events or recent-pickup
+source evidence were present. Installed UI/Trips/Feedback/manifest files were
+read-back verified against UI dev 3, and the active process uses the intended
+client directory. A reload that saves a prior session while first loading the
+new files is a possible explanation, not an established cause.
+
+The newly saved older-build segment has no rapid repeating first-action reversal
+pattern, and includes three acceptances whose pickups had been recommended
+shortly before their unknown labels. These observations cannot validate or
+invalidate the tag 9 fixes. Wait for saved tag 9 playtest evidence before claiming
+new planner/attribution acceptance. No code, package, installation, SavedVariables
+or game controls were changed during this review; exports remain private/ignored.
+
+## UI dev 3 — current work
+
+The maintainer authorized fixing planner stability and recent-pickup feedback
+attribution, rebuilding and installing UI dev 3 after a complete prior-addon
+backup. Manifest `0.2.0-ui-dev.3`; tracker `v0.2.0 | UI dev 3`; planner/capture
+`0.2.0-route-feedback-9`. See [dev 3 notes](docs/UI_DEV_3.md).
+The independent previous-group rebuild preserves the existing retention threshold
+and priority guards; feedback distinguishes recent recommendations from current
+matches without rewriting old observations. Validation passed: 314 Lua 5.1 tests (all thirteen addon sources compiled),
+17 Python reader tests, synthetic tag9 export/reader roundtrip, source privacy,
+manifest/package integrity and source-byte checks. Independent planner/feedback
+review found no remaining actionable source issue after resolving redundant
+source snapshots and late-step attribution. Review: `docs/reviews/ui-dev3-final.md`.
+
+Installation completed: all 22 installed files match the rebuilt package; seven
+files differed from UI dev 2. The complete prior 22-file addon backup was verified
+at `dist/install-backups/QuestWeaver-before-ui-dev-3-20261107-213336-193575.zip`.
+Package SHA256: `0e013c6495f0fdb5bcda574c558b864146aa82361d26261f9d3f3d4d9eae5899`.
+All package files matched source before installation. Ignored receipt:
+`dist/ui-dev-3-install-receipt.json`. SavedVariables, other addons, previous
+backups and packages were preserved. No game input/restart, push or PR occurred.
+The targeted tag 9 playtest review above now supports planner stability and
+recent-pickup attribution in the observed saved window. Broader client behavior
+and exhaustive quest/route acceptance remain unverified. This installation record did not rebuild the
+installed package. No game input/restart, push or PR authorized.
+
+## UI dev 2 follow-up — historical work
+
+The maintainer authorized correcting the drag jump and the UI dev 1 screenshot
+findings, rebuilding and installing UI dev 2 after a complete prior-addon backup.
+Implementation is on `codex/ui-ux-pass`; manifest `0.2.0-ui-dev.2`, tracker
+`v0.2.0 | UI dev 2`. See [dev 2 corrections](docs/UI_DEV_2.md). Installation completed: all 22 installed files matched the package byte-for-byte,
+with five differing from UI dev 1. The complete prior 22-file addon was backed
+up and readback-verified at `dist/install-backups/QuestWeaver-before-ui-dev-2-20261107-192744-879611.zip`.
+Package SHA256: `e0bd8bf7a5763b16a7f550df8fbab53055715fcd7a90f8c07b83f5a800ed11c9`.
+All 22 package files matched source before installation. The ignored
+`dist/ui-dev-2-install-receipt.json` records the hashes and write list.
+Final validation passed: 297 Lua 5.1 tests, 17 Python reader tests, all thirteen
+addon sources compiled, package/privacy/manifest/integrity and diff checks.
+An independent final review found no actionable source/simulation issue.
+SavedVariables, other addons, previous backups and game controls were untouched.
+The maintainer subsequently reported reloading UI dev 2 and confirmed that the
+refresh dragging is fixed. This is owner-reported drag verification, not full
+UI/quest/navigation acceptance. Recording this status did not rebuild the installed package. Preserve
+SavedVariables, all other addons, approved release ZIP and prior backups. No
+restart/game command, push or PR is authorized. Earlier dev 1 records below are
+historical; approved release remains 0.2.0/build 8, not the UI development build.
+
+## Manual quest review follow-up
+
+After the UI dev 2 reload, the maintainer authorized a manual quest review.
+Safe exported-feedback review and isolated private numeric replays identified a
+planner stability defect: the previous-plan retention safeguard only examines
+plans admitted by greedy candidate insertion. A valid near-best previous plan
+can fall out of that set; prior-action preferences then make unchanged-input
+refreshes alternate between work and return recommendations. This was reproduced
+without changing source or driving the client. A separate feedback limitation
+labels an acceptance unplanned even when the pickup appeared shortly before an
+NPC interaction changed the immediate plan. Missing live objective locations
+also limit guidance for some accepted quests; do not invent coordinates.
+
+This was investigation only. No planner/capture/source behavior, package or
+installation was changed. Private exports/replay data remain ignored. A proposed
+return-order detour was not established once its follow-up pickup was considered.
+Fixing planner stability and improving feedback attribution are the recommended
+next scope; no installation, push or PR is implied by this review.
+
+## UI dev 1 installation — historical status
+
+On 2026-11-07 the maintainer authorized installing the existing UI dev package
+for playtesting. The complete prior installed addon was backed up under ignored
+`dist/install-backups/QuestWeaver-before-ui-dev-1-20261107-190913-230738.zip`,
+and every backup file was read back successfully. All 22 development package
+files matched repository sources before installation, and all 22 installed
+files then matched the package byte-for-byte. Six files differed from the prior
+installed release. The ignored installation receipt records package/backup hashes.
+
+Installed: `0.2.0-ui-dev.1`, visible after the user reloads as
+`v0.2.0 | UI dev 1`. The approved release remains 0.2.0/build 8; the dev UI has
+not yet been accepted in-game. No SavedVariables or other addons were changed,
+and no game restart, reload, command or character action was performed. No push,
+PR, merge or publication occurred or is authorized. This status supersedes the
+pre-installation statements below and in the packaged build-preparation docs.
+The package was not rebuilt as part of recording this installation.
+
+## Current local UI work — authoritative
+
+UI implementation is now on local `codex/ui-ux-pass`, based on main `593f879`.
+Manifest: `0.2.0-ui-dev.1`; tracker: `v0.2.0 | UI dev 1`. The installed release
+and approved 0.2.0 ZIP remain unchanged. No install/push/PR/merge/publication is
+authorized for this development branch. See [UI/UX pass](docs/UI_UX_PASS.md) for
+four blind initial critiques, research, design choice, final reviews, offline
+before/after evidence reproduction and remaining client playtests. The old
+"no UI implementation" statements below are historical release-handoff context.
+Planner/catalogue and feedback capture tag 8 are retained; UI adds one optional
+saved size preference and guarded manual native-waypoint feedback.
 
 ## Current release status — authoritative
 

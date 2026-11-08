@@ -189,4 +189,184 @@ test("clearing capture preserves monotonic review identifiers",function()
     F.Mark("after clear",s,{})
     assert(last(db).seq>seq and last(db).session>session)
 end)
+
+-- Attribution fixtures are synthetic. No private quest logs or gameplay routes.
+local function withTime(fn)
+    local saved=GetTime
+    local now=100
+    GetTime=function() return now end
+    local ok,err=pcall(fn,function(value) now=value end)
+    GetTime=saved
+    assert(ok,err)
+end
+local function findEvent(db,kind,id)
+    for i=#db.feedback.entries,1,-1 do
+        local row=db.feedback.entries[i]
+        if row.kind==kind and row.questID==id then return row end
+    end
+end
+
+test("recent pickup attribution survives dialogue closure without claiming a current match",function()
+    withTime(function(setTime)
+        local db,s=setup()
+        F.Observe(s,{step("PICK UP",101,102),step("PICK UP",103)})
+        setTime(102);F.Observe(s,{step("DO",999)})
+        setTime(104);assert(F.Event("QUEST_ACCEPTED",102,s,{step("DO",999)}))
+        local row=last(db)
+        assert(row.relation=="recently_recommended" and row.recommendation.age==4)
+        assert(row.recommendation.relation=="matches_next" and row.recommendation.context.plan[1].ids[2]==102)
+        assert(row.context.plan[1].action=="DO" and row.context.plan[1].ids[1]==999)
+        assert(not F.recentPickups[102],"consume the historical pickup once accepted")
+        local report=F.Report(db)
+        assert(report:find("relation=recently_recommended",1,true) and report:find("Recent recommendation: age=4.0s",1,true))
+        F.Initialize(db)
+        assert(findEvent(db,"ACCEPTED",102).recommendation.context.plan[1].ids[2]==102)
+    end)
+end)
+
+test("snapshot acceptance uses recent pickup evidence with immutable numeric source context",function()
+    withTime(function(setTime)
+        local db,s=setup();local route={step("DO",999),step("PICK UP",104)}
+        F.Observe(s,route)
+        route[2].members[1].id=888;s.pos.x=.7
+        setTime(102);F.Observe(s,{})
+        setTime(105);s.log[104]={progress=0};F.Observe(s,{step("DO",104)})
+        local row=findEvent(db,"ACCEPTED",104)
+        assert(row and row.relation=="recently_recommended" and row.recommendation.relation=="in_plan_later")
+        assert(row.recommendation.context.plan[2].ids[1]==104 and row.recommendation.context.x==.612)
+        assert(row.context.x==.7 and not row.recommendation.context.characterName)
+        local count=0;for _,r in ipairs(db.feedback.entries) do if r.kind=="ACCEPTED" and r.questID==104 then count=count+1 end end
+        assert(count==1)
+    end)
+end)
+
+test("current pickup relations take priority over recent recommendations",function()
+    withTime(function(setTime)
+        local db,s=setup();F.Observe(s,{step("PICK UP",105,106)})
+        setTime(101)
+        F.Event("QUEST_ACCEPTED",105,s,{step("DO",999),step("PICK UP",105)})
+        assert(last(db).relation=="in_plan_later" and not last(db).recommendation)
+        F.Event("QUEST_ACCEPTED",106,s,{step("PICK UP",106)})
+        assert(last(db).relation=="matches_next" and not last(db).recommendation)
+    end)
+end)
+
+test("offered-only unrelated expired skipped and completed quests do not inherit recommendation credit",function()
+    withTime(function(setTime)
+        local db,s=setup();s.offered[107]=true
+        F.Observe(s,{step("PICK UP",108,109,110)})
+        setTime(101);F.Event("QUEST_ACCEPTED",107,s,{step("DO",999)})
+        assert(last(db).relation=="unplanned" and not last(db).recommendation)
+        s.skip={[108]=true};F.Event("QUEST_ACCEPTED",108,s,{})
+        assert(last(db).relation=="unknown" and not last(db).recommendation)
+        s.done[109]=true;F.Event("QUEST_ACCEPTED",109,s,{})
+        assert(last(db).relation=="unknown" and not last(db).recommendation)
+        setTime(111);F.Event("QUEST_ACCEPTED",110,s,{step("DO",999)})
+        assert(last(db).relation=="unplanned" and not last(db).recommendation)
+        F.Event("QUEST_ACCEPTED",111,s,{step("DO",999)})
+        assert(last(db).relation=="unplanned" and not last(db).recommendation)
+    end)
+end)
+
+test("recent pickup history resets at map loading clear reload and clock boundaries",function()
+    withTime(function(setTime)
+        for _,boundary in ipairs({"map","loading","clear","reload","clock","unavailable"}) do
+            setTime(100);local db,s=setup();F.Observe(s,{step("PICK UP",112)})
+            if boundary=="map" then s.map=1457;F.Observe(s,{});s.map=1438
+            elseif boundary=="loading" then F.Suspend()
+            elseif boundary=="clear" then F.Clear(db)
+            elseif boundary=="reload" then F.Initialize(db)
+            elseif boundary=="clock" then setTime(99);F.Observe(s,{})
+            else local old=GetTime;GetTime=nil;F.Observe(s,{});GetTime=old end
+            setTime(101);F.Event("QUEST_ACCEPTED",112,s,{step("DO",999)})
+            assert(last(db).relation=="unplanned" and not last(db).recommendation,boundary)
+        end
+    end)
+end)
+
+test("recent pickup history is bounded and unavailable log rows cannot supply stale attribution",function()
+    withTime(function(setTime)
+        local db,s=setup()
+        for batch=0,4 do
+            local route={}
+            for i=1,8 do route[i]=step("PICK UP",1000+batch*32+(i-1)*4+1,1000+batch*32+(i-1)*4+2,1000+batch*32+(i-1)*4+3,1000+batch*32+i*4) end
+            F.Observe(s,route)
+        end
+        local count=0;for _ in pairs(F.recentPickups) do count=count+1 end
+        assert(count==128 and not F.recentPickups[1001] and F.recentPickups[1160])
+        setTime(101);s.logAvailable=false;F.Observe(s,{})
+        s.logAvailable=true;F.Event("QUEST_ACCEPTED",1160,s,{step("DO",999)})
+        assert(last(db).relation=="unplanned" and not last(db).recommendation)
+    end)
+end)
+
+test("stale recommendation credit expires by observation count even while the clock is stationary",function()
+    withTime(function()
+        local db,s=setup();F.Observe(s,{step("PICK UP",114)})
+        for _=1,21 do F.Observe(s,{step("DO",999)}) end
+        F.Event("QUEST_ACCEPTED",114,s,{step("DO",999)})
+        assert(last(db).relation=="unplanned" and not last(db).recommendation)
+    end)
+end)
+
+test("recent pickup evidence sanitizes old records and leaves prior builds and sequence intact",function()
+    withTime(function(setTime)
+        local db,s=setup();F.Mark("synthetic older entry",s,{})
+        db.feedback.entries[1].build="0.2.0-route-feedback-8"
+        local oldSeq=db.feedback.entries[1].seq
+        F.Observe(s,{step("PICK UP",113)})
+        setTime(102);F.Observe(s,{});F.Event("QUEST_ACCEPTED",113,s,{})
+        local row=last(db);row.recommendation.private="Not retained";row.recommendation.context.characterName="Not retained"
+        local seq,session=row.seq,db.feedback.session
+        F.Initialize(db)
+        assert(db.feedback.entries[1].build=="0.2.0-route-feedback-8" and db.feedback.entries[1].seq==oldSeq)
+        local kept=findEvent(db,"ACCEPTED",113)
+        assert(kept.relation=="recently_recommended" and not kept.recommendation.private and not kept.recommendation.context.characterName)
+        F.Mark("synthetic new entry",s,{})
+        assert(last(db).seq>seq and db.feedback.session>session and last(db).build=="0.2.0-route-feedback-9")
+    end)
+end)
+
+test("recent attribution covers later visible steps beyond the eight-step report context",function()
+    withTime(function(setTime)
+        for _,index in ipairs({9,24}) do
+            setTime(100);local db,s=setup();local route={}
+            for i=1,24 do route[i]=step("DO",2000+i) end
+            route[index]=step("PICK UP",3000+index)
+            F.Observe(s,route);setTime(101);F.Observe(s,{step("DO",999)})
+            setTime(102);F.Event("QUEST_ACCEPTED",3000+index,s,{step("DO",999)})
+            local row=last(db)
+            assert(row.relation=="recently_recommended" and row.recommendation.planIndex==index)
+            assert(row.recommendation.relation=="in_plan_later" and row.recommendation.context.plan[1].ids[1]==3000+index)
+            assert(row.context.plan[1].ids[1]==999 and F.Report(db):find("sourceStep="..index,1,true))
+            F.Initialize(db)
+            assert(findEvent(db,"ACCEPTED",3000+index).recommendation.planIndex==index)
+        end
+    end)
+end)
+
+test("recent recommendation evidence keeps full-entry exports bounded and newest data retained",function()
+    withTime(function(setTime)
+        local db,s=setup()
+        for id=1,40 do s.log[id]={progress=.25,xp=1000,location={x=.5,y=.6},destinationMap=1438} end
+        for batch=1,100 do
+            setTime(100+batch)
+            local route={}
+            for index=1,8 do
+                local id=10000+batch*32+index*4
+                route[index]=step("PICK UP",id,id+1,id+2,id+3)
+            end
+            F.Observe(s,route);F.Observe(s,{step("DO",1)})
+            for index=1,8 do F.Event("QUEST_ACCEPTED",10000+batch*32+index*4,s,{step("DO",1)}) end
+        end
+        local report=F.Report(db)
+        local exported=tonumber(report:match("Entries: exported=(%d+)"))
+        assert(#db.feedback.entries==300 and #report<500000 and exported>0 and exported<=300)
+        assert(last(db).relation=="recently_recommended" and report:find("Event "..last(db).seq.." ",1,true))
+        assert(#last(db).context.active==40 and #last(db).recommendation.context.active==0 and #last(db).recommendation.context.offered==0,
+            "source evidence must not duplicate the event's large quest snapshot")
+        assert(report:find("Recent plan:",1,true) and not report:find("Ignored quest text",1,true))
+    end)
+end)
+
 if savedDB then F.Initialize(savedDB) else F.Initialize(nil) end

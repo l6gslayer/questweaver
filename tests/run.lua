@@ -195,6 +195,7 @@ test("all addon source files compile as Lua",function()
 end)
 
 assert(loadfile("tests/trips_test.lua"))(Q,test)
+assert(loadfile("tests/stability_test.lua"))(Q,test)
 assert(loadfile("tests/ui_test.lua"))(Q,test)
 assert(loadfile("tests/navigation_test.lua"))(Q,test)
 assert(loadfile("tests/locations_test.lua"))(Q,test)

@@ -87,8 +87,8 @@ test("version and build label stays visible in both layouts",function()
     local U=Q.UI;local oldCompact=Q.db.compact
     for _,compact in ipairs({true,false}) do
         Q.db.compact=compact;U.Layout();U.Render()
-        assert(U.build:GetText():find("v0.2.0 | build 8",1,true))
-        assert(U.build:GetText():find("Darnassus",1,true) and U.build:IsShown())
+        assert(U.build:GetText():find("v0.2.0 | UI dev 3",1,true))
+        assert(U.zone:GetText():find("Darnassus",1,true) and U.zone:IsShown() and U.build:IsShown())
     end
     Q.db.compact=oldCompact;U.Layout()
 end)

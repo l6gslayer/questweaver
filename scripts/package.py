@@ -6,7 +6,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = ROOT / 'QuestWeaver'
 SOURCES = ['.gitignore', 'AGENTS.md', 'README.md', 'SOURCES.md', 'LICENSE', 'CHANGELOG.md',
-           'VALIDATION.md', 'CATALOGUE.md', 'DARKSHORE_CATALOGUE.md', 'DARNASSUS_CATALOGUE.md', 'QuestWeaver', 'tests', 'scripts', '.github']
+           'HANDOFF.md', 'docs', 'VALIDATION.md', 'CATALOGUE.md', 'DARKSHORE_CATALOGUE.md', 'DARNASSUS_CATALOGUE.md', 'QuestWeaver', 'tests', 'scripts', '.github']
 ALLOWED = {'.lua', '.toc', '.md', '.py', '.yml'}
 PATTERNS = {
     'machine home path': r'(?:/Users/|/home/|[A-Za-z]:\\Users\\)[^\s"\']+',

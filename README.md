@@ -1,5 +1,11 @@
 # QuestWeaver
 
+**Local UI development branch:** `0.2.0-ui-dev.3` shows **v0.2.0 | UI dev 3**.
+The approved release remains 0.2.0/build 8. UI dev 2 fixed the refresh-driven
+drag jump according to maintainer playtesting. Dev 3 improves planner stability
+and recent-pickup feedback attribution; see [dev 3 notes](docs/UI_DEV_3.md).
+This development build still requires quest-planning playtest acceptance. See [UI review and playtest brief](docs/UI_UX_PASS.md).
+
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
 for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
 conditional offers. **0.2.0** was approved for release after maintainer playtesting
@@ -30,11 +36,13 @@ waypoint API and finally prints coordinates; these fallbacks remain manual. Thir
 ## Window controls
 
 - **Drag the title bar** to move the window. Movement is enabled by default.
-- **Lock / Unlock** controls title dragging in either layout.
-- **- / +** minimizes to the next action or expands the full trip plan.
+- **Options** opens movement, size and planning controls in either layout.
+- **Lock / Unlock** in Options controls title dragging. Refreshes defer layout changes until you finish dragging.
+- **Details / Compact** switches between the current action and full trip plan.
+- **Size** in Options cycles the saved tracker size from 80% to 130%, fitting available screen space.
 - **Waypoint** targets or reselects the first outstanding destination.
 - **Auto: On / Off** controls automatic TomTom guidance in either layout.
-- **x** hides the window; `/qw` brings it back in its saved layout.
+- **Hide** hides the window; `/qw` brings it back in its saved layout.
 - `/qw resetposition` recenters an offscreen window.
 
 Position, compact/expanded state and lock preference survive reloads through
@@ -42,9 +50,12 @@ per-character SavedVariables. Legacy 0.1.0 pixel positions are accepted, then
 saved as normalized coordinates when moved or the layout is toggled. Both
 layouts remain clamped to the screen.
 
-Compact mode shows only the current action, its member quests/objectives,
-available live progress, destination and waypoint control. Expand to see all
-members when a stop contains more than three. Unknown progress says **check
+Compact mode shows the current action, its member quests/objectives, live
+progress, destination and guidance controls. Scroll the task area for all
+members/notices. Details exposes the numbered full route in a separate scroll
+area beginning with the next stop. Live objective descriptions/counts are shown
+when available; missing rows keep known progress or a quest-log reminder.
+Destination and controls remain outside task overflow. Unknown progress says **check
 quest log**, rather than pretending an unmatched objective is complete.
 
 ## Live quest destinations
@@ -181,7 +192,9 @@ reward or player movement is automated.
 ## Playtest feedback and manual review
 
 Click **Feedback** in either tracker layout to add a short note, mark a moment,
-or select a copyable report. You can also use:
+or select a copyable report. Saving shows a local acknowledgment; Clear history
+requires a second confirmation and offers Cancel. Closing preserves an unsaved
+note draft and releases text focus. You can also use:
 
 | Command | Purpose |
 | --- | --- |
@@ -200,7 +213,10 @@ review what you type before sharing. Notes are capped at 240 UTF-8 bytes and
 exports at under 481 KB, retaining newest complete entries when needed.
 
 An action may match the next step, appear later in the plan, be unplanned, or
-have insufficient comparison context. These labels describe differences only;
+have insufficient comparison context. An acceptance may instead be labeled
+**recently_recommended** when its pickup appeared in the preceding ten seconds
+and bounded recent observations on the same map. The export includes that
+earlier recommendation separately from the immediate event context. These labels describe differences only;
 they do not mean the player's route was better or worse. Grouped quest members
 are compared together. Loading/unavailable quest data suspends comparisons
 rather than manufacturing quest removals. Events keep the preceding plan for
@@ -348,8 +364,8 @@ Useful exceptions:
   planner conservatively requires room for planned pickups up front.
 - Previous trips are retained within 15% of the best priority, and small
   destination changes receive hysteresis to avoid repeated direction changes.
-- **Skip first quest** removes only the first quest of a grouped action from
-  recommendations. It never abandons quests. Restore clears skips and pins.
+- **Skip next quest** removes only the first quest of a grouped action from
+  recommendations. It never abandons quests. **Reset choices** clears skips and pins; its tooltip explains this.
 
 ## XP and gear modes
 

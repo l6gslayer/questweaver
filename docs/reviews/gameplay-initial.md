@@ -1,0 +1,32 @@
+# Independent initial gameplay usability review
+
+Reviewed the approved build 8 source before seeing any other review or proposed
+design. Evidence is source inspection and existing UI simulations, not a running
+Forever client. Severity: high impedes a core action or risks losing user data;
+medium causes hesitation or repeated effort; low adds avoidable clutter.
+
+| Severity | Concrete weakness and evidence | Gameplay impact | Highest-value improvement |
+| --- | --- | --- | --- |
+| High | `UI.Render` fixes the current-detail text height to 100 in expanded mode and 190 in compact mode; compact height caps at 360, while up to three wrapped member lines, notices, destination, shared-stop count and hints are concatenated (`UI.lua:188–215`). Only the full route body scrolls. | Long names and multiple objectives can hide the destination, timed warning or missing-location guidance. Expanding does not make the current-detail region taller. | Give the current action a measured, bounded region with explicit overflow access; keep urgent and destination information outside expendable detail text. Ensure every member and notice remains reachable in the expanded scroll area. |
+| High | Feedback's `Clear feedback` immediately calls `FeedbackAction("clear")` beside Save and Select report (`UI.lua:148–157`). | An ordinary misclick irreversibly removes the accumulated local playtest observations. | Require a second explicit clear action or a short inline confirmation, isolated from the primary save flow. Preserve route and feedback state until confirmation. |
+| Medium | `MemberText` chooses `member.label or member.quest.name`; authored multi-task quests use task labels (`Trips.lua:7,59`). The parent quest name is then absent from the row. | A player collecting several items cannot reliably relate each objective to the quest log, especially at grouped stops. | Show the quest title with subordinate objective/progress text when the labels differ. Avoid repeating the title when it already is the objective label. |
+| Medium | Single-member `Instruction` repeats the same label immediately above `MemberText`; multiple-member instructions use vague "Work nearby objectives". Route rows then repeat coordinates and expose numeric quest IDs (`UI.lua:17–27,186–198,226–231`). | The most valuable information competes with duplicated labels and debugging identifiers; a grouped action requires reading a paragraph to understand what to do. | Separate action verb, quest title(s), task progress and shared destination. Use explicit action labels and stop sequencing; place IDs and technical provenance in optional detail or exports. |
+| Medium | `Skip first quest` operates on `Q.route[1].id`, although the first group can contain several quests. Restore skips also clears `Q.db.pin` (`UI.lua:113–120`). | The user cannot tell which grouped quest will be skipped; restoring exclusions unexpectedly discards a preferred quest. | Name the affected quest in a tooltip/confirmation or provide per-quest actions. Explain existing restore behavior; do not silently change planner or saved pin semantics as part of styling. |
+| Medium | `Auto: On` reflects the saved preference even when TomTom is absent. `Navigation.Status` separately says "TomTom not loaded - manual waypoint available". The Waypoint click may only print coordinates (`Navigation.lua:87–91`, `Runtime.lua:262–275`). | An enabled-looking control suggests an arrow is active when it cannot exist; "waypoint available" overstates the coordinate-only fallback. | Distinguish saved automatic preference from dependency readiness. Use precise manual fallback text and visibly acknowledge a successful manual action or failure. Keep the saved preference intact. |
+| Medium | Empty plans always headline "No next action"; runtime combines unsupported catalogue and missing position into one status, and the no-eligible explanation lists level/skips/prerequisites/log together (`Runtime.lua:237–252`, `UI.lua:17,206`). | Loading, unsupported area, completed scope and unresolved locations look like the same failure. The player does not know whether to wait, move, inspect the log or restore skips. | Give waiting/unsupported/empty states distinct plain-language headlines and one useful next step. Keep unknown completion unknown. Show zone-handoff notices prominently without pretending to route foreign coordinates. |
+| Medium | Feedback shows a large editable raw report immediately; saving acknowledges in chat, clears the note and refreshes the report (`UI.lua:141–172`, `Runtime.lua:218–228`). | During play, the panel feels like a diagnostic export tool rather than a quick note workflow; there is no local confirmation beside the entry field. | Put short note entry first with a visible saved acknowledgment and a separate copy/export section. Preserve the private local-only explanation and the reload/logout persistence instruction. |
+| Low | The expanded window uses a 640-unit fixed height but the route viewport starts 304 units down and ends 110 units above the bottom (`UI.lua:72,123`). Static instructions and summary consume much of the available space. | Only a few route steps are visible despite a large overlay, increasing scrolling and obstructing the world. | Compress secondary setup/estimate copy; reserve a larger share of expanded height for the ordered route. Keep compact mode optimized for the immediate action. |
+| Low | Layout controls are `-`, `+`, and `x`, and the entire panel enables mouse capture (`UI.lua:83,97–99`). | The meaning/recovery path is undiscoverable; unused panel area can intercept world interaction. | Supply clear layout/hide tooltips and `/qw` recovery text. Keep drag interaction restricted to the unlocked title; assess click-through outside intentional controls without disrupting scrolling. |
+
+## Priority sequence
+
+1. Protect current-action readability for long and grouped content, including
+   urgent/missing-location notices and named quest/objective association.
+2. Protect feedback deletion and make saving a quick, acknowledged flow.
+3. Clarify navigation availability, grouped skip scope and state-specific next steps.
+4. Remove repeated technical detail and allocate expanded space to route reading.
+
+Do not alter route ordering, quest data, completion inference, automatic player
+actions, waypoint ownership or saved feedback schema to achieve these changes.
+Client rendering, real input, UI-scale behavior and game persistence still need
+separate playtesting.
