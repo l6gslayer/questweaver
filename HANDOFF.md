@@ -4,6 +4,24 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
+## UI dev installation — current status
+
+On 2026-11-07 the maintainer authorized installing the existing UI dev package
+for playtesting. The complete prior installed addon was backed up under ignored
+`dist/install-backups/QuestWeaver-before-ui-dev-1-20261107-190913-230738.zip`,
+and every backup file was read back successfully. All 22 development package
+files matched repository sources before installation, and all 22 installed
+files then matched the package byte-for-byte. Six files differed from the prior
+installed release. The ignored installation receipt records package/backup hashes.
+
+Installed: `0.2.0-ui-dev.1`, visible after the user reloads as
+`v0.2.0 | UI dev 1`. The approved release remains 0.2.0/build 8; the dev UI has
+not yet been accepted in-game. No SavedVariables or other addons were changed,
+and no game restart, reload, command or character action was performed. No push,
+PR, merge or publication occurred or is authorized. This status supersedes the
+pre-installation statements below and in the packaged build-preparation docs.
+The package was not rebuilt as part of recording this installation.
+
 ## Current local UI work — authoritative
 
 UI implementation is now on local `codex/ui-ux-pass`, based on main `593f879`.
