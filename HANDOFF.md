@@ -14,7 +14,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
 - Latest addon implementation: expanded Teldrassil catalogue on the feature branch.
-  The rebuilt ZIP is ready; this catalogue build has NOT been installed.
+  The expanded catalogue build has been installed after a verified backup.
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
 - Source: nested `QuestWeaver/` directory; ten Lua files plus its manifest.
@@ -342,7 +342,7 @@ installed release files match the rebuilt ZIP. SavedVariables and other addons
 untouched; TomTom present; no nested directory. Reload to load this build, play,
 and reload again to save new observations. No game action was performed.
 
-## Expanded Forever Teldrassil catalogue — ready, not installed
+## Expanded Forever Teldrassil catalogue — installed for playtesting
 
 User requested catalogue expansion and advance pickups; no new installation was
 requested. Added Teldrassil.lua after Shadowglen.lua, expanding 23 to 79 records.
@@ -366,5 +366,9 @@ city projections, item/object distinctions, rare advice and missing recipients.
 Independent source/drop/engineering reviews completed; an absent-recipient copy
 bug found in review was fixed and regression tested. Package includes the audit.
 Feedback capture tag 0.2.0-route-feedback-6 preserves history; last review cursor 211.
-The ZIP is rebuilt locally; the installed addon remains the previous tag 5 build.
-No install/game action/push/PR/merge. Actual new behavior awaits playtesting.
+The user subsequently authorized installation. The expanded catalogue ZIP was
+verified against source, the differing prior addon was backed up and checked,
+and all 17 installed release files now match the ZIP byte-for-byte. There is no
+nested addon folder; SavedVariables and other addons were left untouched.
+TomTom is present. No game restart/reload or character action was performed.
+No push/PR/merge. Actual new catalogue behavior awaits playtesting after reload.
