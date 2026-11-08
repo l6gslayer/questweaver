@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **210 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **220 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -263,3 +263,29 @@ For the next local session with the appropriate access:
   `--add-dir` to grant access to the particular installed addon directory.
 - Never publish the parent workspace or copy its local instructions, absolute
   home paths, credentials, saved game data or personal identifiers into this repo.
+
+## Accepted-quest continuity and bounded field continuation
+
+User authorized rebuilding/installing 0.2.0 on the feature branch after the
+second manual feedback review. Accepted quests with valid current destinations
+continue across the corridor on map 1438; unaccepted pickups remain corridor
+limited. Runtime pauses on other maps/unavailable positions. Missing destinations
+remain quest-log notices, and no current-stage return is invented.
+
+Early-return investigation found unknown-recipient companions excluded by the
+shared-return guard. Trips now preserves already grouped accepted nearby work
+before an elective return if progress is known and at least half complete,
+remaining total work <=2 estimated minutes, targets within .04 map distance and
+no increased modeled combat risk. Existing timed/near-ready/pin safeguards and
+four-quest bound remain. Unknown returns never earn completion/chain unlocks.
+
+220 Lua tests and 17 Python reader tests passed; all nine Lua sources compiled.
+Capture tag is 0.2.0-route-feedback-3, retaining history/counters. Actual boundary
+continuity and field-continuation behavior need user playtesting. No PR, merge
+or push authorized; preserve main and feature/0.2.0-trip-planning.
+
+The authorized installation completed after inspecting the existing addon and
+verifying a backup. All 15 installed release files match the rebuilt ZIP;
+no nested addon folder. SavedVariables and other addons were left untouched,
+TomTom is present. No game restart/reload or character action was performed.
+User should reload to load this build, then play and reload again before review.

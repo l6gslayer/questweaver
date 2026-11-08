@@ -8,10 +8,18 @@ function C.Copy(t)
     return r
 end
 
--- All discovered destinations must share the starter map's coordinate space.
+-- Runtime supplies positions in the pack map's coordinate space. Accepted
+-- quests can continue across the authored pickup corridor on that same map.
+function C.IsMapPoint(pos)
+    return type(pos)=="table" and type(pos.x)=="number" and type(pos.y)=="number"
+        and pos.x>=0 and pos.x<=1 and pos.y>=0 and pos.y<=1
+        and not (pos.x==0 and pos.y==0)
+end
+
+-- Authored/unaccepted opportunities remain limited to the starter corridor.
 function C.IsLocal(pos)
     local bounds=Q.Pack and Q.Pack.bounds or {minX=.50,maxX=.65,minY=.23,maxY=.65}
-    return type(pos)=="table" and type(pos.x)=="number" and type(pos.y)=="number"
+    return C.IsMapPoint(pos)
         and pos.x>=bounds.minX and pos.x<=bounds.maxX and pos.y>=bounds.minY and pos.y<=bounds.maxY
 end
 

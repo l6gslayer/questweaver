@@ -110,8 +110,8 @@ Fang can be identified by its known item ID if the optional quest-item API is
 missing. Other starters require the client to identify the quest ID.
 
 Accepted quests outside the authored pack enter planning when WoW exposes a
-current destination inside the Shadowglen–Dolanaar corridor on map 1438
-(x 50-65%, y 23-65%). Discovered item starts require a local client destination
+current destination on the Teldrassil map (1438), including outside the
+Shadowglen–Dolanaar pickup corridor (x 50-65%, y 23-65%). Discovered item starts require a local client destination
 or a local QuestieDB return location before they enter routing; unlocated items
 remain bag reminders. QuestieDB remains optional. No remote destination is
 silently converted into local coordinates.
@@ -236,9 +236,13 @@ package are quest items, not item-starting drops.
 
 The supported area now includes the road and Dolanaar through y 65% on the same
 Teldrassil map. Live quest locations and automatic guidance keep refreshing
-after you leave Shadowglen, and accepted local quests in that corridor can join
-trips. This extension is not a complete authored Dolanaar quest catalogue.
-Outside the supported corridor, guidance clears as before. Fallback coordinates,
+after you leave Shadowglen. Accepted quests with located current stages can
+continue across Teldrassil without dropping at the corridor boundary. Outside
+the corridor, only accepted quests are eligible; new authored pickups and
+speculative follow-ups wait until you return. Guidance clears on other maps
+or when player coordinates are unavailable. This is not a complete authored
+Teldrassil quest catalogue. Missing quest locations remain quest-log reminders.
+Fallback coordinates,
 XP and work times remain estimates; live locations/XP take precedence.
 
 ## TomTom arrow guidance
@@ -447,3 +451,19 @@ pushed. Generated packages, logs, local settings and game saves are ignored.
 opening a PR to `main`. See [VALIDATION.md](VALIDATION.md) for the test record and
 playtest checklist, [CHANGELOG.md](CHANGELOG.md) for changes and
 [SOURCES.md](SOURCES.md) for research boundaries.
+
+### Continuing accepted work beyond the corridor
+
+Accepted quests with current destinations on Teldrassil remain eligible across
+the pickup corridor boundary. Other maps and missing player coordinates still
+pause guidance. Unlocated accepted quests ask you to check the quest log;
+unknown objectives or recipients are never invented.
+
+When an outing already grouped accepted work, a ready quest can now wait for
+an unknown-return companion that is at least halfway done, has known progress,
+and has at most two estimated work minutes remaining in total. Remaining work
+must be within .04 map distance of your current position and have no increased
+modeled combat risk. Up to four quests remain grouped. Timed deliveries, actual
+nearby turn-ins, skips and pins retain their priority. This is bounded field
+continuation, not a claim that both quests share a recipient. Once the companion
+is ready, the client-provided return location drives replanning.

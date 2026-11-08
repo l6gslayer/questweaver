@@ -40,8 +40,9 @@ function P.Quests(state,db)
         local log,item=state.log[id],(state.itemStarts or {})[id]
         local dest=(log and log.location) or (item and item.location)
         local finish=point(read(QuestDB,id,"finishedBy"))
-        if not Q.Core.IsLocal(finish) then finish=nil end
-        if (log and Q.Core.IsLocal(dest)) or (item and (Q.Core.IsLocal(dest) or finish)) then
+        if not Q.Core.IsMapPoint(finish) then finish=nil end
+        if (log and (not state.map or state.map==Q.Pack.mapID) and Q.Core.IsMapPoint(dest))
+            or (item and (Q.Core.IsLocal(dest) or Q.Core.IsLocal(finish))) then
             local complete=log and log.complete
             seeds[#seeds+1]={id=id,name=(log and log.title) or (item and item.title) or ("Quest "..id),
                 minLevel=1,level=(log and log.level) or state.level,
@@ -134,7 +135,7 @@ function P.Quests(state,db)
         if q.ownedOnly and log then q.stageOnly=not q.finish end
         if q.id==97236 and log then q.minutes=.15 end
         if q.dynamic then
-            if not Q.Core.IsLocal(q.finish) then q.finish=nil end
+            if not (log and Q.Core.IsMapPoint(q.finish) or Q.Core.IsLocal(q.finish)) then q.finish=nil end
             q.stageOnly=q.pendingAction~=nil or (not (log and log.complete) and (item~=nil or not q.finish))
         end
         if log and not log.failed and log.location then
@@ -170,6 +171,9 @@ function P.Quests(state,db)
             q.gear,q.gearKnown=Q.Gear.Evaluate(observed.items,db.profile)
             if observed.incomplete then q.gearKnown=false end
         end
+        -- Leaving the corridor continues accepted work, without suggesting new
+        -- authored pickups or speculative follow-ups across the whole zone.
+        if not Q.Core.IsLocal(state.pos) then q.acceptedOnly=true end
         result[#result+1]=q
     end
     return result,notices

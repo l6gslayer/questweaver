@@ -105,3 +105,15 @@ estimates, static timing flags and travel geometry still require Forever testing
   offers rather than fabricating future quest data or permanent availability.
 - Preserve prior capture entries and counters; new observations use capture tag
   0.2.0-route-feedback-2 so subsequent manual reviews identify this build.
+
+### 0.2.0 accepted-quest continuity and field continuation
+
+- Continue accepted current-stage quests across the authored corridor boundary
+  on Teldrassil. Keep unaccepted pickups within the corridor and pause on other
+  maps or unavailable player positions.
+- Retain accepted dynamic quests whose live objective/return moves beyond the
+  corridor; unknown locations remain reminders rather than guessed waypoints.
+- Before an elective return, finish bounded nearby unknown-return work already
+  grouped in the previous outing. Require known progress, at least half done,
+  at most two remaining work minutes and existing urgency/proximity/pin safeguards.
+- Capture tag is now 0.2.0-route-feedback-3; existing saved history is preserved.

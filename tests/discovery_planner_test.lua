@@ -81,13 +81,13 @@ test("newly complete discovered quest becomes an observed local return",function
     assert(T.Plan({q},s)[1].action=="TURN IN")
     s.log[90001]=nil;assert(not find(provider(s),90001))
 end)
-test("discovered quests reject remote and unavailable coordinates and deduplicate seeds",function()
+test("accepted map quests continue outside corridor and reject unavailable coordinates",function()
     local s=state()
     s.log[90001]={title="Remote",location={x=.2,y=.2}}
     s.log[90002]={title="Unknown"}
     s.log[917]={location=cave}
     local qs,notices=provider(s)
-    assert(not find(qs,90001) and not find(qs,90002) and #notices==1)
+    assert(find(qs,90001) and not find(qs,90002) and #notices==1)
     local count=0;for _,q in ipairs(qs) do if q.id==917 then count=count+1 end end
     assert(count==1)
     s.log[90003]={location={x=0/0,y=.3}};assert(not find(provider(s),90003))
@@ -101,7 +101,7 @@ test("local item start joins trip only with locality evidence and remains manual
     assert(T.Plan({q},s)[1].action=="ACCEPT ITEM")
     s.itemStarts={};assert(not find(provider(s),90001))
 end)
-test("database local return supports accepted work without assuming remote returns",function()
+test("database same-map return supports accepted work beyond pickup corridor",function()
     QuestDB={Get=function(id,key)
         if key=="name" then return "DB quest" end
         if key=="finishedBy" then return {{123}} end
@@ -111,7 +111,7 @@ test("database local return supports accepted work without assuming remote retur
     local q=find(provider(s),90001)
     assert(q.finish and not q.stageOnly and member(T.Plan({q},s),90001,"TURN IN"))
     NpcDB.Get=function() return {[141]={{20,20}}} end
-    q=find(provider(s),90001);assert(not q.finish and q.stageOnly)
+    q=find(provider(s),90001);assert(q.finish.x==.2 and not q.stageOnly)
     QuestDB=nil;NpcDB=nil
 end)
 test("failed discovered quests do not route and unknown XP stays explicit",function()

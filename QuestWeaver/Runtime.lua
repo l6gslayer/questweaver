@@ -194,21 +194,21 @@ function R.Refresh()
     Q.notices={}
     if Q.inWorld==false then
         Q.route={}; Q.status="Waiting for the world to load."
-    elseif s.map~=Q.Pack.mapID or not s.pos then
+    elseif s.map~=Q.Pack.mapID or not Q.Core.IsMapPoint(s.pos) then
         Q.route={}; Q.status="Travel to the Shadowglen-Dolanaar area in Teldrassil to use this pack."
     elseif s.classID==nil or not s.raceID then
         Q.route={}; Q.status="Waiting for character information."
     elseif UnitFactionGroup("player")~="Alliance" then
         Q.route={}; Q.status="This starter pack is for Alliance characters."
-    elseif not Q.Core.IsLocal(s.pos) then
-        Q.route={}; Q.status="Return to the supported Shadowglen-Dolanaar corridor in Teldrassil."
     elseif s.logAvailable==false then
         Q.route={}; Q.status="Waiting for quest log data."
     else
         Q.quests,Q.notices=Q.Provider.Quests(s,Q.db)
         Q.notices=Q.notices or {}
         Q.route,Q.trips=Q.Trips.Plan(Q.quests,s,24)
-        Q.status=#Q.route>0 and "Next action is live. Later steps assume you complete this trip." or "No eligible quests remain in this pack. Check your level, skips, and prerequisites."
+        Q.status=#Q.route>0 and "Next action is live. Later steps assume you complete this trip."
+            or (not Q.Core.IsLocal(s.pos) and "No located accepted quests here. Check your quest log; new pickups use the Shadowglen-Dolanaar corridor."
+            or "No eligible quests remain in this pack. Check your level, skips, and prerequisites.")
     end
     local first=Q.route[1]
     Q.previous=first and {tripKey=first.tripKey,nextKey=first.key} or nil

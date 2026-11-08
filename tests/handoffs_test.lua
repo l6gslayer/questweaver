@@ -96,6 +96,8 @@ test("runtime and automatic guidance stay active after leaving Shadowglen",funct
     Q.Runtime.Refresh()
     assert(#Q.route>0 and Q.route[1].id==2159 and Q.route[1].action=="TURN IN" and added==1)
     pos={x=.56,y=.70};Q.Runtime.Refresh()
+    assert(#Q.route>0 and Q.Navigation.current and added==1)
+    C_Map.GetBestMapForUnit=function() return 999 end;Q.Runtime.Refresh()
     assert(#Q.route==0 and not Q.Navigation.current and removed>=1)
     C_Map,C_QuestLog,Q.inWorld,Q.db.autoWaypoint,TomTom=oldMap,oldApi,oldWorld,oldAuto,oldTT
 end)

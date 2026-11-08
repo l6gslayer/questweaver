@@ -86,6 +86,13 @@ function T.Build(selected,s)
                 end
             end
             if node.action=="TURN IN" then
+                -- A bounded continuation may finish already grouped field work
+                -- before departing even when that companion's return is unknown.
+                if node.quest.fieldContinuation then
+                    for _,other in ipairs(nodes) do
+                        if other.action=="DO" and other.quest.fieldCompanion then ready=false end
+                    end
+                end
                 for _,other in ipairs(nodes) do if other.id==node.id and other.action~="TURN IN" then ready=false end end
                 -- Accepted independent work near this quest's objective shares
                 -- the return phase. Do not greedily visit the hub between its
@@ -343,6 +350,53 @@ local function pickupsAlongRoute(best,quests,s,fastest)
     return best
 end
 
+-- Keep a small amount of observed, previously grouped field work ahead of
+-- an elective return. Unknown recipients cannot satisfy shared-return matching;
+-- this policy uses prior accepted grouping and present work proximity instead.
+-- It never projects completion/chain unlocks for a companion with no recipient.
+local function continueFieldWork(available,s)
+    if not s.previous or type(s.previous.tripKey)~="string" or not s.pos then return nil end
+    local prior={}
+    for id in s.previous.tripKey:gmatch("%d+") do prior[tonumber(id)]=true end
+    if s.pin and not prior[s.pin] then return nil end
+    local returns,companions={},{}
+    local work=0
+    for _,q in ipairs(available) do
+        local log=s.log[q.id]
+        if prior[q.id] and log and not log.failed and not q.timed and not q.pendingAction then
+            if log.complete and q.finish and not q.stageOnly then
+                returns[#returns+1]=q
+            elseif not log.complete and q.stageOnly and not q.finish and log.progressKnown~=false
+                and type(log.progress)=="number" and log.progress>=.5 and log.progress<1
+                and (q.level or 1)<=s.level+1 and (q.risk or 0)<=0 then
+                local fits=true
+                local remaining=0
+                for _,task in ipairs(T.Tasks(q)) do
+                    local progress,known=T.Progress(q,task,log)
+                    if not known or (progress<1 and (not task.target or C.Distance(s.pos,task.target)>.04)) then fits=false end
+                    remaining=remaining+(task.minutes or q.minutes or 5)*(1-progress)
+                end
+                if fits and remaining>0 and work+remaining<=2 then
+                    local copy=C.Copy(q);copy.fieldCompanion=true
+                    companions[#companions+1]=copy;work=work+remaining
+                end
+            end
+        end
+    end
+    if #returns==0 or #companions==0 or #returns+#companions>4 then return nil end
+    local selected={}
+    for _,q in ipairs(returns) do local copy=C.Copy(q);copy.fieldContinuation=true;selected[#selected+1]=copy end
+    for _,q in ipairs(companions) do selected[#selected+1]=q end
+    -- A pin within the prior trip must remain in this actual continuation.
+    if s.pin then
+        local found=false;for _,q in ipairs(selected) do if q.id==s.pin then found=true end end
+        if not found then return nil end
+    end
+    local trip=T.Build(selected,s)
+    if trip then trip.fieldContinuation=true end
+    return trip
+end
+
 function T.Choose(quests,s)
     local available,urgent={},nil
     for _,q in ipairs(quests) do
@@ -382,6 +436,8 @@ function T.Choose(quests,s)
         trip.nearbyReturns=true
         return trip
     end
+    local continued=continueFieldWork(available,s)
+    if continued then return continued end
     -- Consider nearby chain unlocks as insertions too. A child cannot form a
     -- trip alone: Build enforces its prerequisite turn-ins before pickup.
     -- Batch the reachability passes so one pass means one prerequisite depth.

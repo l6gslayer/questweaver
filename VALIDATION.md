@@ -296,3 +296,29 @@ Close without accepting to confirm the temporary suggestion clears. Use Feedback
 or `/qw mark`, then reload/logout before requesting another manual review. New
 records carry tag 0.2.0-route-feedback-2; earlier tag-1 observations are retained.
 Actual Forever behavior remains unverified by the agent.
+
+## 0.2.0 boundary and field continuation — 2026-11-07
+
+All 220 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python feedback-reader tests passed. Ten new
+regressions cover accepted objectives/returns across corridor edges, preserving
+pickup limits, invalid/foreign positions, Runtime guidance continuity and wrong-
+map cleanup, previously grouped unknown-return work before an elective return,
+repeat-refresh stability, urgency/nearby/pin preservation, progress/work/risk
+bounds and actual recipient discovery. Earlier corridor-cleanup assertions were
+updated to require accepted continuity and retain wrong-map cleanup checks.
+
+The early-return cause is established by planner source and synthetic tests:
+unknown-recipient quests cannot satisfy shared-return matching. The new policy
+uses prior outing membership/current progress and proximity, not an assumed
+shared recipient. This does not prove the recorded player route was inferior.
+No raw saved logs or notes were added to fixtures or public documentation.
+
+Playtest after reloading: continue an accepted quest beyond the old east/south
+corridor edge; compact mode and Auto should retain a current destination.
+Complete one of a grouped pair while nearby companion work remains almost done.
+If bounded continuation applies, finish that work before the elective return;
+otherwise a nearby return/urgent delivery can still take precedence. Missing
+locations should direct you to the quest log. Mark or write feedback, play, then
+reload again to save observations from capture tag 0.2.0-route-feedback-3.
+Installation checks and mocked tests do not establish this live behavior.
