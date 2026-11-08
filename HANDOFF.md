@@ -4,6 +4,17 @@ Updated 2026-11-08. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
+## UI branch publication authorized — 2026-11-08
+
+The maintainer reports UI dev 3 looks good and authorized pushing
+`codex/ui-ux-pass` and opening a pull request against main. This is approval
+for branch/PR publication only: do not merge, tag, publish a release or change
+the installed addon as part of this handoff. The branch retains development
+version 0.2.0-ui-dev.3 / capture tag 9. Approved release 0.2.0/build 8 remains
+the release baseline. The installed dev 3 playtest and previous backups remain.
+Private screenshots, raw feedback, numeric replays and install receipts stay
+ignored and must not be included in public commits or the PR description.
+
 ## Latest manual feedback review — tag 9 confirmed, 2026-11-08
 
 After the maintainer played with UI dev 3 active and reloaded again, the safe
