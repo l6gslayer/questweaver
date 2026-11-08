@@ -94,3 +94,14 @@ estimates, static timing flags and travel geometry still require Forever testing
 - Avoid false capture during unavailable log/loading data and keep the preceding
   recommendation with inferred actions. No automatic learning, scheduled review,
   network upload, quest acceptance or player movement is introduced.
+
+### 0.2.0 multi-stop pickup and confirmed-offer correction
+
+- Look ahead through up to three independent ready-return trips to collect a
+  useful pickup before passing it, within the existing four-quest/detour bounds.
+  Reforecast remaining work without duplicate pickup, XP or completion credit.
+- Discover unknown quests offered by the current NPC as manual pickup-only
+  candidates; use client names/levels, refresh immediately, and discard closed
+  offers rather than fabricating future quest data or permanent availability.
+- Preserve prior capture entries and counters; new observations use capture tag
+  0.2.0-route-feedback-2 so subsequent manual reviews identify this build.

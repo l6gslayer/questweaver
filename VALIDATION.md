@@ -261,3 +261,38 @@ log out to write data and ask for a review. Actual on-route pickup suggestions,
 UI text entry/copying, quest-event delivery, reload persistence and saved-export
 readback remain pending Forever playtesting. No game commands were run by the
 agent, and no live/private report was copied into public source.
+
+## 0.2.0 multi-stop pickups and confirmed offers — 2026-11-07
+
+**210 Lua tests and 17 Python reader tests passed.** All nine addon Lua sources
+compiled in the existing embedded Lua 5.1 runtime. Seventeen new cases cover a
+pickup before an intermediate ready return, second/third destination lookahead,
+nonduplicated rewards/actions, current offer provenance/eligibility, capacity,
+projected prerequisites, ready/timed protection, unknown stages and four-quest/
+display bounds; unknown live-offer pickup-only planning, stale database gates,
+client names/levels, skip/done/full-log constraints, closed/outside-area offers,
+accepted-quest transition, modern/legacy metadata, ignored offers, immediate
+NPC refresh, and preservation of earlier build feedback/sequence identifiers.
+
+The multi-stop correction inspects a bounded ready-return prefix, rather than
+arbitrary unknown future work. Prefix plus pickup must fit four quests; all
+prefix quests must already be accepted and ready. Remaining work is reforecast
+without recursively calling Plan. Unresolved/urgent/gear-detour prefixes and
+actual nearby ready returns are not overridden. Existing geometric detour
+limits remain. Generic synthetic regressions represent the reviewed failure;
+no actual private feedback log was copied into tests or public documents.
+
+New unknown NPC offers are manual pickup-only steps with observed interaction
+coordinates and estimated unknown reward data. Their objectives and turn-ins
+are not projected before acceptance. Available names/levels come from guarded
+modern/legacy reads; disappearance or dialogue closure removes the unaccepted
+candidate. No game selection/acceptance API is called.
+
+Playtest pending: reload and check an available pickup near a route with more
+than one ready destination. Pickup should precede departure when its return fits
+that bounded outing. Open a nearby NPC with a quest outside the authored pack;
+confirm the pickup appears, accept manually, then check live objectives/return.
+Close without accepting to confirm the temporary suggestion clears. Use Feedback
+or `/qw mark`, then reload/logout before requesting another manual review. New
+records carry tag 0.2.0-route-feedback-2; earlier tag-1 observations are retained.
+Actual Forever behavior remains unverified by the agent.

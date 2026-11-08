@@ -84,16 +84,29 @@ function R.Snapshot()
     local pos=call(C_Map and C_Map.GetPlayerMapPosition,s.map,"player")
     if pos then s.pos={x=pos.x,y=pos.y} end
     local pois=call(C_QuestLog and C_QuestLog.GetQuestsOnMap,Q.Pack.mapID)
-    s.offered={}
+    s.offered={};s.offerDetails={}
     if R.gossipOpen then
         local offers=call(C_GossipInfo and C_GossipInfo.GetAvailableQuests)
-        for _,offer in ipairs(type(offers)=="table" and offers or {}) do
-            if type(offer)=="table" and positiveID(offer.questID) then s.offered[offer.questID]=true end
+        local ignored={}
+        for index,offer in ipairs(type(offers)=="table" and offers or {}) do
+            if index>40 then break end
+            if type(offer)=="table" and positiveID(offer.questID) and offer.isIgnored==true then ignored[offer.questID]=true end
+            if type(offer)=="table" and positiveID(offer.questID) and offer.isIgnored~=true then
+                local id=offer.questID
+                s.offered[id]=true
+                s.offerDetails[id]={title=type(offer.title)=="string" and offer.title or nil,
+                    level=type(offer.questLevel)=="number" and offer.questLevel>0 and offer.questLevel<1000 and offer.questLevel or nil}
+            end
         end
         local n=boundedCount(call(GetNumAvailableQuests),0,40)
         for i=1,n do
             local id=call(GetAvailableQuestID,i)
-            if positiveID(id) then s.offered[id]=true end
+            if positiveID(id) and not ignored[id] then
+                s.offered[id]=true
+                local title,level=call(GetAvailableTitle,i),call(GetAvailableLevel,i)
+                s.offerDetails[id]=s.offerDetails[id] or {title=type(title)=="string" and title or nil,
+                    level=type(level)=="number" and level>0 and level<1000 and level or nil}
+            end
         end
     end
     local count=call(C_QuestLog and C_QuestLog.GetNumQuestLogEntries) or call(GetNumQuestLogEntries)
@@ -254,7 +267,7 @@ f:SetScript("OnEvent",function(_,event,...)
             if positiveID(id) then Q.Feedback.Event(event,id,R.Snapshot(),Q.route) end
         end
         if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true end
-        if event=="GOSSIP_CLOSED" or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
+        if (event=="GOSSIP_CLOSED" and ...~=true) or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
         if event=="PLAYER_LEAVING_WORLD" then
             Q.inWorld=false; Q.Navigation.Clear()
             if Q.Feedback and Q.Feedback.Suspend then Q.Feedback.Suspend() end
@@ -266,9 +279,12 @@ f:SetScript("OnEvent",function(_,event,...)
             if type(id)=="number" then Q.db.completed[id]=true; if Q.db.pin==id then Q.db.pin=nil end end
         end
         Q.dirty=true
+        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" or (event=="GOSSIP_OPTIONS_REFRESHED" and R.gossipOpen) then
+            R.Refresh();Q.dirty=false
+        end
     end
 end)
-for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGOUT","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
+for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGOUT","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","GOSSIP_OPTIONS_REFRESHED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
     "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end

@@ -488,13 +488,14 @@ function T.Choose(quests,s)
     return pickupsAlongRoute(best,quests,s,fastest)
 end
 
-function T.Plan(quests,state,limit)
+local function forecast(quests,state,limit,initialTrip)
     local s=C.Copy(state)
     s.done=s.done or {}; s.skip=s.skip or {}; s.log=s.log or {}
     local route,trips={},{}
     -- Forecast at most three complete trips, unlocking chains only on returns.
     for index=1,3 do
-        local trip=T.Choose(quests,s)
+        local trip=index==1 and initialTrip or nil
+        if not trip then trip=T.Choose(quests,s) end
         if not trip then break end
         trip.index=index; trips[#trips+1]=trip
         for _,step in ipairs(trip.steps) do
@@ -511,6 +512,49 @@ function T.Plan(quests,state,limit)
         -- item start or a quest whose eventual return is not yet known.
         if trip.stageOnly then break end
         s.pos=trip.steps[#trip.steps].lastTarget; s.previous=nil
+    end
+    return route,trips
+end
+
+-- Inspect the existing bounded forecast before leaving a pickup behind. Only
+-- combine an independent ready-return prefix: those destinations are observed,
+-- need no unknown objective work and cannot wait on projected prerequisites.
+-- If the prefix plus a pickup cannot fit four quests, keep the original plan.
+local function multiStopPickup(quests,state,trips)
+    local first=trips[1]
+    if not first or first.urgent or first.nearbyReturns or first.stageOnly then return nil end
+    local selected,seen={},{}
+    for prefix,trip in ipairs(trips) do
+        if trip.urgent or trip.nearbyReturns or trip.stageOnly or trip.gearDetour then break end
+        for _,q in ipairs(trip.quests) do
+            local log=state.log and state.log[q.id]
+            if not log or not log.complete or log.failed or q.timed or q.pendingAction or q.stageOnly then return nil end
+            if not seen[q.id] then selected[#selected+1]=q;seen[q.id]=true end
+        end
+        -- Reserve at least one slot for the pickup, not a fifth quest.
+        if #selected>=4 then break end
+        if prefix>=2 then
+            local base=T.Build(selected,state)
+            if not base then return nil end
+            base.priority=base.score
+            local combined=pickupsAlongRoute(base,quests,state,base)
+            if combined.onRoutePickups then
+                combined.multiStopPickups=true;combined.lookaheadTrips=prefix
+                return combined
+            end
+        end
+    end
+end
+
+function T.Plan(quests,state,limit)
+    state=C.Copy(state)
+    state.done=state.done or {};state.skip=state.skip or {};state.log=state.log or {}
+    local route,trips=forecast(quests,state,limit)
+    local combined=multiStopPickup(quests,state,trips)
+    if combined then
+        -- Reforecast the remainder from the combined trip's projected returns;
+        -- do not append the old later pickup or double-credit its reward/slot.
+        return forecast(quests,state,limit,combined)
     end
     return route,trips
 end

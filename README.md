@@ -149,6 +149,32 @@ prerequisites, class/race gates, skips and completion still apply. Proximity is
 geometric (.012 map units to a leg/pickup, .03 to an existing destination), not
 terrain-aware pathfinding. No quest is automatically accepted.
 
+For multiple ready turn-ins, pickup lookahead now checks the bounded three-trip
+forecast. It can fold an independent ready-return prefix and a useful pickup
+into one outing when the total fits four quests. This allows collecting a
+package now even if its recipient is near the second or third planned stop.
+The remaining forecast is rebuilt so the pickup, reward and freed log slot are
+not counted again. Prefixes with unresolved work, urgent delivery, gear-detour
+assumptions or too many quests are left to normal planning; an actually nearby
+ready return still wins. Existing detour and current-eligibility limits apply.
+
+## Confirmed NPC offers
+
+Unknown quests in an open NPC conversation can now become pickup candidates,
+using the offered quest's name/level when the client supplies them. The initial
+step is **accept manually** at the current interaction location. It does not
+invent later objective or turn-in locations, gear value or completed progress.
+Unknown XP remains a labeled estimate until observed. Accepted quests then use
+normal live-location discovery and planning.
+
+Offers refresh immediately when a conversation opens or its options refresh.
+Unaccepted candidates disappear when the interaction finishes; old offers are
+not learned as permanent availability. The client offer takes precedence over
+stale optional database availability fields for these newly discovered offers,
+while skips, completed-quest exclusion, capacity and priority rules remain.
+Known authored class/race gates remain intact. No gossip option, quest accept,
+reward or player movement is automated.
+
 ## Playtest feedback and manual review
 
 Click **Feedback** in either tracker layout to add a short note, mark a moment,

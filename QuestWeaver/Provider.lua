@@ -26,11 +26,15 @@ end
 function P.Quests(state,db)
     local result,notices,seeds,known={},{},{},{}
     for _,seed in ipairs(Q.Pack.quests) do seeds[#seeds+1]=seed; known[seed.id]=true end
-    local ids={}
-    for id in pairs(state.log) do if not known[id] then ids[#ids+1]=id end end
-    for id in pairs(state.itemStarts or {}) do
-        if not known[id] and not state.log[id] then ids[#ids+1]=id end
+    local ids,seen={},{}
+    local function discover(id)
+        if type(id)=="number" and id>0 and id<1000000000 and id==math.floor(id) and not known[id] and not seen[id] then
+            ids[#ids+1]=id;seen[id]=true
+        end
     end
+    for id in pairs(state.log) do discover(id) end
+    for id in pairs(state.itemStarts or {}) do discover(id) end
+    for id,offered in pairs(state.offered or {}) do if offered==true then discover(id) end end
     table.sort(ids)
     for _,id in ipairs(ids) do
         local log,item=state.log[id],(state.itemStarts or {})[id]
@@ -47,6 +51,15 @@ function P.Quests(state,db)
                 itemStartID=item and item.itemID,dynamic=true,
                 stageOnly=not complete and (item~=nil or not finish),
                 note="Discovered nearby quest. Work time is estimated; unknown rewards are not assumed to be gear upgrades."}
+        elseif (state.offered or {})[id]==true and not log and not item
+            and Q.Core.IsLocal(state.pos) and (not state.map or state.map==Q.Pack.mapID) then
+            local info=(state.offerDetails or {})[id] or {}
+            local title=type(info.title)=="string" and info.title or ("Quest "..id)
+            local level=type(info.level)=="number" and info.level>0 and info.level<1000 and info.level or state.level
+            local start=Q.Core.Copy(state.pos);start.source="Observed NPC offer"
+            seeds[#seeds+1]={id=id,name=title,level=level,minLevel=1,xp=250,xpEstimated=true,
+                minutes=.15,start=start,offeredOnly=true,dynamic=true,dynamicOffer=true,stageOnly=true,
+                note="Confirmed NPC offer. Accept manually to reveal objective/reward data; later work and return are not assumed."}
         elseif item and not state.done[id] and not state.skip[id] then
             notices[#notices+1]="Bag quest: use "..(item.name or ("item for quest "..id)).." to inspect/accept; local destination unknown."
         elseif log and not log.failed and not log.location and not state.skip[id] then
@@ -85,6 +98,15 @@ function P.Quests(state,db)
         else q.metadata=q.dynamic and "Discovered nearby quest" or "Unverified starter baseline" end
         local log=state.log[q.id]
         local item=(state.itemStarts or {})[q.id]
+        if q.dynamicOffer and (state.offered or {})[q.id]==true then
+            -- The client is offering this quest now. Inherited optional database
+            -- restrictions must not replace that availability evidence.
+            q.disabled=false;q.all=nil;q.any=nil;q.minLevel=1
+            local detail=(state.offerDetails or {})[q.id] or {}
+            q.name=type(detail.title)=="string" and detail.title or seed.name
+            q.level=type(detail.level)=="number" and detail.level>0 and detail.level<1000 and detail.level or seed.level
+            q.start=Q.Core.Copy(state.pos);q.start.source="Observed NPC offer"
+        end
         if q.requiredRaceID and state.raceID~=q.requiredRaceID then q.disabled=true end
         if q.requiredClassID and state.classID~=q.requiredClassID then q.disabled=true end
         if q.offeredOnly then
@@ -113,7 +135,7 @@ function P.Quests(state,db)
         if q.id==97236 and log then q.minutes=.15 end
         if q.dynamic then
             if not Q.Core.IsLocal(q.finish) then q.finish=nil end
-            q.stageOnly=not (log and log.complete) and (item~=nil or not q.finish)
+            q.stageOnly=q.pendingAction~=nil or (not (log and log.complete) and (item~=nil or not q.finish))
         end
         if log and not log.failed and log.location then
             if log.complete then

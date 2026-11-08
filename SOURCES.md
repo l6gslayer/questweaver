@@ -110,3 +110,13 @@ are not an exact Forever build reference. No selection or acceptance API is used
 - Supplied sigils, vessel and delivery package are not starter items; the new
   entries intentionally have no itemStartID. Expanded map bounds are a product
   scope decision for this test build, not evidence of terrain-safe routing.
+
+## Confirmed NPC offer metadata follow-up
+
+The [Blizzard-generated gossip API mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_APIDocumentationGenerated/GossipInfoDocumentation.lua)
+lists `GetAvailableQuests` rows containing questID, title, questLevel and
+isIgnored, plus the GOSSIP_OPTIONS_REFRESHED event and GOSSIP_CLOSED continuation
+flag. Reads are guarded, legacy quest-greeting identifiers/names/levels remain
+optional fallbacks, and unknown values stay unknown. This is supporting API
+documentation, not verification of each Forever event/field. Titles are used
+transiently in the tracker; automatic saved capture remains numeric/ID-only.

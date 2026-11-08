@@ -13,7 +13,7 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch on-route pickup and feedback follow-up
+- Latest addon implementation: current feature-branch multi-stop pickup/confirmed-offer follow-up
   (extends `18e628d` automatic TomTom integration).
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **193 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **210 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -191,6 +191,27 @@ installed build has no feedback export; the first reload loads
 capture, and a later reload after playing saves reviewable data. Treat reported
 deviations as hypotheses to compare, not automatic planner training or approval
 for new builds. Stay on the feature branch; no PR, merge or push is authorized.
+
+## Multi-stop pickup and confirmed-offer correction
+
+User authorized fixing the two gaps found in the first manual feedback review,
+rebuilding and installing 0.2.0. Trips now examines up to three forecast trips
+and folds a snapshot-accepted ready-return prefix plus an eligible pickup only
+when it fits the existing four-quest/detour bounds. It then reforecasts without
+duplicate pickup/XP/completion credit. This is bounded ready-return lookahead,
+not speculative planning through unknown objective work.
+
+Provider now discovers unknown current NPC offers as manual pickup-only stages.
+Runtime reads transient names/levels, refreshes immediately on NPC opening/
+options refresh and clears eligibility when the interaction ends. Live offers
+outweigh stale optional metadata for these new candidates; skips, done status,
+capacity and actual ready/timed priorities still apply. Accepted quests enter
+normal live planning. No future objective/return is guessed before acceptance.
+
+All 210 Lua and 17 Python tests passed; all nine Lua sources compiled. Capture
+tag is now 0.2.0-route-feedback-2, retaining existing history and counters. User
+feedback reviews remain manual after play/reload. Actual in-game behavior still
+needs playtesting. Stay on feature/0.2.0-trip-planning; no PR, merge or push.
 
 ## Immediate next task: install for user playtesting
 
