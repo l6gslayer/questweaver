@@ -1,5 +1,21 @@
 # Validation record
 
+## UI dev 3 requested playtest review — evidence mismatch
+
+The maintainer reported a UI dev 3 playtest/reload. The latest saved export still
+contains only planner/capture tag 8, with no tag 9 events or recent recommendation
+evidence. Short allowlisted structured capture-version values also identify tag 8,
+so this is not solely an older export header. Installed Feedback/Trips/UI/manifest
+files match UI dev 3; the correct client process is running. Loading the new
+files on the most recent reload is one possible explanation, not verified.
+
+No rapid repeating next-action reversal was found in the newly saved older-build
+segment. Three pickups have the earlier attribution pattern addressed by tag 9.
+This is older-build history, not a live outcome for the corrected implementation.
+Tag 9 stability, attribution and actual persistence acceptance remain pending.
+No tests/code changes, rebuild, installation, game input or publication occurred.
+
+
 ## UI dev 3 planner/capture corrections — 2026-11-07
 
 **314 Lua 5.1 tests passed**, including compilation of all thirteen addon sources,

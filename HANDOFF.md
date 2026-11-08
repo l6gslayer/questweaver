@@ -4,6 +4,23 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
+## Latest manual feedback review — awaiting tag 9 evidence
+
+The maintainer reported playtesting UI dev 3 and reloading, then requested a
+read-only stability/attribution review. The fresh saved export and its structured
+capture-version fields still identify tag 8; no tag 9 events or recent-pickup
+source evidence were present. Installed UI/Trips/Feedback/manifest files were
+read-back verified against UI dev 3, and the active process uses the intended
+client directory. A reload that saves a prior session while first loading the
+new files is a possible explanation, not an established cause.
+
+The newly saved older-build segment has no rapid repeating first-action reversal
+pattern, and includes three acceptances whose pickups had been recommended
+shortly before their unknown labels. These observations cannot validate or
+invalidate the tag 9 fixes. Wait for saved tag 9 playtest evidence before claiming
+new planner/attribution acceptance. No code, package, installation, SavedVariables
+or game controls were changed during this review; exports remain private/ignored.
+
 ## UI dev 3 — current work
 
 The maintainer authorized fixing planner stability and recent-pickup feedback
