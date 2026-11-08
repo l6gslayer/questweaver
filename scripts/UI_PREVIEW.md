@@ -21,13 +21,28 @@ The implementation session used an existing embedded Lua 5.1 runtime and an
 isolated Pillow installation. These are execution-environment substitutions,
 not dependencies added to the addon.
 
-The fifteen fixtures cover compact/expanded grouped objectives, grouped pickups
-and returns, item acceptance, four-member
-stops, multiple objectives, synthetic German/French long names, timed warnings,
-a missing-location-only plan, a notice for another quest while the current
-destination remains valid, a defensive invalid-target state, absent TomTom,
-world loading, no eligible plan,
-a cross-zone handoff notice, local feedback and an 800×600 viewport.
+The harness executes seventeen fixtures, defined by `local cases` in
+`scripts/ui_preview.lua`:
+
+| Fixture | Synthetic state |
+| --- | --- |
+| `compact-grouped` | Compact grouped objectives |
+| `expanded-grouped` | Expanded grouped objectives and forecast |
+| `grouped-pickups` | Grouped quest pickups |
+| `grouped-returns` | Grouped quest turn-ins |
+| `item-start` | Manual bag-item acceptance |
+| `long-localized` | Long German/French names, reminder and timed warning |
+| `missing-location` | Missing-location notice with no routable plan |
+| `missing-other-location` | Missing-location notice beside a valid current plan |
+| `invalid-target` | Defensive invalid current destination |
+| `missing-tomtom` | Guidance without TomTom |
+| `loading` | World-loading state |
+| `empty` | No eligible plan |
+| `zone-handoff` | Cross-zone handoff notice |
+| `feedback` | Local note and export panel |
+| `single-live` | One quest with unfinished/finished live objective rows |
+| `options` | Open secondary-control tray |
+| `small-viewport` | Expanded tracker in an 800×600 viewport |
 
 Standalone PNGs retain the viewport. Contact sheets crop to the panels for
 comparison. Panel crops are also saved separately. Rendering `after.json` after
