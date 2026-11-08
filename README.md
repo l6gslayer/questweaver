@@ -1,7 +1,8 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, with a **79-record Teldrassil
-catalogue** including prerequisites, quest-starting drops and conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
+An adaptive quest planner for **WoW Forever**, with separate zone catalogues
+for Teldrassil and Darkshore, including prerequisites, quest-starting drops and
+conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
 
@@ -239,8 +240,8 @@ Teldrassil map. Live quest locations and automatic guidance keep refreshing
 after you leave Shadowglen. Accepted quests with located current stages can
 continue across Teldrassil without dropping at the corridor boundary. Outside
 the corridor, accepted quests, actual open offers and explicitly catalogued
-pickups are eligible. Uncatalogued unseen opportunities remain corridor-limited. Guidance clears on other maps
-or when player coordinates are unavailable. This is not a complete authored
+pickups are eligible. Uncatalogued unseen opportunities remain corridor-limited. The active catalogue switches in supported zones; guidance pauses in
+unsupported zones or when player coordinates are unavailable. This is not a complete authored
 Teldrassil quest catalogue. Missing quest locations remain quest-log reminders.
 Fallback coordinates,
 XP and work times remain estimates; live locations/XP take precedence.
@@ -404,7 +405,8 @@ steps include IDs to support targeting a different member.
   documented in [CATALOGUE.md](CATALOGUE.md). Known pickups can be proposed ahead
   of time; conditional records require observed offers. Accepted quests and bag
   starters still join dynamically. This is not exhaustive coverage of every
-  event, profession variant, class follow-up or drop. Other maps are not routed.
+  event, profession variant, class follow-up or drop. Darkshore has its own
+  initial catalogue; unsupported maps pause guidance.
 - Starter objective coordinates, XP baselines and work times are **unverified
   estimates**. QuestieDB can replace selected metadata and giver positions,
   but not these objective areas. No paid routes or third-party datasets are
@@ -455,8 +457,8 @@ playtest checklist, [CHANGELOG.md](CHANGELOG.md) for changes and
 ### Continuing accepted work beyond the corridor
 
 Accepted quests with current destinations on Teldrassil remain eligible across
-the pickup corridor boundary. Other maps and missing player coordinates still
-pause guidance. Unlocated accepted quests ask you to check the quest log;
+the pickup corridor boundary. Other supported maps select their own catalogue;
+unsupported maps and missing player coordinates pause guidance. Unlocated accepted quests ask you to check the quest log;
 unknown objectives or recipients are never invented.
 
 When accepted quests share the current objective step, QuestWeaver saves a small
@@ -503,3 +505,22 @@ Shimmering Frond and Sprouted Fronds are object-started quests, not bag starters
 City handoffs wait for a valid live projection rather than treating Darnassus
 coordinates as Teldrassil coordinates. See the audit for conditional records and
 remaining coverage gaps.
+
+### Separate zone catalogues
+
+Each zone owns its quest records, UI map ID, database area ID, faction and data
+coverage notes. A shared registry selects the catalogue for your current map
+before reading quest locations. The same planner, bag/offer discovery, feedback
+and navigation modules serve every zone. Switching zones clears the old owned
+waypoint and outing context so percentages cannot refer to the wrong map.
+Quest prerequisites can refer to completed quests from another zone. Carried
+starter identities are recognized across registered catalogues, but ambiguous
+item-only variants require an explicit client quest ID.
+
+Teldrassil retains its [79-record audit](CATALOGUE.md). Darkshore begins with an
+[Auberdine-area catalogue and evidence audit](DARKSHORE_CATALOGUE.md). Known
+pickups can be proposed in advance; unknown work and conditional quests keep
+the same pickup-only/observed-offer safeguards. Each zone is expanded through
+source research and playtest review. Neither catalogue claims exhaustive quests
+or measured optimal travel. Darkshore still uses geometric travel
+estimates rather than terrain-aware paths or measured movement times.

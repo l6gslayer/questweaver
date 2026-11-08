@@ -104,7 +104,7 @@ test("modern offer names levels and ignored rows are transient snapshot data",fu
         {questID=90001,title="A confirmed local task",questLevel=6},
         {questID=90002,title="Ignored task",questLevel=6,isIgnored=true}} end}
     GetNumAvailableQuests=function() return 1 end;GetAvailableQuestID=function() return 90002 end
-    R.gossipOpen=true
+    R.gossipOpen=true;R.gossipMap=Q.Pack.mapID
     local s=R.Snapshot()
     assert(s.offered[90001] and s.offerDetails[90001].title=="A confirmed local task")
     assert(s.offerDetails[90001].level==6 and not s.offered[90002])
@@ -112,7 +112,7 @@ test("modern offer names levels and ignored rows are transient snapshot data",fu
     assert(next(s.offered)==nil and next(s.offerDetails)==nil)
 end)
 test("legacy quest greeting can identify an unknown offered pickup",function()
-    C_GossipInfo=nil;R.gossipOpen=true
+    C_GossipInfo=nil;R.gossipOpen=true;R.gossipMap=Q.Pack.mapID
     GetNumAvailableQuests=function() return 1 end;GetAvailableQuestID=function() return 90003 end
     GetAvailableTitle=function() return "Legacy available task" end;GetAvailableLevel=function() return 4 end
     local s=R.Snapshot()

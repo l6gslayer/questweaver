@@ -73,11 +73,11 @@ test("negative or missing readiness never comes from proximity or finished rows"
 end)
 test("NPC offers are guarded and not reused after interaction closes",function()
     C_GossipInfo={GetAvailableQuests=function() return {{questID=97977},{questID=97979}} end}
-    Q.Runtime.gossipOpen=true
+    Q.Runtime.gossipOpen=true;Q.Runtime.gossipMap=Q.Pack.mapID
     local s=Q.Runtime.Snapshot()
     assert(s.offered[97977] and s.offered[97979])
     Q.Runtime.gossipOpen=false;assert(next(Q.Runtime.Snapshot().offered)==nil)
-    Q.Runtime.gossipOpen=true;C_GossipInfo.GetAvailableQuests=function() error("unsupported") end
+    Q.Runtime.gossipOpen=true;Q.Runtime.gossipMap=Q.Pack.mapID;C_GossipInfo.GetAvailableQuests=function() error("unsupported") end
     assert(next(Q.Runtime.Snapshot().offered)==nil)
 end)
 C_QuestLog,C_GossipInfo,Q.Runtime.gossipOpen=savedAPI,savedGossip,savedOpen

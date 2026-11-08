@@ -13,11 +13,11 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: expanded Teldrassil catalogue on the feature branch.
-  The expanded catalogue build has been installed after a verified backup.
+- Latest addon implementation: zone registry and initial Darkshore catalogue.
+  This newest package has NOT been installed; live addon remains the Teldrassil build.
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
-- Source: nested `QuestWeaver/` directory; ten Lua files plus its manifest.
+- Source: nested `QuestWeaver/` directory; twelve Lua files plus its manifest.
 - Installable artifact: `dist/QuestWeaver-0.2.0.zip`, one addon folder at root.
 - Settings: `QuestWeaverDB`, per-character SavedVariables, schema 3.
 
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **250 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **265 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -372,3 +372,28 @@ and all 17 installed release files now match the ZIP byte-for-byte. There is no
 nested addon folder; SavedVariables and other addons were left untouched.
 TomTom is present. No game restart/reload or character action was performed.
 No push/PR/merge. Actual new catalogue behavior awaits playtesting after reload.
+
+## Separate catalogues and initial Darkshore — ready, not installed
+
+User asked how catalogues work and authorized subagents to begin other areas,
+then selected Darkshore first. Catalogues.lua registers Teldrassil (map 1438 /
+area 141) and Darkshore (map 1439 / area 148), with per-zone quests/bounds/faction.
+Runtime selects before map POI/current quest reads; unsupported zones pause.
+The shared planner/Provider/UI/Navigation/feedback serve the active catalogue.
+Provider optional NPC/object spawns use the active AreaTable ID. Prerequisite
+completion reads include parents outside the current zone. Bag starter identity
+reads all registered catalogues, refusing ambiguous item-only variants.
+
+Darkshore.lua adds 28 records: 8 advance pickup candidates, 18 actual-offer entries,
+2 owned starters. DARKSHORE_CATALOGUE.md records evidence, metadata unknowns,
+reward estimates and deferred coverage. No imported guide/database. Data remains
+pickup-only before live work, with conditional and foreign-map safeguards.
+Switches clear previous-zone route/outing/owned waypoint. Map-stamped interactions
+preserve the first offer after entry and prevent resurrection after unsupported
+travel; review reproduced that gap and a regression now covers it.
+
+All 265 Lua tests and 17 Python reader tests passed, all twelve sources compiled.
+Capture tag 0.2.0-route-feedback-7 retains prior history. Last review cursor 211.
+Source/privacy/manifest/ZIP checks passed. The rebuilt 0.2.0 is NOT installed;
+no live game/addon/SavedVariables change or game action. Keep feature branch;
+main unchanged, no push/PR/merge. Actual Darkshore behavior needs playtesting.

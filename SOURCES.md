@@ -142,3 +142,15 @@ NPC or object references, not copied quest prose, guide routes, scoring tables,
 third-party code or an imported database. Public observed/cache records are
 supporting evidence, not live compatibility verification. GPL data exports were
 not vendored. Travel/work and unresolved requirements remain explicit estimates.
+
+## Initial Darkshore catalogue and zone registry
+
+[DARKSHORE_CATALOGUE.md](DARKSHORE_CATALOGUE.md) records 28 independently curated
+facts/identities and their linked player-observed/game-cache evidence: eight
+advance candidates, eighteen actual-offer entries and two owned starters. It
+separates confirmed positions, catalogue reward estimates, unknown requirements,
+object interactions and foreign-zone destinations. No route, Classic spawn
+array, guide prose or third-party dataset is imported. Current client stages
+remain authoritative; these sources do not establish live addon compatibility.
+Zone selection uses the existing guarded map APIs; AreaTable and UI map IDs
+remain separate. Unsupported maps pause routing.

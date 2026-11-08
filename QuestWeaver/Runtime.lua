@@ -41,8 +41,15 @@ end
 -- The resulting item identities are transient snapshot data, not SavedVariables.
 function R.ItemStarts(log)
     local items,known={},{}
-    for _,q in ipairs(Q.Pack.quests) do
-        if positiveID(q.itemStartID) then known[q.itemStartID]=q.id end
+    for _,pack in pairs(Q.Catalogues and Q.Catalogues.packs or {Q.Pack}) do
+        for _,q in ipairs(pack.quests) do
+            if positiveID(q.itemStartID) then
+                local previous=known[q.itemStartID]
+                -- A starter shared by conditional variants needs the client's
+                -- explicit quest ID; do not guess from an ambiguous item alone.
+                known[q.itemStartID]=(previous==nil or previous==q.id) and q.id or false
+            end
+        end
     end
     local container=C_Container or {}
     local bags=boundedCount(NUM_BAG_SLOTS,4,10)
@@ -81,9 +88,23 @@ function R.Snapshot()
     local s={level=UnitLevel("player"),class=class,classID=classID,raceID=raceID,
         done={},log={},skip=Q.db.skip,pin=Q.db.pin,mode=Q.db.mode,budget=Q.db.budget,previous=Q.previous}
     s.map=call(C_Map and C_Map.GetBestMapForUnit,"player")
+    local previousMap=Q.Pack.mapID
+    local supported=not Q.Catalogues or Q.Catalogues.Select(s.map)~=nil
+    -- Transient offers belong to their observed map even during unsupported
+    -- travel or loading; returning must not resurrect an old interaction.
+    if R.detailOffer and R.detailOffer.map~=s.map then R.detailOffer=nil end
+    if R.gossipOpen and R.gossipMap~=s.map then R.gossipOpen=false;R.gossipMap=nil end
+    if supported and previousMap~=Q.Pack.mapID then
+        Q.previous=nil;s.previous=nil;Q.db.outing=nil
+        Q.route={};Q.trips={}
+        if not R.detailOffer or R.detailOffer.map~=s.map then R.detailOffer=nil end
+        if R.gossipMap~=s.map then R.gossipOpen=false;R.gossipMap=nil end
+        Q.Navigation.Clear()
+    end
+    local map=supported and Q.Pack.mapID or nil
     local pos=call(C_Map and C_Map.GetPlayerMapPosition,s.map,"player")
     if pos then s.pos={x=pos.x,y=pos.y} end
-    local pois=call(C_QuestLog and C_QuestLog.GetQuestsOnMap,Q.Pack.mapID)
+    local pois=map and call(C_QuestLog and C_QuestLog.GetQuestsOnMap,map)
     s.offered={};s.offerDetails={}
     if R.gossipOpen then
         local offers=call(C_GossipInfo and C_GossipInfo.GetAvailableQuests)
@@ -144,7 +165,7 @@ function R.Snapshot()
                 title=type(title)=="string" and title or nil,
                 level=type(level)=="number" and level>0 and level or s.level,
                 xp=type(xp)=="number" and xp>=0 and xp<math.huge and xp or nil,
-                location=R.QuestLocation(id,Q.Pack.mapID,pois),
+                location=map and R.QuestLocation(id,map,pois),
                 objectives=objectives,text=table.concat(text,"; "),progressKnown=complete or total>0,
                 progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end
@@ -158,7 +179,11 @@ function R.Snapshot()
     end
     s.itemStarts=R.ItemStarts(s.log)
     local ids={}
-    for _,q in ipairs(Q.Pack.quests) do ids[q.id]=true end
+    for _,q in ipairs(Q.Pack.quests) do
+        ids[q.id]=true
+        for _,id in ipairs(q.all or {}) do ids[id]=true end
+        for _,id in ipairs(q.any or {}) do ids[id]=true end
+    end
     for id in pairs(s.log) do ids[id]=true end
     for id in pairs(s.itemStarts) do ids[id]=true end
     for id in pairs(s.offered) do ids[id]=true end
@@ -168,7 +193,7 @@ function R.Snapshot()
         s.done[id]=done or Q.db.completed[id] or false
         if s.itemStarts[id] then
             if s.done[id] then s.itemStarts[id]=nil
-            else s.itemStarts[id].location=R.QuestLocation(id,Q.Pack.mapID,pois) end
+            else s.itemStarts[id].location=map and R.QuestLocation(id,map,pois) end
         end
     end
     if type(MAX_QUESTLOG_QUESTS)=="number" then
@@ -204,11 +229,11 @@ function R.Refresh()
     if Q.inWorld==false then
         Q.route={}; Q.status="Waiting for the world to load."
     elseif s.map~=Q.Pack.mapID or not Q.Core.IsMapPoint(s.pos) then
-        Q.route={}; Q.status="Travel to Teldrassil to use this catalogue."
+        Q.route={}; Q.status="No catalogue or player location available for this area yet."
     elseif s.classID==nil or not s.raceID then
         Q.route={}; Q.status="Waiting for character information."
-    elseif UnitFactionGroup("player")~="Alliance" then
-        Q.route={}; Q.status="This starter pack is for Alliance characters."
+    elseif UnitFactionGroup("player")~=(Q.Pack.faction or "Alliance") then
+        Q.route={}; Q.status="This catalogue is for "..(Q.Pack.faction or "Alliance").." characters."
     elseif s.logAvailable==false then
         Q.route={}; Q.status="Waiting for quest log data."
     else
@@ -276,14 +301,18 @@ f:SetScript("OnEvent",function(_,event,...)
             local id=event=="QUEST_ACCEPTED" and (type(second)=="number" and second or first) or first
             if positiveID(id) then Q.Feedback.Event(event,id,R.Snapshot(),Q.route) end
         end
-        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true;R.detailOffer=nil end
+        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then
+            R.gossipOpen=true;R.detailOffer=nil
+            R.gossipMap=call(C_Map and C_Map.GetBestMapForUnit,"player")
+        end
         if event=="QUEST_DETAIL" then
-            R.detailOffer=nil;R.gossipOpen=false
+            R.detailOffer=nil;R.gossipOpen=false;R.gossipMap=nil
             local id=call(GetQuestID)
             if positiveID(id) then
                 local title=call(GetTitleText)
                 local level=call(C_QuestLog and C_QuestLog.GetQuestDifficultyLevel,id)
-                R.detailOffer={id=id,title=type(title)=="string" and title or nil,
+                R.detailOffer={id=id,map=call(C_Map and C_Map.GetBestMapForUnit,"player"),
+                    title=type(title)=="string" and title or nil,
                     level=type(level)=="number" and level>0 and level<1000 and level or nil}
             end
         elseif event=="QUEST_FINISHED" or event=="QUEST_PROGRESS" or event=="QUEST_COMPLETE"
@@ -293,7 +322,7 @@ f:SetScript("OnEvent",function(_,event,...)
             local id=type(second)=="number" and second or first
             if R.detailOffer and R.detailOffer.id==id then R.detailOffer=nil end
         end
-        if (event=="GOSSIP_CLOSED" and ...~=true) or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
+        if (event=="GOSSIP_CLOSED" and ...~=true) or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false;R.gossipMap=nil end
         if event=="PLAYER_LEAVING_WORLD" then
             Q.inWorld=false; Q.Navigation.Clear()
             if Q.Feedback and Q.Feedback.Suspend then Q.Feedback.Suspend() end

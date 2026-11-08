@@ -11,8 +11,10 @@ local function point(givers)
     for group,db in ipairs({NpcDB or false,ObjectDB or false}) do
         for _,id in ipairs((givers or {})[group] or {}) do
             local spawns=read(db,id,"spawns")
-            -- AreaTable 141 is Teldrassil; do not mix subzone coordinate spaces.
-            local pos=spawns and spawns[141] and spawns[141][1]
+            -- AreaTable IDs differ from UI map IDs. Only use this zone's
+            -- coordinate space; never reuse another zone's percentages.
+            local area=Q.Pack.areaID or 141
+            local pos=spawns and spawns[area] and spawns[area][1]
             if pos and pos[1]>0 and pos[2]>0 then return {x=pos[1]/100,y=pos[2]/100} end
         end
     end

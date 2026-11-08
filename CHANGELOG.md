@@ -152,3 +152,17 @@ estimates, static timing flags and travel geometry still require Forever testing
   metadata and use actual client offers/stages when available.
 - Include CATALOGUE.md audit in the package. Capture tag 0.2.0-route-feedback-6;
   existing feedback remains preserved. This build has not been installed.
+
+### 0.2.0 zone catalogues and initial Darkshore coverage
+
+- Register separate Teldrassil/Darkshore catalogues and automatically select the
+  supported current map before reading quest locations. Keep zone NPC database
+  coordinates separate and read prerequisites completed in other zones.
+- Add 28 Darkshore records with an evidence audit: eight advance pickup candidates,
+  eighteen conditional offer-only records and two owned-item starters.
+- Clear previous-zone routing/outing/owned waypoint context, preserve the first
+  current-zone interaction and prevent stale offers returning after unsupported
+  travel. Recognize carried starter IDs across catalogues without ambiguous
+  item-only guesses.
+- Keep version 0.2.0 and bump capture tag to 0.2.0-route-feedback-7. Rebuilt package
+  is ready for requested installation; no game files were changed by this work.

@@ -393,3 +393,28 @@ Moss-twined Heart acceptance if found and object-started fruit/fronds. Condition
 entries should wait for actual offers, and city handoffs must use live projection.
 Expected new-build capture tag 0.2.0-route-feedback-6. Existing saved feedback and
 last manual review cursor 211 remain unchanged by source/package work.
+
+## 0.2.0 zone registry / initial Darkshore — 2026-11-07
+
+All 265 Lua tests passed under embedded Lua 5.1 and all twelve addon sources
+compiled. All 17 Python reader tests passed. Ten zone regressions cover supported/
+unsupported selection, area-specific optional NPC coordinates, current-map reads,
+off-zone prerequisites, owned-waypoint cleanup, outing isolation, the first new
+zone interaction, stale-offer cleanup across unsupported detours and global
+starter identity/ambiguity. Five Darkshore tests cover coverage counts/map IDs,
+advance pickups without fake work, prerequisites/live metadata, conditional
+pickup materialization and owned starters/foreign destinations. Existing
+Teldrassil planner/UI/capture tests still pass. Directly toggled gossip fixtures
+now include the map stamp required for real interaction context.
+
+Research and read-only review used subagents. A reproduced stale-offer lifecycle
+gap was fixed and regression tested. No raw game logs/prose or private paths were
+added to sources. Package includes both zone audits; no new installation occurred.
+Mocked zone/map/waypoint tests do not prove actual Forever client transitions.
+
+After separately requested installation: load in Teldrassil, travel to Darkshore,
+verify new pickup candidates/current map points, and return. Confirm only the
+owned arrow switches and old outing/offer data do not leak. Try a conditional
+NPC offer and carried starter without accepting automatically; visit an
+unsupported area and confirm guidance pauses. Play and reload to save feedback
+with expected capture tag 0.2.0-route-feedback-7. Last reviewed cursor remains 211.
