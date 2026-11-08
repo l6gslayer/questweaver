@@ -1,3 +1,12 @@
+# Local UI preview — 0.2.0-ui-dev.2 (unreleased)
+
+Fix refresh-driven snapping while dragging; defer geometry until final position
+is saved. Prioritize quest names and live objective counts, remove duplicate
+current-stop forecasts and misplaced generic pickup warnings, group occasional
+controls under Options, reduce expanded footprint, and tidy status/scroll/plural
+presentation. Planner, catalogue, feedback capture and TomTom ownership unchanged.
+See docs/UI_DEV_2.md for evidence, verification and playtest scope.
+
 # Local UI preview — 0.2.0-ui-dev.1 (unreleased)
 
 Readable scroll-bounded compact/full trackers, named controls and saved size,

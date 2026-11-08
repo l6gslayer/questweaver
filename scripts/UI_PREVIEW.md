@@ -51,3 +51,11 @@ establish Forever rendering, correct client API support, combat behavior,
 mouse/keyboard behavior or SavedVariables persistence. In particular, UI scale
 must still be checked in the actual client; the small-viewport fixture checks
 available layout space, not a faithful UI-scale implementation.
+
+## UI dev 2 comparison
+
+The current harness adds single-live and Options fixtures (17 total). The local
+follow-up comparison uses UI dev 1 at `75c1bb5` as before-source and current
+UI dev 2 as after-source, with output isolated under ignored `build/ui-dev2/`.
+The single-live fixture uses synthetic unfinished/finished objective rows and
+generic catalogue boilerplate; it contains no private screenshot-derived data.

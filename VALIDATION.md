@@ -1,5 +1,32 @@
 # Validation record
 
+## UI dev 2 corrections — 2026-11-07
+
+**297 Lua 5.1 tests passed**, including compilation of all thirteen addon sources,
+in a separate headless embedded runtime. **17 Python reader tests passed**.
+Eight new interaction regressions cover normal/enlarged-scale refreshes during
+movement (zero anchor/size/scale writes), final-position save before deferred
+rendering, hiding during movement, live objective count/finished-row display,
+conservative task matching, malformed objective rows, stage-specific generic
+warnings, Options preference preservation, nonduplicated forecasts and scrollbars.
+
+An independent reviewer inspected the implementation and two detailed synthetic
+renders, then authored regression tests without implementing the UI changes.
+No actionable source/simulated-layout issue remains in that review:
+[UI dev 2 review](docs/reviews/ui-dev2-final.md). Seventeen offline before/after
+states were rendered against UI dev 1, including single live-objective and Options
+fixtures, and inspected under ignored build/ui-dev2 output. The actual user
+screenshot establishes UI dev 1 rendering only; it was not copied into public
+source. No actual UI dev 2 dragging or rendering has yet been verified in Forever.
+
+The dev 2 package uses a distinct filename and manifest; package/privacy,
+manifest/integrity/single-folder and source-byte comparison checks are required
+before installation. Backup/installed-readback results are recorded in HANDOFF.md.
+Approved 0.2.0, UI dev 1 packages and previous backups remain preserved. Planner,
+catalogue, capture and waypoint ownership implementation files are unchanged.
+No game input, restart, push, PR, merge or publication is part of this work.
+See [corrections and focused playtest](docs/UI_DEV_2.md).
+
 ## Local UI development pass — 2026-11-07
 
 **289 Lua 5.1 tests passed**, including compilation of all thirteen addon sources,

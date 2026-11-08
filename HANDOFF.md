@@ -4,7 +4,28 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
-## UI dev installation — current status
+## UI dev 2 follow-up — current work
+
+The maintainer authorized correcting the drag jump and the UI dev 1 screenshot
+findings, rebuilding and installing UI dev 2 after a complete prior-addon backup.
+Implementation is on `codex/ui-ux-pass`; manifest `0.2.0-ui-dev.2`, tracker
+`v0.2.0 | UI dev 2`. See [dev 2 corrections](docs/UI_DEV_2.md). Installation completed: all 22 installed files matched the package byte-for-byte,
+with five differing from UI dev 1. The complete prior 22-file addon was backed
+up and readback-verified at `dist/install-backups/QuestWeaver-before-ui-dev-2-20261107-192744-879611.zip`.
+Package SHA256: `e0bd8bf7a5763b16a7f550df8fbab53055715fcd7a90f8c07b83f5a800ed11c9`.
+All 22 package files matched source before installation. The ignored
+`dist/ui-dev-2-install-receipt.json` records the hashes and write list.
+Final validation passed: 297 Lua 5.1 tests, 17 Python reader tests, all thirteen
+addon sources compiled, package/privacy/manifest/integrity and diff checks.
+An independent final review found no actionable source/simulation issue.
+SavedVariables, other addons, previous backups and game controls were untouched.
+User must reload manually and playtest; no actual dev 2 rendering/drag validation
+is claimed. Recording this status did not rebuild the installed package. Preserve
+SavedVariables, all other addons, approved release ZIP and prior backups. No
+restart/game command, push or PR is authorized. Earlier dev 1 records below are
+historical; approved release remains 0.2.0/build 8, not the UI development build.
+
+## UI dev 1 installation — historical status
 
 On 2026-11-07 the maintainer authorized installing the existing UI dev package
 for playtesting. The complete prior installed addon was backed up under ignored

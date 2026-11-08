@@ -69,7 +69,7 @@ local function encode(v)
  for k,x in pairs(v) do if type(x)~="function" and k~="scripts" then a[#a+1]=encode(k)..":"..encode(x) end end
  return '{'..table.concat(a,',')..'}'
 end
-local cases={"compact-grouped","expanded-grouped","grouped-pickups","grouped-returns","item-start","long-localized","missing-location","missing-other-location","invalid-target","missing-tomtom","loading","empty","zone-handoff","feedback","small-viewport"}
+local cases={"compact-grouped","expanded-grouped","grouped-pickups","grouped-returns","item-start","long-localized","missing-location","missing-other-location","invalid-target","missing-tomtom","loading","empty","zone-handoff","feedback","single-live","options","small-viewport"}
 local all={}
 for _,case in ipairs(cases) do
  nodes={}; UIParent=make("Root");UIParent:SetSize(case=="small-viewport" and 800 or 1280,case=="small-viewport" and 600 or 900)
@@ -93,6 +93,16 @@ for _,case in ipairs(cases) do
   local action=case=="grouped-pickups" and "PICK UP" or case=="grouped-returns" and "TURN IN" or "ACCEPT ITEM"
   step.action=action;for _,m in ipairs(members) do m.action=action end
  end
+ if case=="single-live" then
+  local m=members[1]
+  m.quest.name="Forest Watch"
+  m.quest.note="Catalogue pickup: check availability. Objective work requires the current quest location; work/travel are estimates."
+  step.members={m}
+  Q.route={step,{id=m.id,action="TURN IN",target=step.target,members={{id=m.id,quest=m.quest,action="TURN IN",target=step.target}},trip=1}}
+  Q.state.log[m.id]={progress=.625,objectives={{text="Forest sentries defeated",numFulfilled=4,numRequired=7,finished=false},{text="Moon charm",numFulfilled=1,numRequired=1,finished=true}}}
+  Q.trips[1].quests={m.quest};Q.trips[1].xp=875;Q.trips[1].minutes=4.3
+  Q.db.compact=false
+ end
  Q.status="Next action is live. Later steps assume you complete this trip."
  if case=="long-localized" then Q.notices={"A long synthetic quest reminder whose details must remain readable when the window is narrow."};Q.trips[1].urgent=true end
  if case=="missing-location" or case=="missing-other-location" then
@@ -110,6 +120,7 @@ for _,case in ipairs(cases) do
  local ok,err=pcall(function()
   assert(loadfile(source))("QuestWeaver",Q);Q.UI.Create()
   if case=="feedback" then Q.UI.ShowFeedback(Q.db.feedbackReport) end
+  if case=="options" and Q.UI.options then Q.UI.options:GetScript("OnClick")() end
  end)
  for key,f in pairs(Q.UI) do if type(f)=="table" and f.id then f.role=key end end
  all[#all+1]={name=case,width=UIParent.w,height=UIParent.h,nodes=nodes,error=not ok and tostring(err) or nil}

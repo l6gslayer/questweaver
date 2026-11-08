@@ -1,8 +1,9 @@
 # QuestWeaver
 
-**Local UI development branch:** `0.2.0-ui-dev.1` shows **v0.2.0 | UI dev 1**.
-The approved installed release remains 0.2.0/build 8. This UI preview has not
-been installed or accepted in-game. See [UI review and playtest brief](docs/UI_UX_PASS.md).
+**Local UI development branch:** `0.2.0-ui-dev.2` shows **v0.2.0 | UI dev 2**.
+The approved release remains 0.2.0/build 8. UI dev 1 was installed and its
+in-game screenshot reviewed; dev 2 addresses the reported drag/presentation issues.
+This development UI still requires playtest acceptance. See [dev 2 notes](docs/UI_DEV_2.md). See [UI review and playtest brief](docs/UI_UX_PASS.md).
 
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
 for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
@@ -34,9 +35,10 @@ waypoint API and finally prints coordinates; these fallbacks remain manual. Thir
 ## Window controls
 
 - **Drag the title bar** to move the window. Movement is enabled by default.
-- **Lock / Unlock** controls title dragging in either layout.
+- **Options** opens movement, size and planning controls in either layout.
+- **Lock / Unlock** in Options controls title dragging. Refreshes defer layout changes until you finish dragging.
 - **Details / Compact** switches between the current action and full trip plan.
-- **Size** cycles the saved tracker size from 80% to 130%, fitting available screen space.
+- **Size** in Options cycles the saved tracker size from 80% to 130%, fitting available screen space.
 - **Waypoint** targets or reselects the first outstanding destination.
 - **Auto: On / Off** controls automatic TomTom guidance in either layout.
 - **Hide** hides the window; `/qw` brings it back in its saved layout.
@@ -50,7 +52,9 @@ layouts remain clamped to the screen.
 Compact mode shows the current action, its member quests/objectives, live
 progress, destination and guidance controls. Scroll the task area for all
 members/notices. Details exposes the numbered full route in a separate scroll
-area. Destination and controls remain outside task overflow. Unknown progress says **check
+area beginning with the next stop. Live objective descriptions/counts are shown
+when available; missing rows keep known progress or a quest-log reminder.
+Destination and controls remain outside task overflow. Unknown progress says **check
 quest log**, rather than pretending an unmatched objective is complete.
 
 ## Live quest destinations

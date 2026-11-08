@@ -53,7 +53,11 @@ function methods:HighlightText() self.highlighted=true end
 for _,name in ipairs({"SetJustifyH","SetJustifyV","SetClampedToScreen","SetMovable","SetBackdrop","SetBackdropColor","SetBackdropBorderColor","RegisterForDrag","RegisterEvent","SetMultiLine","SetAutoFocus","SetMaxLetters","SetTextColor","SetSpacing","SetWordWrap","SetNonSpaceWrap","SetFrameStrata","SetFrameLevel","SetHitRectInsets","SetClipsChildren","SetPropagateMouseClicks","SetPropagateMouseMotion"}) do
     methods[name]=function() end
 end
-local function frame(_,name,parent) return setmetatable({scripts={},shown=true,parent=parent,name=name},{__index=methods}) end
+local function frame(kind,name,parent,template)
+    local f=setmetatable({scripts={},shown=true,parent=parent,name=name},{__index=methods})
+    if kind=="ScrollFrame" and template then f.ScrollBar=setmetatable({scripts={},shown=true,parent=f},{__index=methods}) end
+    return f
+end
 function methods:CreateFontString() return frame(nil,nil,self) end
 CreateFrame=frame
 UIParent=frame(); UIParent:SetSize(1200,900)
@@ -63,7 +67,7 @@ Q.db={mode="balanced",profile="melee",budget=10,skip={},rewards={},completed={},
 Q.route={}; Q.trips={}; Q.state={log={}}
 U.Create()
 
-test("expanded tracker starts movable with visible lock/minimize controls",function()
+test("expanded tracker starts movable with named layout and options controls",function()
     assert(U.frame:GetWidth()>0 and U.drag.mouse and U.lock.text=="Lock" and U.toggle.text=="Compact")
     U.drag.scripts.OnDragStart(); assert(U.frame.moving)
     U.drag.scripts.OnDragStop(); assert(not U.frame.moving and Q.db.position.normalized)
@@ -82,7 +86,7 @@ test("minimize preserves top-left position and shows only current action",functi
 end)
 test("expand restores route controls and position",function()
     U.toggle.scripts.OnClick()
-    assert(not Q.db.compact and U.scroll.shown and U.mode.shown and U.frame:GetLeft()==170 and U.frame:GetTop()==780)
+    assert(not Q.db.compact and U.scroll.shown and not U.mode.shown and U.frame:GetLeft()==170 and U.frame:GetTop()==780)
 end)
 test("legacy pixel position migrates to normalized saved position",function()
     Q.db.position={x=120,y=750}; U.Place(); U.SavePosition()
@@ -217,4 +221,135 @@ test("size control recovers malformed legacy scale values without losing saved p
         assert(Q.db.locked==oldLocked and Q.db.autoWaypoint==oldAuto)
     end
     Q.db.uiScale=oldScale;U.Render()
+end)
+
+
+-- UI dev 2 regressions: a normal refresh must never fight the moving frame.
+test("refresh and layout leave moving geometry and saved position untouched until drop",function()
+    local oldRoute,oldState,oldNotices,oldPosition,oldLocked,oldScale=Q.route,Q.state,Q.notices,Q.db.position,Q.db.locked,Q.db.uiScale
+    Q.db.locked=false;Q.notices={};Q.state={log={}}
+    for _,scale in ipairs({1,1.3}) do
+        Q.db.uiScale=scale;Q.route={syntheticStop("drag-before",1)};U.Render();U.SavePosition()
+        local saved=Q.db.position
+        local calls={};local originals={}
+        for _,name in ipairs({"ClearAllPoints","SetPoint","SetSize","SetHeight","SetWidth","SetScale"}) do
+            originals[name]=U.frame[name]
+            local method=name
+            U.frame[name]=function(self,...) calls[method]=(calls[method] or 0)+1;return originals[method](self,...) end
+        end
+        U.drag:GetScript("OnDragStart")()
+        assert(U.dragging and U.frame.moving)
+        local step=syntheticStop("drag-after",1);step.members[1].quest.name="Synthetic quest updated while dragging"
+        Q.route={step}
+        U.Render();U.Layout();U.Place();U.Render()
+        assert(next(calls)==nil,"refresh must not resize, rescale or reanchor the moving frame")
+        assert(Q.db.position==saved,"refresh cannot overwrite the last saved position during drag")
+        U.frame.left=180;U.frame.top=800
+        U.drag:GetScript("OnDragStop")()
+        assert(not U.dragging and not U.frame.moving)
+        assert(U.nextText:GetText()=="Synthetic quest updated while dragging","deferred render must show latest plan")
+        assert(math.abs(Q.db.position.x-180*scale/UIParent:GetWidth())<.001)
+        assert(math.abs(Q.db.position.y-800*scale/UIParent:GetHeight())<.001)
+        for name,original in pairs(originals) do U.frame[name]=original end
+    end
+    Q.route,Q.state,Q.notices,Q.db.position,Q.db.locked,Q.db.uiScale=oldRoute,oldState,oldNotices,oldPosition,oldLocked,oldScale;U.Render()
+end)
+
+test("hiding during a drag ends movement and retains the release position",function()
+    local oldLocked,oldPosition,oldScale,oldHidden=Q.db.locked,Q.db.position,Q.db.uiScale,Q.db.hidden
+    Q.db.locked=false;Q.db.uiScale=1;U.Render();U.frame:Show()
+    U.drag:GetScript("OnDragStart")();U.frame.left=160;U.frame.top=780;U.Render()
+    U.close:GetScript("OnClick")()
+    assert(not U.dragging and not U.frame.moving and not U.frame:IsShown())
+    assert(Q.db.position.normalized and math.abs(Q.db.position.x-160/UIParent:GetWidth())<.001)
+    U.frame:Show();U.Render()
+    assert(U.frame:GetLeft()==160 and U.frame:GetTop()==780,"show must restore final drag location")
+    Q.db.locked,Q.db.position,Q.db.uiScale,Q.db.hidden=oldLocked,oldPosition,oldScale,oldHidden;U.Render()
+end)
+
+test("live objective counts retain unfinished work before completed rows without changing readiness",function()
+    local oldState=Q.state
+    local quest={id=98001,name="Synthetic objective quest",minutes=5}
+    local member={id=quest.id,quest=quest,action="DO"}
+    local log={complete=false,progress=.62,objectives={
+        {text="Synthetic jewel",numFulfilled=1,numRequired=1,finished=true},
+        {text="Synthetic creatures defeated",numFulfilled=4,numRequired=7,finished=false}}}
+    Q.state={log={[quest.id]=log}}
+    local text=U.ObjectiveText(member)
+    assert(text:find("4/7",1,true) and text:find("Done: Synthetic jewel",1,true))
+    assert(text:find("Synthetic creatures",1,true)<text:find("Done:",1,true),"remaining work should come first")
+    assert(log.complete==false and log.progress==.62 and log.objectives[1].finished==true)
+    log.objectives[2].text="Synthetic creatures defeated: 4 / 7"
+    text=U.ObjectiveText(member)
+    assert(not text:find("4 / 7 - 4/7",1,true),"already supplied objective count should not repeat")
+    Q.state=oldState
+end)
+
+test("static multitask rows show only conservatively matched objectives",function()
+    local oldState=Q.state
+    local quest={id=98002,name="Synthetic collection",tasks={{label="Collect lilies",match="lilies"},{label="Collect moss",match="moss"}}}
+    local member={id=quest.id,quest=quest,action="DO",task=1}
+    Q.state={log={[quest.id]={complete=false,objectives={{text="Synthetic lilies",numFulfilled=2,numRequired=4},{text="Synthetic moss",numFulfilled=1,numRequired=5}}}}}
+    local text=U.ObjectiveText(member)
+    assert(text:find("lilies",1,true) and not text:find("moss",1,true))
+    quest.tasks[1].match="unmatched localized text"
+    assert(U.ObjectiveText(member)==nil)
+    assert(U.MemberText(member):find("quest log",1,true),"unmatched tasks must remain unknown")
+    Q.state=oldState
+end)
+
+test("malformed objective counts cannot format-crash and unknown text stays useful",function()
+    local oldState=Q.state
+    local quest={id=98003,name="Synthetic unknown objective"}
+    local member={id=quest.id,quest=quest,action="DO"}
+    for _,value in ipairs({0/0,math.huge,-math.huge,"unknown",-1}) do
+        Q.state={log={[quest.id]={objectives={{text="Synthetic objective instruction",numFulfilled=value,numRequired=value}}}}}
+        local ok,text=pcall(U.ObjectiveText,member)
+        assert(ok and text:find("Synthetic objective instruction",1,true))
+        assert(not text:find("nan",1,true) and not text:find("inf",1,true))
+    end
+    Q.state={log={[quest.id]={objectives={{text="Synthetic objective instruction"}}}}}
+    assert(U.ObjectiveText(member)=="Synthetic objective instruction")
+    Q.state={log={[quest.id]={progressKnown=false}}}
+    assert(U.MemberText(member):find("quest log",1,true))
+    Q.state=oldState
+end)
+
+test("pickup boilerplate is stage-specific while custom safety notes remain visible",function()
+    local quest={id=98004,name="Synthetic note",note="Catalogue pickup: check availability. Objective work requires the current quest location; work/travel are estimates."}
+    local member={id=quest.id,quest=quest,action="PICK UP"}
+    assert(U.StageNote(member):find("availability",1,true))
+    quest.pickupObserved=true;assert(U.StageNote(member)==nil)
+    quest.pickupObserved=nil;member.action="DO";assert(U.StageNote(member)==nil)
+    member.action="TURN IN";assert(U.StageNote(member)==nil)
+    quest.note="Elite quest: assess group readiness."
+    assert(U.StageNote(member)==quest.note,"custom safety notes must not be suppressed with boilerplate")
+end)
+
+test("options reveal secondary controls without changing planning choices and single current stop is not repeated",function()
+    local oldRoute,oldTrips,oldState,oldNotices,oldCompact,oldOptions=Q.route,Q.trips,Q.state,Q.notices,Q.db.compact,U.optionsOpen
+    local mode,pin,auto,position,skip=Q.db.mode,Q.db.pin,Q.db.autoWaypoint,Q.db.position,Q.db.skip
+    Q.db.compact=false;U.optionsOpen=false;Q.notices={};Q.state={log={}}
+    local step=syntheticStop("options-current",1);step.members[1].quest.name="Synthetic current title"
+    Q.route={step};Q.trips={{quests={step.members[1].quest},minutes=3,xp=100}}
+    U.Render()
+    assert(U.nextText:GetText()=="Synthetic current title" and not U.current:GetText():find("Synthetic current title",1,true))
+    assert(not U.body:GetText():find("Synthetic current title",1,true),"full route should not duplicate current stop")
+    assert(U.summary:GetText():find("1 quest |",1,true) and not U.summary:GetText():find("1 quests",1,true))
+    assert(not U.lock:IsShown() and not U.mode:IsShown() and not U.scale:IsShown() and not U.skip:IsShown() and not U.restore:IsShown())
+    U.options:GetScript("OnClick")()
+    assert(U.lock:IsShown() and U.mode:IsShown() and U.scale:IsShown() and U.skip:IsShown() and U.restore:IsShown())
+    assert(Q.db.mode==mode and Q.db.pin==pin and Q.db.autoWaypoint==auto and Q.db.position==position and Q.db.skip==skip)
+    U.options:GetScript("OnClick")();assert(not U.mode:IsShown())
+    Q.route,Q.trips,Q.state,Q.notices,Q.db.compact,U.optionsOpen=oldRoute,oldTrips,oldState,oldNotices,oldCompact,oldOptions;U.Render()
+end)
+
+test("current scrollbar appears only when current detail actually overflows",function()
+    local oldRoute,oldState,oldNotices=Q.route,Q.state,Q.notices
+    Q.route={syntheticStop("short-scroll",1)};Q.route[1].members[1].quest.name="Short quest";Q.route[1].members[1].label=nil
+    Q.state={log={}};Q.notices={};U.Render()
+    assert(not U.currentScroll.ScrollBar:IsShown())
+    Q.notices={string.rep("Synthetic long notice ",100)};U.Render()
+    assert(U.currentScroll.ScrollBar:IsShown())
+    Q.route,Q.state,Q.notices=oldRoute,oldState,oldNotices;U.Render()
 end)

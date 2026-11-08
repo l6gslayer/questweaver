@@ -1,5 +1,8 @@
 # UI/UX development pass
 
+This records the original UI dev 1 pass. See [UI dev 2 corrections](UI_DEV_2.md)
+for the later user screenshot review and dragging/presentation fixes.
+
 2026-11-07. Branch: `codex/ui-ux-pass`, based on clean main `593f879`.
 Approved release remains 0.2.0/build 8, integrated through PR #1 at `7eafd03`.
 This branch is **0.2.0-ui-dev.1**, visibly **v0.2.0 | UI dev 1**. It is a local
