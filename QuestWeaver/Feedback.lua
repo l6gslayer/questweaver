@@ -1,7 +1,7 @@
 local _, Q = ...
 Q.Feedback={}
 local F=Q.Feedback
-F.BUILD="0.2.0-route-feedback-3"
+F.BUILD="0.2.0-route-feedback-4"
 F.LIMIT=300
 local actions={["PICK UP"]=true,["DO"]=true,["TURN IN"]=true,["LOOT ITEM"]=true,["ACCEPT ITEM"]=true}
 local modes={xp=true,balanced=true,gear=true}

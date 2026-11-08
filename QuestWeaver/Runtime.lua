@@ -149,11 +149,19 @@ function R.Snapshot()
                 progress=complete and 1 or (total>0 and fulfilled/total or 0)}
         end
     end
+    -- Some questgivers open the offer directly, without a greeting/gossip
+    -- list. Only an actual QUEST_DETAIL event establishes this transient offer.
+    local detail=R.detailOffer
+    if detail and not s.log[detail.id] then
+        s.offered[detail.id]=true
+        s.offerDetails[detail.id]={title=detail.title,level=detail.level,source="Observed quest detail"}
+    end
     s.itemStarts=R.ItemStarts(s.log)
     local ids={}
     for _,q in ipairs(Q.Pack.quests) do ids[q.id]=true end
     for id in pairs(s.log) do ids[id]=true end
     for id in pairs(s.itemStarts) do ids[id]=true end
+    for id in pairs(s.offered) do ids[id]=true end
     for id in pairs(ids) do
         local done=call(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,id)
         if done==nil then done=call(IsQuestFlaggedCompleted,id) end
@@ -266,26 +274,44 @@ f:SetScript("OnEvent",function(_,event,...)
             local id=event=="QUEST_ACCEPTED" and (type(second)=="number" and second or first) or first
             if positiveID(id) then Q.Feedback.Event(event,id,R.Snapshot(),Q.route) end
         end
-        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true end
+        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" then R.gossipOpen=true;R.detailOffer=nil end
+        if event=="QUEST_DETAIL" then
+            R.detailOffer=nil;R.gossipOpen=false
+            local id=call(GetQuestID)
+            if positiveID(id) then
+                local title=call(GetTitleText)
+                local level=call(C_QuestLog and C_QuestLog.GetQuestDifficultyLevel,id)
+                R.detailOffer={id=id,title=type(title)=="string" and title or nil,
+                    level=type(level)=="number" and level>0 and level<1000 and level or nil}
+            end
+        elseif event=="QUEST_FINISHED" or event=="QUEST_PROGRESS" or event=="QUEST_COMPLETE"
+            or event=="PLAYER_LEAVING_WORLD" then R.detailOffer=nil
+        elseif event=="QUEST_ACCEPTED" then
+            local first,second=...
+            local id=type(second)=="number" and second or first
+            if R.detailOffer and R.detailOffer.id==id then R.detailOffer=nil end
+        end
         if (event=="GOSSIP_CLOSED" and ...~=true) or event=="QUEST_FINISHED" or event=="PLAYER_LEAVING_WORLD" then R.gossipOpen=false end
         if event=="PLAYER_LEAVING_WORLD" then
             Q.inWorld=false; Q.Navigation.Clear()
             if Q.Feedback and Q.Feedback.Suspend then Q.Feedback.Suspend() end
         end
         if event=="PLAYER_ENTERING_WORLD" then Q.inWorld=true end
-        if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then Q.Gear.Capture(Q.db) end
+        if event=="QUEST_DETAIL" or event=="QUEST_COMPLETE" or event=="QUEST_ITEM_UPDATE" then call(Q.Gear.Capture,Q.db) end
         if event=="QUEST_TURNED_IN" then
             local id=...
             if type(id)=="number" then Q.db.completed[id]=true; if Q.db.pin==id then Q.db.pin=nil end end
         end
         Q.dirty=true
-        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" or (event=="GOSSIP_OPTIONS_REFRESHED" and R.gossipOpen) then
+        if event=="GOSSIP_SHOW" or event=="QUEST_GREETING" or event=="QUEST_DETAIL"
+            or event=="QUEST_FINISHED" or event=="QUEST_PROGRESS" or event=="QUEST_COMPLETE"
+            or (event=="GOSSIP_OPTIONS_REFRESHED" and R.gossipOpen) then
             R.Refresh();Q.dirty=false
         end
     end
 end)
 for _,event in ipairs({"ADDON_LOADED","PLAYER_LOGOUT","PLAYER_ENTERING_WORLD","PLAYER_LEAVING_WORLD","QUEST_LOG_UPDATE","QUEST_POI_UPDATE","GOSSIP_SHOW","GOSSIP_CLOSED","GOSSIP_OPTIONS_REFRESHED","QUEST_GREETING","QUEST_FINISHED","BAG_UPDATE_DELAYED","QUEST_ACCEPTED","QUEST_REMOVED",
-    "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
+    "QUEST_TURNED_IN","QUEST_DETAIL","QUEST_PROGRESS","QUEST_COMPLETE","QUEST_ITEM_UPDATE","PLAYER_LEVEL_UP","PLAYER_EQUIPMENT_CHANGED","ZONE_CHANGED_NEW_AREA","GET_ITEM_INFO_RECEIVED"}) do
     pcall(f.RegisterEvent,f,event)
 end
 local elapsed=0

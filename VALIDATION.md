@@ -322,3 +322,22 @@ otherwise a nearby return/urgent delivery can still take precedence. Missing
 locations should direct you to the quest log. Mark or write feedback, play, then
 reload again to save observations from capture tag 0.2.0-route-feedback-3.
 Installation checks and mocked tests do not establish this live behavior.
+
+## 0.2.0 direct quest offers — 2026-11-07
+
+All 228 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python reader tests passed. Eight new generic
+regressions cover direct detail without gossip, immediate manual pickup/offer
+capture, close/progress/reward/new-interaction cleanup, detail/gossip transition
+ordering, accepted-stage deduplication, absent/invalid/failing optional reads,
+reward-reader exceptions, completed flags and fast manual acceptance context.
+No raw saved logs or quest text were copied into fixtures.
+
+The source-level gap is reproduced. Its role in the reported missed pickup is
+plausible, not proven by the sparse interaction log. No live Forever verification
+is claimed. After reload, open an available quest directly and check for manual
+pickup guidance; close it without accepting and ensure the offer disappears.
+Then accept another and check transition to objective work. Existing urgent or
+nearby ready returns may still take priority. If quest 489 is already complete,
+use another direct offer rather than abandoning a quest. Play, mark/write
+feedback, then reload again to save capture tag 0.2.0-route-feedback-4.

@@ -117,3 +117,12 @@ estimates, static timing flags and travel geometry still require Forever testing
   grouped in the previous outing. Require known progress, at least half done,
   at most two remaining work minutes and existing urgency/proximity/pin safeguards.
 - Capture tag is now 0.2.0-route-feedback-3; existing saved history is preserved.
+
+### 0.2.0 direct quest-offer discovery
+
+- Recognize QUEST_DETAIL offers even without a greeting/gossip list, refresh
+  immediately and capture the offered quest before manual acceptance.
+- Clear direct offers on acceptance, dialog closure, progress/rewards, new
+  greeting or leaving the world; keep observed and accepted stages distinct.
+- Preserve normal pickup safeguards; use no hard-coded availability for quest 489.
+- Capture tag 0.2.0-route-feedback-4 preserves earlier history and counters.

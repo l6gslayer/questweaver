@@ -57,10 +57,10 @@ function P.Quests(state,db)
             local info=(state.offerDetails or {})[id] or {}
             local title=type(info.title)=="string" and info.title or ("Quest "..id)
             local level=type(info.level)=="number" and info.level>0 and info.level<1000 and info.level or state.level
-            local start=Q.Core.Copy(state.pos);start.source="Observed NPC offer"
+            local start=Q.Core.Copy(state.pos);start.source=info.source or "Observed NPC offer"
             seeds[#seeds+1]={id=id,name=title,level=level,minLevel=1,xp=250,xpEstimated=true,
                 minutes=.15,start=start,offeredOnly=true,dynamic=true,dynamicOffer=true,stageOnly=true,
-                note="Confirmed NPC offer. Accept manually to reveal objective/reward data; later work and return are not assumed."}
+                note="Confirmed quest offer. Accept manually to reveal objective/reward data; later work and return are not assumed."}
         elseif item and not state.done[id] and not state.skip[id] then
             notices[#notices+1]="Bag quest: use "..(item.name or ("item for quest "..id)).." to inspect/accept; local destination unknown."
         elseif log and not log.failed and not log.location and not state.skip[id] then
@@ -106,13 +106,15 @@ function P.Quests(state,db)
             local detail=(state.offerDetails or {})[q.id] or {}
             q.name=type(detail.title)=="string" and detail.title or seed.name
             q.level=type(detail.level)=="number" and detail.level>0 and detail.level<1000 and detail.level or seed.level
-            q.start=Q.Core.Copy(state.pos);q.start.source="Observed NPC offer"
+            q.start=Q.Core.Copy(state.pos);q.start.source=detail.source or "Observed NPC offer"
         end
         if q.requiredRaceID and state.raceID~=q.requiredRaceID then q.disabled=true end
         if q.requiredClassID and state.classID~=q.requiredClassID then q.disabled=true end
         if q.offeredOnly then
             if not log then
-                q.pendingAction="PICK UP"; q.pendingLabel="Accept "..q.name.." (offered by NPC)"
+                q.pendingAction="PICK UP"
+                q.pendingLabel="Accept "..q.name..(q.start and q.start.source=="Observed quest detail"
+                    and " (open quest offer)" or " (offered by NPC)")
                 q.stageOnly=true; q.minutes=.15
             elseif log.complete then q.objective=Q.Core.Copy(q.finish) end
         end

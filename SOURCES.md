@@ -120,3 +120,15 @@ flag. Reads are guarded, legacy quest-greeting identifiers/names/levels remain
 optional fallbacks, and unknown values stay unknown. This is supporting API
 documentation, not verification of each Forever event/field. Titles are used
 transiently in the tracker; automatic saved capture remains numeric/ID-only.
+
+## Direct quest-offer discovery
+
+- [Blizzard quest frame source mirror](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_UIPanels_Game/Mainline/QuestFrame.lua)
+  handles QUEST_DETAIL separately from QUEST_GREETING and reads GetQuestID;
+  title rendering reads GetTitleText. This supports direct-offer discovery, but
+  the live branch is not an exact Forever build reference. New optional reads
+  are protected and missing IDs never create guessed offers.
+- The local feedback review showed quest489 accepted without an offered snapshot.
+  This establishes a missed recommendation, not the exact interaction sequence.
+  Direct quest details were a confirmed source-level discovery gap; synthetic
+  tests reproduce and cover it without hard-coding quest489 or copying game logs.

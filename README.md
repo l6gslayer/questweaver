@@ -467,3 +467,14 @@ modeled combat risk. Up to four quests remain grouped. Timed deliveries, actual
 nearby turn-ins, skips and pins retain their priority. This is bounded field
 continuation, not a claim that both quests share a recipient. Once the companion
 is ready, the client-provided return location drives replanning.
+
+### Direct quest offers
+
+Some interactions open a quest offer directly without a list of available quests.
+QuestWeaver now reads that open offer immediately and can recommend accepting it
+manually. This handles quests outside the authored pack without guessing their
+availability, objectives or recipient. The offer is transient: accepting it,
+closing the quest dialog, switching to progress/rewards or opening another
+interaction clears it. Existing skips, completion, capacity, corridor limits
+for new pickups and urgent/nearby-return priorities still apply. Discovery starts
+when the client exposes the offer; it cannot predict an unseen NPC's quests.

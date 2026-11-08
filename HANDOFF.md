@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **220 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **228 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -289,3 +289,28 @@ verifying a backup. All 15 installed release files match the rebuilt ZIP;
 no nested addon folder. SavedVariables and other addons were left untouched,
 TomTom is present. No game restart/reload or character action was performed.
 User should reload to load this build, then play and reload again before review.
+
+## Direct quest-offer discovery follow-up
+
+User authorized investigation/correction of missed pickup 489 and installing an
+updated 0.2.0. Review establishes acceptance without a captured available offer;
+the exact live interaction sequence is unknown. Runtime had no offer-discovery
+path for QUEST_DETAIL without greeting/gossip. It now reads the displayed quest
+ID/title and optional level, refreshes immediately and feeds the existing manual
+pickup stage. No hard-coded quest 489 availability or invented future work.
+
+Direct offers clear on acceptance, quest closure, progress/rewards, new greeting
+or leaving the world. Gossip-to-detail close ordering preserves the open detail
+offer. Optional read failures degrade without aborting immediate refresh;
+reward capture is protected. Offered IDs now participate in completion reads.
+Existing pickup limits/priority, accepted continuity and field continuation stay
+in place. Capture tag 0.2.0-route-feedback-4 retains history and counters.
+
+228 Lua tests and 17 Python reader tests passed; all nine sources compiled.
+Actual Forever direct-dialog behavior needs playtesting. Stay on feature branch;
+no PR, merge or push. Latest feedback review cursor 147, not reset by this build.
+
+Authorized installation completed after verified backup. All 15 installed
+release files match the latest ZIP; SavedVariables and other addons untouched,
+TomTom present and no nested directory. Reload to load this build, then play
+and reload again before feedback review. No game action was performed.
