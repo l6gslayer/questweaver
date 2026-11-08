@@ -4,13 +4,28 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
+## Current release status — authoritative
+
+0.2.0 / build 8 was accepted after maintainer playtesting and merged into main
+on 2026-11-07. PR #1: https://github.com/l6gslayer/questweaver/pull/1.
+Merge commit 7eafd0385e486107c5015007d585de88d1457de3 is on local/origin main;
+GitHub Validate run 42440234091 passed. The originating feature branch is retained.
+The installed Lua implementation remains the approved build 8; release preparation
+changed documentation only and did not reinstall or operate the game.
+
+Next requested work is a UI/UX pass with independent reviews, on a NEW branch
+from main. No UI implementation has started. Preserve planner/catalogue behavior,
+SavedVariables and TomTom ownership. Further installation/push/PR/merge needs
+separate authorization. Historical no-merge instructions below were superseded
+only for the approved 0.2.0 integration.
+
 ## Goal and current state
 
 Build an adaptive quest planner for WoW Forever, beginning with Shadowglen.
 The user requested efficient XP, worthwhile gear, multiple quests per outing,
 an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 
-- Release integration target: `main`; originating branch: `feature/0.2.0-trip-planning`.
+- Current branch/baseline: `main` (approved 0.2.0); originating branch retained.
 - Previous main/base: `f343cf4` (0.1.0); approved 0.2.0 implementation: `be6d0b4`.
 - Trip-planning/UI implementation: `1966290`.
 - Latest addon implementation: Darnassus catalogue, cross-zone stage notices and

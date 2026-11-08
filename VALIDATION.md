@@ -446,3 +446,10 @@ The release retains the tested Lua behavior and capture tag 0.2.0-route-feedback
 release preparation updates documentation without changing the installed code.
 No additional game action or installation is required for this documentation.
 Future UI/UX work requires a new branch and its own independent reviews/playtest.
+
+Release integration verified: [PR #1](https://github.com/l6gslayer/questweaver/pull/1)
+merged at 7eafd0385e486107c5015007d585de88d1457de3. Push and PR validation passed
+for 33d9ae0; [main validation 42440234091](https://github.com/l6gslayer/questweaver/actions/runs/42440234091)
+passed for the merge commit. Author/committer metadata remained generic. The
+feature branch is retained; no new GitHub Release/tag or live game action was
+performed. UI/UX work is a separately scoped next pass.
