@@ -1,7 +1,7 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, starting with a 23-entry
-**Shadowglen–Dolanaar** pack. **0.2.0** is a test build awaiting in-game acceptance.
+An adaptive quest planner for **WoW Forever**, with a **79-record Teldrassil
+catalogue** including prerequisites, quest-starting drops and conditional offers. **0.2.0** is a test build awaiting in-game acceptance.
 
 ## Install or update
 
@@ -238,8 +238,8 @@ The supported area now includes the road and Dolanaar through y 65% on the same
 Teldrassil map. Live quest locations and automatic guidance keep refreshing
 after you leave Shadowglen. Accepted quests with located current stages can
 continue across Teldrassil without dropping at the corridor boundary. Outside
-the corridor, accepted quests and actual open quest offers are eligible;
-unseen authored pickups and speculative follow-ups wait until you return. Guidance clears on other maps
+the corridor, accepted quests, actual open offers and explicitly catalogued
+pickups are eligible. Uncatalogued unseen opportunities remain corridor-limited. Guidance clears on other maps
 or when player coordinates are unavailable. This is not a complete authored
 Teldrassil quest catalogue. Missing quest locations remain quest-log reminders.
 Fallback coordinates,
@@ -400,11 +400,11 @@ steps include IDs to support targeting a different member.
 
 ## Limits and data quality
 
-- The authored pack covers a subset of Shadowglen quests, including Fang of
-  Githyiss. Accepted quests and carried quest-starting items may be discovered
-  dynamically as described above. This is not a complete catalogue of unseen
-  Forever drops/class quests. The panel supports the Shadowglen–Dolanaar corridor,
-  rather than all of Teldrassil.
+- The catalogue includes 79 Teldrassil records, with availability/position gaps
+  documented in [CATALOGUE.md](CATALOGUE.md). Known pickups can be proposed ahead
+  of time; conditional records require observed offers. Accepted quests and bag
+  starters still join dynamically. This is not exhaustive coverage of every
+  event, profession variant, class follow-up or drop. Other maps are not routed.
 - Starter objective coordinates, XP baselines and work times are **unverified
   estimates**. QuestieDB can replace selected metadata and giver positions,
   but not these objective areas. No paid routes or third-party datasets are
@@ -484,5 +484,22 @@ closing the quest dialog, switching to progress/rewards or opening another
 interaction clears it. Confirmed offers can become manual pickups anywhere on
 Teldrassil, including outside the authored corridor, with no guessed later work
 or recipient. Skips, completion, capacity, class/race safeguards and urgent/
-nearby-return priorities still apply. Unseen pickups remain corridor-limited. Discovery starts
+nearby-return priorities still apply. Uncatalogued unseen pickups remain corridor-limited. Discovery starts
 when the client exposes the offer; it cannot predict an unseen NPC's quests.
+
+### Advance pickup catalogue
+
+The [catalogue audit](CATALOGUE.md) lists the new chains, sources and uncertainty.
+Known NPC/object locations and prerequisite links let the planner propose
+**Check availability** pickups before you interact. Most new records deliberately
+plan only the pickup until acceptance reveals current work. This can group hub
+pickups but does not guess objective locations, completion or later chain unlocks.
+Actual offers override conservative catalogue gates. Live progress/XP/locations
+remain authoritative.
+
+Moss-twined Heart 5179 is a rare quest starter, accepted manually only if carried;
+a nearby advisory does not promise a drop or route you to camp it. Glowing Fruit,
+Shimmering Frond and Sprouted Fronds are object-started quests, not bag starters.
+City handoffs wait for a valid live projection rather than treating Darnassus
+coordinates as Teldrassil coordinates. See the audit for conditional records and
+remaining coverage gaps.

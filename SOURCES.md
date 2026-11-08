@@ -132,3 +132,13 @@ transiently in the tracker; automatic saved capture remains numeric/ID-only.
   This establishes a missed recommendation, not the exact interaction sequence.
   Direct quest details were a confirmed source-level discovery gap; synthetic
   tests reproduce and cover it without hard-coding quest489 or copying game logs.
+
+## Expanded Teldrassil catalogue
+
+See [CATALOGUE.md](CATALOGUE.md) for all 56 additions, per-record links, explicit
+prerequisite conflicts, map boundaries and deferred conditional coverage. The
+source file contains independently curated factual IDs/names/levels/rewards/
+NPC or object references, not copied quest prose, guide routes, scoring tables,
+third-party code or an imported database. Public observed/cache records are
+supporting evidence, not live compatibility verification. GPL data exports were
+not vendored. Travel/work and unresolved requirements remain explicit estimates.

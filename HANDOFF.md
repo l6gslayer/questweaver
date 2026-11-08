@@ -13,11 +13,11 @@ an easily movable/minimizable tracker, and TomTom direction-arrow guidance.
 - Active branch: `feature/0.2.0-trip-planning`.
 - Main/base: `f343cf4` (published 0.1.0 alpha).
 - Trip-planning/UI implementation: `1966290`.
-- Latest addon implementation: current feature-branch multi-stop pickup/confirmed-offer follow-up
-  (extends `18e628d` automatic TomTom integration).
+- Latest addon implementation: expanded Teldrassil catalogue on the feature branch.
+  The rebuilt ZIP is ready; this catalogue build has NOT been installed.
 - Version remains **0.2.0**, a test build, not a merged release.
 - Public remote: `https://github.com/l6gslayer/questweaver`.
-- Source: nested `QuestWeaver/` directory; nine Lua files plus its manifest.
+- Source: nested `QuestWeaver/` directory; ten Lua files plus its manifest.
 - Installable artifact: `dist/QuestWeaver-0.2.0.zip`, one addon folder at root.
 - Settings: `QuestWeaverDB`, per-character SavedVariables, schema 3.
 
@@ -61,7 +61,7 @@ profiles, modes, gear budgets, pins and skips.
 
 ## Verification and important limits
 
-- **239 tests passed** under an existing embedded Lua 5.1 runtime; all nine
+- **250 tests passed** under an existing embedded Lua 5.1 runtime; all nine
   addon Lua sources compiled. Tests include planner, provider/gear, runtime,
   simulated window behavior and TomTom API spies/failure handling.
 - Package integrity, single-folder layout, manifest references and two public
@@ -341,3 +341,30 @@ Authorized installation completed after inspection and verified backup; all 15
 installed release files match the rebuilt ZIP. SavedVariables and other addons
 untouched; TomTom present; no nested directory. Reload to load this build, play,
 and reload again to save new observations. No game action was performed.
+
+## Expanded Forever Teldrassil catalogue — ready, not installed
+
+User requested catalogue expansion and advance pickups; no new installation was
+requested. Added Teldrassil.lua after Shadowglen.lua, expanding 23 to 79 records.
+56 new records include ordinary chains, Forever-specific Oracle/Twisted Hatred
+extensions, rare starter 927/item 5179, object pickups and conditional Camping/
+profession records. CATALOGUE.md documents every addition's evidence, conflicts,
+unknowns and deferred coverage. No imported guide or third-party dataset.
+
+Known catalogue pickups are eligible across Teldrassil before interaction with
+prerequisite/level/skip/done/capacity safeguards and check-availability labeling.
+Most unknown work remains pickup-only until acceptance; it grants no projected
+completion or chain unlock. Actual offers override conservative requirements;
+recorded catalogue prerequisite links resist incomplete/conflicting optional
+metadata. Elite/escort/profession/regional/unknown records remain offer-only.
+City coordinates are not inserted into map 1438. Unknown accepted destinations
+remain notices, including completed quests whose recipient is not yet exposed.
+
+All 250 Lua tests and 17 Python reader tests passed; ten addon Lua sources compiled.
+New regressions cover proactive pickup groups, graph/gates, live stages/XP,
+city projections, item/object distinctions, rare advice and missing recipients.
+Independent source/drop/engineering reviews completed; an absent-recipient copy
+bug found in review was fixed and regression tested. Package includes the audit.
+Feedback capture tag 0.2.0-route-feedback-6 preserves history; last review cursor 211.
+The ZIP is rebuilt locally; the installed addon remains the previous tag 5 build.
+No install/game action/push/PR/merge. Actual new behavior awaits playtesting.

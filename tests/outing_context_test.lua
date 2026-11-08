@@ -87,6 +87,7 @@ test("runtime saves and reloads numeric outing context before singleton return c
     local oldUI,oldSync,oldWorld=Q.UI,Q.Navigation.Sync,Q.inWorld
     local oldOuting,oldPrevious,oldSkip=Q.db.outing,Q.previous,Q.db.skip
     Q.db.outing=nil;Q.db.skip={};Q.previous=nil;Q.UI=nil;Q.Navigation.Sync=function() end;Q.inWorld=true
+    for _,q in ipairs(Q.Pack.quests) do if q.catalogue then Q.db.skip[q.id]=true end end
     UnitLevel=function() return 8 end;UnitFactionGroup=function() return "Alliance" end
     C_Map={GetBestMapForUnit=function() return Q.Pack.mapID end,
         GetPlayerMapPosition=function() return {x=.58,y=.70} end}

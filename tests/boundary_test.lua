@@ -25,7 +25,7 @@ end)
 test("outside corridor does not unlock authored pickups or item starts",function()
     local s=state();s.itemStarts[90002]={location={x=.58,y=.44},name="Starter"}
     local qs=provider(s)
-    for _,q in ipairs(qs) do assert(not C.Eligible(q,s)) end
+    for _,q in ipairs(qs) do if not q.catalogue then assert(not C.Eligible(q,s)) end end
     s.log[457]={progress=.5,location={x=.61,y=.69}}
     assert(C.Eligible(find(provider(s),457),s))
     s.skip[457]=true;assert(not C.Eligible(find(provider(s),457),s))
@@ -42,6 +42,7 @@ test("runtime keeps accepted guidance outside corridor and clears wrong-map rout
     local savedSnapshot,savedUI,savedSync=Q.Runtime.Snapshot,Q.UI,Q.Navigation.Sync
     local savedFaction,savedWorld=UnitFactionGroup,Q.inWorld
     local s=state();s.log[90001]={progress=.5,location={x=.55,y=.69}}
+    for _,q in ipairs(Q.Pack.quests) do if q.catalogue then s.skip[q.id]=true end end
     Q.Runtime.Snapshot=function() return s end
     UnitFactionGroup=function() return "Alliance" end
     Q.UI=nil;Q.inWorld=true

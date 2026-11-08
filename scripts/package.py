@@ -6,7 +6,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ADDON = ROOT / 'QuestWeaver'
 SOURCES = ['.gitignore', 'AGENTS.md', 'README.md', 'SOURCES.md', 'LICENSE', 'CHANGELOG.md',
-           'VALIDATION.md', 'QuestWeaver', 'tests', 'scripts', '.github']
+           'VALIDATION.md', 'CATALOGUE.md', 'QuestWeaver', 'tests', 'scripts', '.github']
 ALLOWED = {'.lua', '.toc', '.md', '.py', '.yml'}
 PATTERNS = {
     'machine home path': r'(?:/Users/|/home/|[A-Za-z]:\\Users\\)[^\s"\']+',
@@ -52,7 +52,7 @@ def main():
     with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as archive:
         for file in addon_files:
             archive.write(file, f'QuestWeaver/{file.name}')
-        for name in ['README.md', 'LICENSE', 'SOURCES.md', 'VALIDATION.md', 'CHANGELOG.md']:
+        for name in ['README.md', 'LICENSE', 'SOURCES.md', 'VALIDATION.md', 'CHANGELOG.md', 'CATALOGUE.md']:
             archive.write(ROOT / name, f'QuestWeaver/{name}')
     with zipfile.ZipFile(target) as archive:
         assert archive.testzip() is None

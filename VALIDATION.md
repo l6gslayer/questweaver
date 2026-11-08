@@ -365,3 +365,31 @@ Timed deliveries/turn-ins beside you still take precedence, and unknown objectiv
 requirements remain a quest-log check. Play, mark/write feedback, then reload
 again before asking for a review. Expected capture tag 0.2.0-route-feedback-5.
 Mocked tests and file installation do not establish actual Forever behavior.
+
+## 0.2.0 Teldrassil catalogue — 2026-11-07
+
+All 250 Lua tests passed under the existing embedded Lua 5.1 runtime; all ten addon
+sources compiled. All 17 Python safe-reader tests passed. Eleven catalogue tests
+cover unique/acyclic internal prerequisite graph, advance hub pickups beyond the
+legacy corridor, actual-offer override with capacity/skips, accepted live-stage/
+XP/deduplication, city projection, Forever intermediary gates and elite risk,
+conditional profession/escort availability, owned-only rare starter versus
+object/supplied items, advisory-only rare opportunities, optional metadata
+conflicts, and missing accepted destinations including completed unknown returns.
+Earlier boundary/outing fixtures now isolate their subject from newly eligible
+catalogue choices. The wrong-map cleanup checks remain.
+
+Source/drop reviews found no factual issue beyond explicitly documented unknown
+metadata. Engineering review caught copying a missing recipient to an empty
+point; that path is now guarded and regression tested. NPC/object positions,
+work/travel and availability still need actual Forever testing. No raw saved logs
+or notes were added to fixtures. No guide route or database dump was bundled.
+
+The rebuilt ZIP adds Teldrassil.lua and CATALOGUE.md at the correct single addon
+root. This catalogue build is NOT installed; no installation was requested.
+After a separately requested installation, test predicted hub pickups before
+opening NPCs, prerequisite transitions, current objective/return replacement,
+Moss-twined Heart acceptance if found and object-started fruit/fronds. Conditional
+entries should wait for actual offers, and city handoffs must use live projection.
+Expected new-build capture tag 0.2.0-route-feedback-6. Existing saved feedback and
+last manual review cursor 211 remain unchanged by source/package work.

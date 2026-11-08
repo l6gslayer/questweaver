@@ -4,7 +4,7 @@ local function test(name,fn)
     fn(); count=count+1; print("PASS "..name)
 end
 local function load(name) assert(loadfile("QuestWeaver/"..name..".lua"))("QuestWeaver",Q) end
-load("Core"); load("Trips"); load("Shadowglen"); load("Gear"); load("Provider"); load("Navigation"); load("Feedback")
+load("Core"); load("Trips"); load("Shadowglen"); load("Teldrassil"); load("Gear"); load("Provider"); load("Navigation"); load("Feedback")
 assert(loadfile("tests/reference_planner.lua"))("QuestWeaver",Q)
 local C=Q.Core
 local p={x=.58,y=.44}
@@ -91,9 +91,9 @@ test("starter pack identifiers are unique and bounded",function()
     local ids={}
     for _,q in ipairs(Q.Pack.quests) do
         assert(not ids[q.id]); ids[q.id]=true
-        for _,pos in ipairs({q.start,q.objective,q.finish}) do assert(pos.x>0 and pos.x<1 and pos.y>0 and pos.y<1) end
+        for _,key in ipairs({"start","objective","finish"}) do local pos=q[key];if pos then assert(pos.x>0 and pos.x<1 and pos.y>0 and pos.y<1) end end
     end
-    assert(#Q.Pack.quests==23)
+    assert(#Q.Pack.quests>=50)
 end)
 test("gear profiles distinguish intellect and strength",function()
     local stats={ITEM_MOD_INTELLECT_SHORT=10}
@@ -106,7 +106,7 @@ end)
 test("provider operates without optional database",function()
     local s=state(); s.classID=1; s.raceID=4
     local q=Q.Provider.Quests(s,{rewards={},profile="melee"})
-    assert(#q==23 and not q[1].xpObserved and q[1].metadata:find("Unverified"))
+    assert(#q==#Q.Pack.quests and not q[1].xpObserved and q[1].metadata:find("Unverified"))
 end)
 test("observed XP is used only at matching level",function()
     local db={rewards={[456]={xp=999,level=5,items={}}},profile="melee"}
@@ -189,7 +189,7 @@ test("legacy quest log fallback preserves complete state",function()
 end)
 
 test("all addon source files compile as Lua",function()
-    for _,name in ipairs({"Core","Trips","Shadowglen","Provider","Gear","Navigation","Feedback","Runtime","UI"}) do
+    for _,name in ipairs({"Core","Trips","Shadowglen","Teldrassil","Provider","Gear","Navigation","Feedback","Runtime","UI"}) do
         assert(loadfile("QuestWeaver/"..name..".lua"))
     end
 end)
@@ -213,4 +213,5 @@ assert(loadfile("tests/boundary_test.lua"))(Q,test)
 assert(loadfile("tests/field_continuation_test.lua"))(Q,test)
 assert(loadfile("tests/detail_offer_test.lua"))(Q,test)
 assert(loadfile("tests/outing_context_test.lua"))(Q,test)
+assert(loadfile("tests/catalogue_test.lua"))(Q,test)
 print(string.format("%d tests passed",count))

@@ -137,3 +137,18 @@ estimates, static timing flags and travel geometry still require Forever testing
   work minutes, preserving urgent/nearby-return/pin and risk safeguards. Unknown
   recipients remain unknown until observed.
 - Capture tag is 0.2.0-route-feedback-5; existing feedback is preserved.
+
+### 0.2.0 expanded Teldrassil catalogue
+
+- Expand from 23 to 79 records, adding independently sourced ordinary chains,
+  Forever additions, conditional Camping/profession records and object pickups.
+- Plan known pickups ahead of interaction across Teldrassil, respecting recorded
+  prerequisites and labeling unconfirmed availability. Unknown work remains
+  pickup-only until accepted; conditional/insufficient records stay offer-only.
+- Add owned Moss-twined Heart support and uncertain nearby rare advisory; keep
+  object-supplied fruit/fronds separate from bag starters. Preserve Forever's
+  Oracle intermediary chain and avoid city-coordinate mixups.
+- Preserve catalogue prerequisites against incomplete/conflicting optional
+  metadata and use actual client offers/stages when available.
+- Include CATALOGUE.md audit in the package. Capture tag 0.2.0-route-feedback-6;
+  existing feedback remains preserved. This build has not been installed.

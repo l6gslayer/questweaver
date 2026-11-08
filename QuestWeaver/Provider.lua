@@ -75,8 +75,10 @@ function P.Quests(state,db)
             q.minLevel=read(QuestDB,q.id,"requiredLevel") or q.minLevel
             local level=read(QuestDB,q.id,"questLevel")
             if level and level>0 then q.level=level end
-            q.all=read(QuestDB,q.id,"preQuestGroup")
-            q.any=read(QuestDB,q.id,"preQuestSingle")
+            if not q.catalogue or not q.all then
+                q.all=read(QuestDB,q.id,"preQuestGroup") or q.all
+                q.any=read(QuestDB,q.id,"preQuestSingle") or q.any
+            end
             q.start=point(read(QuestDB,q.id,"startedBy")) or q.start
             q.finish=point(read(QuestDB,q.id,"finishedBy")) or q.finish
             q.metadata="QuestieDB + starter objective estimates"
@@ -96,9 +98,30 @@ function P.Quests(state,db)
             for _,id in ipairs(read(QuestDB,q.id,"exclusiveTo") or {}) do
                 if state.done[id] or state.log[id] then q.disabled=true end
             end
-        else q.metadata=q.dynamic and "Discovered nearby quest" or "Unverified starter baseline" end
+        else q.metadata=q.catalogue and "Forever catalogue; estimated work/travel"
+            or (q.dynamic and "Discovered nearby quest" or "Unverified starter baseline") end
         local log=state.log[q.id]
         local item=(state.itemStarts or {})[q.id]
+        if q.catalogue and log and not q.start then q.start=Q.Core.Copy(state.pos) end
+        if q.catalogue and not log and (state.offered or {})[q.id]==true then
+            -- The actual offer supersedes conservative catalogue gates.
+            q.disabled=false;q.all=nil;q.any=nil;q.minLevel=1
+            q.start=Q.Core.Copy(state.pos)
+        end
+        if q.rare and q.opportunityArea and not log and not item and state.level>=(q.opportunityMinLevel or q.level)
+            and not state.done[q.id] and not state.skip[q.id] and Q.Core.Distance(state.pos,q.opportunityArea)<=.06 then
+            notices[#notices+1]="Optional rare nearby: "..q.name..". Loot the starter if encountered; do not assume a spawn or guaranteed drop."
+        end
+        if q.pickupOnly then
+            if not log then
+                q.pendingAction="PICK UP";q.stageOnly=true;q.minutes=.15
+                q.pendingLabel="Check availability: "..q.name
+                if (state.offered or {})[q.id] then
+                    q.start=Q.Core.Copy(state.pos);q.start.source="Observed quest offer"
+                    q.pendingLabel="Accept "..q.name.." (offered now)"
+                end
+            else q.stageOnly=not q.finish end
+        end
         local confirmedOutside=not Q.Core.IsLocal(state.pos) and Q.Core.IsMapPoint(state.pos)
             and (not state.map or state.map==Q.Pack.mapID)
             and (state.offered or {})[q.id]==true and not log and not item
@@ -128,7 +151,7 @@ function P.Quests(state,db)
                 q.pendingLabel="Accept "..q.name..(q.start and q.start.source=="Observed quest detail"
                     and " (open quest offer)" or " (offered by NPC)")
                 q.stageOnly=true; q.minutes=.15
-            elseif log.complete then q.objective=Q.Core.Copy(q.finish) end
+            elseif log.complete then q.objective=q.finish and Q.Core.Copy(q.finish) or nil end
         end
         if (q.itemStartID or item) and not log then
             q.stageOnly=true
@@ -163,10 +186,13 @@ function P.Quests(state,db)
                 q.tasks=nil
             end
         end
+        if q.catalogue and log and log.complete and q.finish then
+            q.stageOnly=false;q.objective=Q.Core.Copy(q.finish)
+        end
         if q.ownedOnly and log and log.complete and q.finish then
             q.stageOnly=false; q.objective=Q.Core.Copy(q.finish)
         end
-        if log and not log.failed and (q.offeredOnly or q.ownedOnly) and not q.objective then
+        if log and not log.failed and (q.offeredOnly or q.ownedOnly or q.catalogue) and not q.objective then
             notices[#notices+1]=q.name..": current destination unavailable; check quest log."
         end
         local observed=db.rewards[q.id]
@@ -185,9 +211,12 @@ function P.Quests(state,db)
             q.gear,q.gearKnown=Q.Gear.Evaluate(observed.items,db.profile)
             if observed.incomplete then q.gearKnown=false end
         end
-        -- Outside the authored corridor only accepted work and actual open
-        -- offers are eligible. No unseen pickup or future seed route is inferred.
-        if not Q.Core.IsLocal(state.pos) and not confirmedOutside then q.acceptedOnly=true end
+        -- Outside legacy coverage, allow explicit catalogue pickups as well as
+        -- accepted work/current offers. Uncatalogued opportunities stay bounded.
+        if not Q.Core.IsLocal(state.pos) and not confirmedOutside and not q.catalogue then q.acceptedOnly=true end
+        if q.catalogue and not log and ((state.map and state.map~=Q.Pack.mapID) or not Q.Core.IsMapPoint(state.pos)) then
+            q.disabled=true
+        end
         result[#result+1]=q
     end
     return result,notices
