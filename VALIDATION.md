@@ -1,5 +1,35 @@
 # Validation record
 
+## Local UI development pass — 2026-11-07
+
+**289 Lua 5.1 tests passed**, including compilation of all thirteen addon sources,
+in an isolated headless embedded runtime. **17 Python reader tests passed**.
+Package privacy/manifest/integrity/single-folder checks passed for the distinct
+`dist/QuestWeaver-0.2.0-ui-dev.1.zip`. The approved 0.2.0 ZIP remains unchanged.
+The source privacy scan now also covers HANDOFF.md and docs, including reviews.
+
+Sixteen new interaction/boundary regressions cover long grouped parent/task
+association and notices, scroll extent/preservation/reset, invalid destinations,
+missing TomTom preference, small-screen fitting, malformed positions/scale,
+empty/loading controls, save/focus/draft behavior, clear confirmation/cancel,
+long export wheel access, hidden-tracker feedback fitting, and guarded native
+manual waypoint fallbacks. Earlier planner, data, feedback and ownership tests
+still pass; existing content assertions were adapted to the relocated item
+instruction and development identity without weakening manual-action safeguards.
+
+Four distinct blind initial reviewers and independent final reviewers evaluated
+the pass. Findings and disposition: [UI/UX report](docs/UI_UX_PASS.md).
+Fifteen synthetic before/after states were rendered from executed UI frame
+traces, inspected, and kept under ignored build output. A read-only live
+build-8 compact screenshot was observed separately; no live after state exists.
+These are different evidence types. No game click, command, restart, installation,
+SavedVariables modification or external publication occurred.
+
+Actual client font/button/scroll rendering, combat/input/click-through/focus,
+UI scaling and persistence remain unverified for this development UI. A focused
+playtest checklist is in the linked report. This local work does not constitute
+owner acceptance or a replacement release.
+
 ## 0.2.0 — 2026-11-07
 
 **91 tests passed** under an existing embedded Lua 5.1 runtime in a separate

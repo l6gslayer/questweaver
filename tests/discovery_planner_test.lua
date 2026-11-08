@@ -125,9 +125,9 @@ test("item and stage actions render in compact and expanded layouts",function()
     local qs,notices=provider(s)
     Q.route,Q.trips=T.Plan(only(qs,97236),s);Q.state=s;Q.notices=notices
     Q.db.compact=true;Q.UI.Render()
-    assert(not Q.UI.way.enabled and Q.UI.current.text:find("Use the item yourself",1,true))
+    assert(not Q.UI.way.enabled and Q.UI.destination.text:find("accept the quest yourself",1,true))
     Q.db.compact=false;Q.UI.Render()
-    assert(Q.UI.body.text:find("ACCEPT ITEM",1,true) and not Q.UI.body.text:find("58.0, 44.0",1,true))
+    assert(Q.UI.body.text:find("Accept a quest from your bags",1,true) and not Q.UI.body.text:find("58.0, 44.0",1,true))
     Q.route,Q.state,Q.notices,Q.trips=oldRoute,oldState,oldNotices,oldTrips
 end)
 test("large shortlist retains real prerequisites before projected children",function()

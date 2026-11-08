@@ -257,22 +257,54 @@ function R.Refresh()
     if not first then Q.trips={} end
     if Q.Feedback and Q.inWorld~=false then Q.Feedback.Observe(s,Q.route,Q.trips) end
     Q.Navigation.Sync(first)
-    if Q.UI then Q.UI.Render() end
+    if Q.UI then
+        local destination=Q.Navigation.Destination(first)
+        if not destination or Q.UI.waypointStatusKey~=destination.key or Q.Navigation.Available() or Q.Navigation.error then
+            Q.UI.waypointStatus=nil; Q.UI.waypointStatusKey=nil
+        end
+        Q.UI.Render()
+    end
 end
 function R.Waypoint()
     local next=Q.route and Q.route[1]
     if not next or next.action=="ACCEPT ITEM" then return end
-    if Q.Navigation.Available() then
-        Q.Navigation.Show(next,true)
-        if Q.UI then Q.UI.Render() end
+    local destination=Q.Navigation.Destination(next)
+    local function acknowledge(text)
+        if Q.UI then
+            Q.UI.waypointStatus=text
+            Q.UI.waypointStatusKey=destination and destination.key or nil
+            Q.UI.Render()
+        end
+    end
+    if not destination then
+        acknowledge("Location unavailable - check your quest log.")
         return
     end
-    if C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
-        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(Q.Pack.mapID,next.target.x,next.target.y))
-        if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then C_SuperTrack.SetSuperTrackedUserWaypoint(true) end
-    else
-        print(string.format("QuestWeaver: %s %.1f, %.1f",next.name,next.target.x*100,next.target.y*100))
+    if Q.Navigation.Available() then
+        Q.Navigation.Show(next,true)
+        -- TomTom supplies its own precise success/error status.
+        acknowledge(nil)
+        return
     end
+    local placed=false
+    if type(C_Map and C_Map.SetUserWaypoint)=="function"
+        and type(UiMapPoint and UiMapPoint.CreateFromCoordinates)=="function" then
+        local ok,point=pcall(UiMapPoint.CreateFromCoordinates,destination.map,destination.x,destination.y)
+        if ok and point then
+            local set,result=pcall(C_Map.SetUserWaypoint,point)
+            placed=set and result~=false
+        end
+    end
+    if placed then
+        if type(C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint)=="function" then
+            local ok,result=pcall(C_SuperTrack.SetSuperTrackedUserWaypoint,true)
+            if ok and result~=false then acknowledge("Map pin set."); return end
+        else acknowledge("Map pin set."); return end
+    end
+    -- Optional native APIs can be missing, unsupported or fail at call time.
+    -- Keep coordinates useful without exposing client error text or markup.
+    print(string.format("QuestWeaver: Destination %.1f, %.1f",destination.x*100,destination.y*100))
+    acknowledge(placed and "Map pin set; coordinates printed in chat." or "Map pin unavailable; coordinates printed in chat.")
 end
 
 local f=CreateFrame("Frame")

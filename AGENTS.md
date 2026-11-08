@@ -26,3 +26,9 @@
   improved route. Reviews are manual after the user reloads/logs out and asks.
 - Bump `Feedback.BUILD` when changing planner/capture behavior after this build
   so future playtest reports identify the implementation being evaluated.
+
+- Current local UI development work: `codex/ui-ux-pass`, manifest
+  `0.2.0-ui-dev.1`. See `docs/UI_UX_PASS.md` and the current HANDOFF section.
+  Approved 0.2.0/build 8 remains the installed baseline; further installation,
+  push, PR, merge or publication needs separate authorization. Offline preview
+  output belongs only under ignored `build/`, never in public commits.

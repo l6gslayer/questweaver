@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: QuestWeaver
-## Notes: Adaptive zone quest planning with explained XP and gear tradeoffs.
-## Version: 0.2.0
+## Notes: Development UI preview; approved planner baseline 0.2.0/build 8.
+## Version: 0.2.0-ui-dev.1
 ## Author: QuestWeaver contributors
 ## OptionalDeps: QuestieDB, TomTom
 ## SavedVariablesPerCharacter: QuestWeaverDB

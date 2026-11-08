@@ -1,5 +1,9 @@
 # QuestWeaver
 
+**Local UI development branch:** `0.2.0-ui-dev.1` shows **v0.2.0 | UI dev 1**.
+The approved installed release remains 0.2.0/build 8. This UI preview has not
+been installed or accepted in-game. See [UI review and playtest brief](docs/UI_UX_PASS.md).
+
 An adaptive quest planner for **WoW Forever**, with separate zone catalogues
 for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
 conditional offers. **0.2.0** was approved for release after maintainer playtesting
@@ -31,10 +35,11 @@ waypoint API and finally prints coordinates; these fallbacks remain manual. Thir
 
 - **Drag the title bar** to move the window. Movement is enabled by default.
 - **Lock / Unlock** controls title dragging in either layout.
-- **- / +** minimizes to the next action or expands the full trip plan.
+- **Details / Compact** switches between the current action and full trip plan.
+- **Size** cycles the saved tracker size from 80% to 130%, fitting available screen space.
 - **Waypoint** targets or reselects the first outstanding destination.
 - **Auto: On / Off** controls automatic TomTom guidance in either layout.
-- **x** hides the window; `/qw` brings it back in its saved layout.
+- **Hide** hides the window; `/qw` brings it back in its saved layout.
 - `/qw resetposition` recenters an offscreen window.
 
 Position, compact/expanded state and lock preference survive reloads through
@@ -42,9 +47,10 @@ per-character SavedVariables. Legacy 0.1.0 pixel positions are accepted, then
 saved as normalized coordinates when moved or the layout is toggled. Both
 layouts remain clamped to the screen.
 
-Compact mode shows only the current action, its member quests/objectives,
-available live progress, destination and waypoint control. Expand to see all
-members when a stop contains more than three. Unknown progress says **check
+Compact mode shows the current action, its member quests/objectives, live
+progress, destination and guidance controls. Scroll the task area for all
+members/notices. Details exposes the numbered full route in a separate scroll
+area. Destination and controls remain outside task overflow. Unknown progress says **check
 quest log**, rather than pretending an unmatched objective is complete.
 
 ## Live quest destinations
@@ -181,7 +187,9 @@ reward or player movement is automated.
 ## Playtest feedback and manual review
 
 Click **Feedback** in either tracker layout to add a short note, mark a moment,
-or select a copyable report. You can also use:
+or select a copyable report. Saving shows a local acknowledgment; Clear history
+requires a second confirmation and offers Cancel. Closing preserves an unsaved
+note draft and releases text focus. You can also use:
 
 | Command | Purpose |
 | --- | --- |
@@ -348,8 +356,8 @@ Useful exceptions:
   planner conservatively requires room for planned pickups up front.
 - Previous trips are retained within 15% of the best priority, and small
   destination changes receive hysteresis to avoid repeated direction changes.
-- **Skip first quest** removes only the first quest of a grouped action from
-  recommendations. It never abandons quests. Restore clears skips and pins.
+- **Skip next quest** removes only the first quest of a grouped action from
+  recommendations. It never abandons quests. **Reset choices** clears skips and pins; its tooltip explains this.
 
 ## XP and gear modes
 

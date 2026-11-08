@@ -164,4 +164,80 @@ test("manual waypoint retains the existing native fallback when TomTom is absent
     C_Map.SetUserWaypoint=nil; UiMapPoint=oldPoint; C_SuperTrack=oldTrack
 end)
 
+
+-- Native fallback regressions exercise optional client boundaries, not rendering.
+local function nativeEnvironment(fn)
+    local oldTomTom,oldPoint,oldTrack,oldSet=TomTom,UiMapPoint,C_SuperTrack,C_Map.SetUserWaypoint
+    local oldRoute,oldPrint,oldCurrent=Q.route,print,N.current
+    local oldStatus,oldKey=Q.UI.waypointStatus,Q.UI.waypointStatusKey
+    local output={}
+    TomTom=nil;N.current=nil;Q.route={step()}
+    print=function(text) output[#output+1]=text end
+    local ok,err=pcall(fn,output)
+    TomTom,UiMapPoint,C_SuperTrack,C_Map.SetUserWaypoint=oldTomTom,oldPoint,oldTrack,oldSet
+    Q.route,print,N.current=oldRoute,oldPrint,oldCurrent
+    Q.UI.waypointStatus,Q.UI.waypointStatusKey=oldStatus,oldKey
+    assert(ok,err)
+end
+
+test("native manual fallback catches create set and tracking exceptions",function()
+    nativeEnvironment(function(output)
+        local auto,pin,route=Q.db.autoWaypoint,Q.db.pin,Q.route
+        for _,failure in ipairs({"create","set","track"}) do
+            UiMapPoint={CreateFromCoordinates=function()
+                if failure=="create" then error("synthetic optional API error") end
+                return {x=.575,y=.328}
+            end}
+            C_Map.SetUserWaypoint=function() if failure=="set" then error("synthetic optional API error") end end
+            C_SuperTrack={SetSuperTrackedUserWaypoint=function() error("synthetic optional API error") end}
+            Q.Runtime.Waypoint()
+            assert(output[#output]:find("57.5, 32.8",1,true))
+            assert(not output[#output]:find("synthetic",1,true),"client error details must not enter player chat")
+            assert(Q.UI.waypointStatus:find("coordinates printed",1,true))
+            assert(Q.db.autoWaypoint==auto and Q.db.pin==pin and Q.route==route and not N.current)
+        end
+    end)
+end)
+
+test("native manual fallback handles absent false and malformed optional APIs",function()
+    nativeEnvironment(function(output)
+        UiMapPoint=nil;C_Map.SetUserWaypoint=nil;C_SuperTrack=nil
+        Q.Runtime.Waypoint();assert(#output==1 and Q.UI.waypointStatus:find("unavailable",1,true))
+        UiMapPoint={CreateFromCoordinates=function() return false end};C_Map.SetUserWaypoint=function() error("must not set invalid point") end
+        Q.Runtime.Waypoint();assert(#output==2)
+        UiMapPoint={CreateFromCoordinates=function() return {} end};C_Map.SetUserWaypoint=function() return false end
+        Q.Runtime.Waypoint();assert(#output==3)
+        UiMapPoint={CreateFromCoordinates="unsupported"};C_Map.SetUserWaypoint=true
+        Q.Runtime.Waypoint();assert(#output==4)
+    end)
+end)
+
+test("manual waypoint validates the destination before optional client calls",function()
+    nativeEnvironment(function(output)
+        local called=0
+        UiMapPoint={CreateFromCoordinates=function() called=called+1;return {} end}
+        C_Map.SetUserWaypoint=function() called=called+1 end
+        for _,target in ipairs({{x=0/0,y=.3},{x=math.huge,y=.3},{x=-1,y=.3},{x=.3,y=2}}) do
+            Q.route={step()};Q.route[1].target=target;Q.Runtime.Waypoint()
+        end
+        Q.route={step()};Q.route[1].target=nil;Q.Runtime.Waypoint()
+        Q.route={step()};Q.route[1].action="ACCEPT ITEM";Q.Runtime.Waypoint()
+        Q.route={};Q.Runtime.Waypoint()
+        assert(called==0 and #output==0 and Q.UI.waypointStatus:find("Location unavailable",1,true))
+    end)
+end)
+
+test("native pin success acknowledges locally and stale acknowledgment clears during loading",function()
+    nativeEnvironment(function(output)
+        local oldWorld=Q.inWorld
+        UiMapPoint={CreateFromCoordinates=function(map,x,y) return {map=map,x=x,y=y} end}
+        C_Map.SetUserWaypoint=function() end;C_SuperTrack=nil
+        Q.Runtime.Waypoint()
+        assert(#output==0 and Q.UI.waypointStatus=="Map pin set.")
+        assert(Q.UI.waypointStatusKey==N.Destination(Q.route[1]).key)
+        Q.inWorld=false;Q.Runtime.Refresh();Q.inWorld=oldWorld
+        assert(Q.UI.waypointStatus==nil and Q.UI.waypointStatusKey==nil)
+    end)
+end)
+
 N.Clear(); TomTom=nil

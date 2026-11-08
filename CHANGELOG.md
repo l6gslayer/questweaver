@@ -1,3 +1,10 @@
+# Local UI preview — 0.2.0-ui-dev.1 (unreleased)
+
+Readable scroll-bounded compact/full trackers, named controls and saved size,
+clear navigation states and guarded manual fallback, deliberate local-feedback
+entry/export/clear flows. Planner/catalogues and approved build 8 unchanged.
+See docs/UI_UX_PASS.md for independent reviews, evidence and playtest limits.
+
 # Changelog
 
 ## 0.2.0 — 2026-11-07 — Adaptive trips and zone catalogues

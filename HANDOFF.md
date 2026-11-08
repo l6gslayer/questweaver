@@ -4,6 +4,18 @@ Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
+## Current local UI work — authoritative
+
+UI implementation is now on local `codex/ui-ux-pass`, based on main `593f879`.
+Manifest: `0.2.0-ui-dev.1`; tracker: `v0.2.0 | UI dev 1`. The installed release
+and approved 0.2.0 ZIP remain unchanged. No install/push/PR/merge/publication is
+authorized for this development branch. See [UI/UX pass](docs/UI_UX_PASS.md) for
+four blind initial critiques, research, design choice, final reviews, offline
+before/after evidence reproduction and remaining client playtests. The old
+"no UI implementation" statements below are historical release-handoff context.
+Planner/catalogue and feedback capture tag 8 are retained; UI adds one optional
+saved size preference and guarded manual native-waypoint feedback.
+
 ## Current release status — authoritative
 
 0.2.0 / build 8 was accepted after maintainer playtesting and merged into main
