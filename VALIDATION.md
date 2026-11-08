@@ -1,40 +1,448 @@
 # Validation record
 
-Version 0.1.0, 2026-11-07.
+## 0.2.0 — 2026-11-07
 
-## Automated and package checks
+**91 tests passed** under an existing embedded Lua 5.1 runtime in a separate
+headless process. All eight addon Lua sources compiled. No dependency was
+installed to run these checks. Window tests simulate frame APIs; they do not
+render the actual Forever UI or prove client compatibility.
 
-- Lua planner/adapter regression suite: **30 tests passed** using an existing
-  embedded Lua 5.1 runtime in a separate headless process. No standalone Lua
-  command was available; no dependencies were installed to run these checks.
-- All six addon Lua files compiled successfully under that Lua 5.1 runtime.
-- Manifest references, privacy scan and ZIP integrity/layout: run with
-  `python3 scripts/package.py`; the release package is created only if these pass.
-- GitHub Actions workflow: prepared for Lua 5.1 tests and packaging; not run
-  until the repository is published and a workflow run completes.
+Coverage includes:
 
-The regression run caught and fixed an action-target fallback that could point
-a pickup at an objective when its giver coordinate was absent. These are mocked
-logic/adapter tests, not a test of game rendering or actual client APIs.
+- Pickup batches before departure; objective batches; nearby grouped turn-ins.
+- Shared travel without double-counted quest XP, explicit shared combat sources,
+  and a bound on how far one grouped stop can stretch.
+- Separate mushroom/lily/spider tasks, partial progress, unmatched/localized
+  objective text and incomplete quests with all known tasks done.
+- Turn-in prerequisites enforced even when child quests are in the same trip.
+- Timed deliveries, known log capacity, pins/skips, abandonment, changed progress,
+  candidate determinism, forecast limits and state immutability.
+- Whole-trip gear budgets, mode differences, known chain rewards and hysteresis.
+- TomTom auto/manual modes, idempotent updates, grouped target changes, owned
+  cleanup, hidden-window updates, loading/zone transitions, API failure handling,
+  missing dependency, cave-label scope, instance replacement, saved auto preference
+  and preservation of the manual native fallback.
+- Visible movement/lock controls, minimizing/expanding, stable top-left position,
+  legacy-position migration, offscreen reset, compact content, reload preferences
+  and slash controls.
+- Retained 0.1.0 baseline planner, gear/provider and modern/legacy API regressions.
 
-## In-game acceptance checklist (all pending)
+A deterministic two-quest synthetic fixture uses less than **70% of the travel**
+of separate out-and-back trips. This is a geometric regression scenario, not a
+measured in-game speedup. Twenty complete Shadowglen forecasts took about
+**0.14 seconds** total in this local test runtime; this is not an in-game FPS or
+latency guarantee.
 
-- Cold login and `/reload` load without Lua errors on the current Forever build.
-- The window is readable at normal UI scale, scrolls and remembers its position.
-- Out-of-zone and out-of-pack messages suppress invalid routing.
-- At level 1, available pickups match actual Shadowglen quest givers.
-- Each objective's progress updates; finishing changes DO to TURN IN.
-- Turning in updates prerequisites and unlocks the correct next quest.
-- Skipping, restoring, pinning and abandoning a quest produce sensible plans.
-- Confirm all 12 starter IDs, locations, levels, XP rewards and chain edges.
-- Check cave entrance/ramp warnings and replace inaccurate target coordinates.
-- Opening quest offer/reward windows captures actual XP/reward IDs.
-- Cached/missing item data never shows an invented upgrade.
-- Role profiles, level restrictions, armor usability and weapon-loadout handling
-  do not recommend unusable items.
-- Waypoint button works with/without TomTom and only acts when requested.
-- Combat and item/quest event bursts do not cause errors or noticeable stalls.
-- Settings survive logout/login; separate characters do not share skips/pins.
+Manifest references, the public source privacy scan and ZIP integrity/layout
+are checked by `python3 scripts/package.py`. A separate staged-file review checks
+for the local username and credential-like assignments before committing.
 
-No successful game installation, client startup, quest run, combat test or
-SavedVariables persistence test is claimed by this record.
+GitHub Actions for 0.2.0 is pending branch publication. No PR to main is opened
+until user playtesting is complete.
+
+## Playtest checklist for 0.2.0 (pending)
+
+1. Replace the 0.1.0 source with the 0.2.0 package, preserving SavedVariables.
+   Confirm the tracker loads without Lua errors and existing preferences remain.
+2. Drag its title, click Lock, verify it stays fixed, then click Unlock and move
+   it again. Test in both expanded and compact layouts.
+3. Click - to compact and + to expand. Position should remain at the same top-left
+   corner, except for screen clamping. Check readability at your normal UI scale.
+4. Use `/qw resetposition`. Toggle compact/lock, `/reload`, and confirm those
+   preferences and the position survive. Close and reopen with `/qw`.
+5. With multiple compatible quests available, confirm the first action lists
+   nearby pickups before sending you away. Accept one at a time and watch the
+   list update without requiring you to complete each quest separately.
+6. With Webwood Venom and Iverron's Antidote both accepted, check grouped spider
+   work. Verify mushroom/lily objectives disappear individually when finished.
+   Check all new gathering coordinates against actual Forever spawns.
+7. Complete a quest while another remains nearby. Confirm the route continues
+   sensible nearby work or returns for a useful unlock, rather than automatically
+   taking a separate hub trip for every quest.
+8. Turn quests in individually; completed quests should disappear and follow-ups
+   should become real pickup recommendations only after their prerequisites.
+9. Test a skipped/pinned quest, Restore, and a quest abandoned outside the addon.
+   Recommendations should reflect the actual quest log.
+10. Test timed antidote delivery without optional detours. Check the warning
+    against the actual Forever quest; the addon does not read a countdown.
+11. Install/enable the matching TomTom version. Confirm Auto: On shows its arrow
+    and distance, tracks the first outstanding grouped member and keeps working
+    while the tracker is minimized or hidden. Check the cave/upstairs hints.
+12. Accept/complete/skip/turn in quests. Check that the arrow updates once to the
+    new target, not every second. Arriving alone must not complete a quest.
+13. Set an unrelated TomTom waypoint, then toggle Auto off or leave Shadowglen.
+    Confirm only QuestWeaver's marker is removed. Test loading transitions.
+14. Test Auto off plus manual Waypoint, `/qw auto on|off`, saved preference across
+    reload, and the status/manual fallback when TomTom is disabled. Verify that
+    arrow visibility/style/scale remain under TomTom's own settings.
+15. Check out-of-zone messaging, combat, event bursts, and movement near a route
+    boundary. Report repeated direction reversals or perceptible stalls.
+
+### Installation and initial user playtest — 2026-11-07
+
+The existing 0.2.0 package, including Navigation.lua, was installed into the
+Forever addon folder after a verified full backup of the previous addon.
+All 14 installed release files were byte-compared with the ZIP successfully,
+including a subsequent readback. SavedVariables and other addons were untouched.
+The agent did not restart the game or run an in-game reload command.
+
+The user subsequently reported that the build is working. Their screenshot
+shows the compact tracker, Auto: On, a ready navigation status and a TomTom
+arrow for The Balance of Nature. A subsequent filesystem inspection found
+TomTom v4.4.1-release with Interface 16001 among its declared targets. This
+establishes initial user-reported operation and visible rendering, not completion
+of the checklist above. Persistence, cleanup, combat and full quest progression
+remain unverified.
+
+The screenshot also exposes an outstanding objective-waypoint accuracy issue:
+the tracker targets 57.9, 41.2 while Mangy Nightsabers remain and the other mob
+objective is complete. Source inspection confirms quest 457 has one fixed,
+unverified objective point and no per-mob tasks. The planner therefore retains
+the same point regardless of which mob objective remains. Navigation passes
+that point directly to TomTom. QuestieDB integration currently updates quest
+givers/metadata, not objective spawn locations. A corrected spawn area needs
+Forever evidence; no replacement coordinate has been inferred from the player's
+position or the quest-area marker. Gameplay code and package remain unchanged
+by this documentation update.
+
+## Previous baseline
+
+0.1.0 passed 30 Lua tests. GitHub Actions run 42410645167 passed syntax checks,
+planner tests, privacy/package validation and artifact upload on the initial
+main commit. The old planner is retained only in `tests/reference_planner.lua`
+for regression comparisons and is not loaded by the 0.2.0 manifest.
+
+## 0.2.0 current quest destinations — 2026-11-07
+
+**100 tests passed** under the existing embedded Lua 5.1 runtime, including
+compilation of all eight addon sources. Nine new cases cover waypoint priority,
+map-specific coordinate spaces, quest-area fallback, absent/failing APIs,
+invalid/foreign coordinates, live destination changes reaching navigation,
+no duplicate gathering pins or seed mutation, completed return points, fallback
+estimates, and snapshot refresh/map-query count. Existing planner, UI and
+navigation ownership regressions also pass.
+
+The implementation now reads current quest locations through guarded optional
+APIs rather than substituting guessed spawn coordinates. It labels live points
+and estimates in the tracker. The earlier waypoint investigation above describes
+the previous package. This updated build still requires a Forever playtest:
+reload, check The Balance of Nature against the blue area, confirm a live source
+label, then finish an objective and check the destination refresh. If it says
+starter estimate, the client did not expose valid location data via these reads.
+Test completion/return and a multi-objective gathering quest too. A quest-area
+point is not an individual mob spawn or an objective-indexed location.
+
+## 0.2.0 nearby quests and item-start discovery — 2026-11-07
+
+**125 tests passed** under the existing embedded Lua 5.1 runtime, with all eight
+addon sources compiled. New regressions cover modern/legacy bag discovery,
+known item fallback, accepted/active/completed suppression, uncached/missing
+APIs, bounded carried-bag scans, bag removal, log XP/title/level reads, Fang's
+loot/accept/return stages, shared egg outing and Aldrassil returns, full-log
+reminders, local/remote filtering, seed deduplication, missing return/XP/gear,
+no fake completion/unlocks, discovered pinning, manual-only acceptance without
+waypoints, compact/expanded rendering, and prerequisite-safe shortlisting.
+A synthetic 40-local-quest plan took about 0.03 seconds in the test runtime,
+not an in-game timing guarantee. Existing navigation ownership tests remain.
+
+Playtest pending: after reload, inspect an unaccepted Fang in bags (if still
+available), manually accept it, then confirm it joins the Aldrassil return.
+With Webwood Egg active, check the optional Githyiss loot opportunity; if already
+turned in, Fang should stay absent. Test another nearby accepted quest outside
+the authored pack, a detected item-start quest, bag item removal, full-log
+reminder, skip/pin and progression to its live return. Remote/unlocated quests
+must not gain fabricated local waypoints. Unlocated starters should explain
+that the bag item needs manual inspection. No full catalogue of unseen drops
+is implied. New discovery/API behavior requires actual Forever validation.
+
+## 0.2.0 nearby ready returns and coverage audit — 2026-11-07
+
+**142 tests passed** under the existing embedded Lua 5.1 runtime; all eight Lua
+addon sources compiled. The 17 new tests cover a nearby completed Fang versus
+farther high-value/pinned/previous plans, grouped actual returns, timed delivery
+precedence, movement across the near radius, no completion inferred from
+proximity/objective rows, failed/skipped/done exclusions, freed quest-log slots,
+discovered return coordinates, deterministic four-return bounds, offer-only
+pickups, live Nature's Call area and completion, missing-location notices,
+Night Elf/all-class gating, owned-only voucher behavior, readiness fallback,
+and clearing offers after a conversation closes.
+
+Source inspection shows the planner already samples current position; the
+reproduced fault was missing nearby-ready-return priority in trip selection.
+The user report does not establish which readiness API values the live client
+returned. The new guarded ReadyForTurnIn read addresses that additional boundary
+without assuming that item acceptance or proximity completes a quest.
+
+Playtest pending: reload beside Gilshalan with Fang accepted and ready, and
+confirm TURN IN precedes a farther pickup. Turn it in, move away, and confirm
+planning resumes from your current position. Check another ready local return,
+open Tarindrella/Shanda's conversation for newly offered quests, manually accept,
+and verify live objectives/returns. A voucher must never create an unowned loot
+suggestion. Class introductions remain accepted-discovery coverage; outbound
+Dolanaar trips remain separate. No new in-game or persistence test is claimed.
+
+## 0.2.0 class introductions and Dolanaar handoffs — 2026-11-07
+
+**149 tests passed** under the existing embedded Lua 5.1 runtime; all eight addon
+Lua files compiled. Seven new cases cover each class/race/offer gate, accepted
+trainer routes and completion, Crown handoff prerequisite order, shared delivery
+travel with pickup precedence, full-log handoff constraints, dynamic quest/live
+return discovery in Dolanaar, and a simulated runtime/TomTom transition beyond
+the old Shadowglen bound with cleanup outside the new supported corridor.
+Existing nearby-return/timed priority and ownership tests still pass.
+
+Playtest pending: talk to Ilthalaine with the appropriate Night Elf class and
+confirm only its offered sigil is recommended; accept/read manually, then check
+the correct trainer. After Crown 921, take 928 and/or Dolanaar Delivery; verify
+pickup/return destinations, shared trip logic, and arrow refresh on the road
+and inside Dolanaar. Accept a local Dolanaar quest and check dynamic discovery.
+Return priority beside recipients should still work. This is not a complete
+Dolanaar quest pack, and all fallback positions/work/XP need Forever checking.
+No in-game playtest or automated character action was performed by the agent.
+
+## 0.2.0 shared-return batching correction — 2026-11-07
+
+**162 tests passed** under embedded Lua 5.1, including compilation of all eight
+addon Lua files. Thirteen new regressions cover forced Moss/Totem ordering,
+progress at 0/50/80/95%, shared-return travel/time savings, previous solo-route
+stickiness, Moss becoming complete in the field, actual recipient proximity,
+far/excessive work exclusion, skipped/failed/unaccepted/unlocated companions,
+timed delivery and pin preservation, multiple objective tasks, separate nearby
+stops, prerequisite-cycle avoidance, unconfirmed finished rows and increased risk.
+All previous class/Dolanaar/runtime/navigation ownership cases also pass.
+
+The reported failure is addressed in both route ordering and candidate selection.
+Only snapshot-accepted independent work participates in shared-return barriers;
+locked child pickups cannot block their prerequisite's return. Companion
+insertion compares combined completion cost against the existing trip followed
+by the other quest from that trip's endpoint, requires strictly less walking
+and more than .01 estimated minute saved, and adds at most six estimated work
+minutes without raising risk. Bounds are product heuristics, not client timing
+measurements. No combat savings were invented for Fel Moss versus Totems.
+
+Playtest pending: with both Woodland Protector and Nature's Call accepted and
+live locations available, collect Moss partway, then finish it away from the
+recipient. Totems should remain in the current outing before the shared return.
+Check live arrow advancement and grouped returns. Standing beside an actually
+ready recipient or carrying an urgent timed delivery should retain priority.
+Test another nearby accepted pair when these one-time quests are already done;
+no quest abandonment/reset is required or automated. In-game behavior remains
+unverified by the agent.
+
+## 0.2.0 on-route pickups and local feedback — 2026-11-07
+
+**193 Lua tests passed** under the embedded Lua 5.1 runtime, including
+compilation of all nine addon sources. **17 Python reader tests passed**.
+New checks cover Porthannius with accepted ready Crown, pin/previous route,
+observed versus estimated availability, route-leg pickup precedence, unrelated
+pickups, detour/work/risk/capacity/gate limits, neutral grouped/later/unplanned
+acceptance/readiness/turn-in observations, snapshot/event deduplication including
+lagged log updates and bounded expiry, stable counters across reload/clear,
+300-entry limits, malformed saved data, loading/API gaps, preceding-plan event
+context, bounded Unicode notes/reports, compact/expanded feedback controls,
+manual commands and logout export persistence. A synthetic actual Lua-generated
+quoted report round-tripped through the safe Python reader, including UTF-8.
+This does not establish actual client rendering or SavedVariables serialization.
+
+Porthannius reproduction: at 61.2,47.6 with ready Crown 928 and its pinned/previous
+Dolanaar trip, the prior planner excluded Delivery despite its real 110-XP seed.
+The new supplement includes pickup before the southbound destination, requiring
+route proximity .012, a destination within .03, <=1 minute estimated work per
+pickup, <=.5 added walking and <=1.5 total extra outing minutes, at most four
+quests and existing eligibility/capacity/risk/gear/pin safeguards. Metadata-only
+availability is explicitly labeled check availability. This is a reproduced
+code path; the user's exact prior live state was not captured retrospectively.
+
+Manual review was chosen by the user; no automation or recurring review exists.
+The existing local QuestWeaver saved file was accessible to the reader but had
+no feedback export, as expected before this build loads. After installing,
+reload once to start capture, play/use Feedback or `/qw mark`, then reload or
+log out to write data and ask for a review. Actual on-route pickup suggestions,
+UI text entry/copying, quest-event delivery, reload persistence and saved-export
+readback remain pending Forever playtesting. No game commands were run by the
+agent, and no live/private report was copied into public source.
+
+## 0.2.0 multi-stop pickups and confirmed offers — 2026-11-07
+
+**210 Lua tests and 17 Python reader tests passed.** All nine addon Lua sources
+compiled in the existing embedded Lua 5.1 runtime. Seventeen new cases cover a
+pickup before an intermediate ready return, second/third destination lookahead,
+nonduplicated rewards/actions, current offer provenance/eligibility, capacity,
+projected prerequisites, ready/timed protection, unknown stages and four-quest/
+display bounds; unknown live-offer pickup-only planning, stale database gates,
+client names/levels, skip/done/full-log constraints, closed/outside-area offers,
+accepted-quest transition, modern/legacy metadata, ignored offers, immediate
+NPC refresh, and preservation of earlier build feedback/sequence identifiers.
+
+The multi-stop correction inspects a bounded ready-return prefix, rather than
+arbitrary unknown future work. Prefix plus pickup must fit four quests; all
+prefix quests must already be accepted and ready. Remaining work is reforecast
+without recursively calling Plan. Unresolved/urgent/gear-detour prefixes and
+actual nearby ready returns are not overridden. Existing geometric detour
+limits remain. Generic synthetic regressions represent the reviewed failure;
+no actual private feedback log was copied into tests or public documents.
+
+New unknown NPC offers are manual pickup-only steps with observed interaction
+coordinates and estimated unknown reward data. Their objectives and turn-ins
+are not projected before acceptance. Available names/levels come from guarded
+modern/legacy reads; disappearance or dialogue closure removes the unaccepted
+candidate. No game selection/acceptance API is called.
+
+Playtest pending: reload and check an available pickup near a route with more
+than one ready destination. Pickup should precede departure when its return fits
+that bounded outing. Open a nearby NPC with a quest outside the authored pack;
+confirm the pickup appears, accept manually, then check live objectives/return.
+Close without accepting to confirm the temporary suggestion clears. Use Feedback
+or `/qw mark`, then reload/logout before requesting another manual review. New
+records carry tag 0.2.0-route-feedback-2; earlier tag-1 observations are retained.
+Actual Forever behavior remains unverified by the agent.
+
+## 0.2.0 boundary and field continuation — 2026-11-07
+
+All 220 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python feedback-reader tests passed. Ten new
+regressions cover accepted objectives/returns across corridor edges, preserving
+pickup limits, invalid/foreign positions, Runtime guidance continuity and wrong-
+map cleanup, previously grouped unknown-return work before an elective return,
+repeat-refresh stability, urgency/nearby/pin preservation, progress/work/risk
+bounds and actual recipient discovery. Earlier corridor-cleanup assertions were
+updated to require accepted continuity and retain wrong-map cleanup checks.
+
+The early-return cause is established by planner source and synthetic tests:
+unknown-recipient quests cannot satisfy shared-return matching. The new policy
+uses prior outing membership/current progress and proximity, not an assumed
+shared recipient. This does not prove the recorded player route was inferior.
+No raw saved logs or notes were added to fixtures or public documentation.
+
+Playtest after reloading: continue an accepted quest beyond the old east/south
+corridor edge; compact mode and Auto should retain a current destination.
+Complete one of a grouped pair while nearby companion work remains almost done.
+If bounded continuation applies, finish that work before the elective return;
+otherwise a nearby return/urgent delivery can still take precedence. Missing
+locations should direct you to the quest log. Mark or write feedback, play, then
+reload again to save observations from capture tag 0.2.0-route-feedback-3.
+Installation checks and mocked tests do not establish this live behavior.
+
+## 0.2.0 direct quest offers — 2026-11-07
+
+All 228 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python reader tests passed. Eight new generic
+regressions cover direct detail without gossip, immediate manual pickup/offer
+capture, close/progress/reward/new-interaction cleanup, detail/gossip transition
+ordering, accepted-stage deduplication, absent/invalid/failing optional reads,
+reward-reader exceptions, completed flags and fast manual acceptance context.
+No raw saved logs or quest text were copied into fixtures.
+
+The source-level gap is reproduced. Its role in the reported missed pickup is
+plausible, not proven by the sparse interaction log. No live Forever verification
+is claimed. After reload, open an available quest directly and check for manual
+pickup guidance; close it without accepting and ensure the offer disappears.
+Then accept another and check transition to objective work. Existing urgent or
+nearby ready returns may still take priority. If quest 489 is already complete,
+use another direct offer rather than abandoning a quest. Play, mark/write
+feedback, then reload again to save capture tag 0.2.0-route-feedback-4.
+
+## 0.2.0 confirmed offers and retained outings — 2026-11-07
+
+All 239 Lua tests passed under the existing embedded Lua 5.1 runtime; all nine
+addon sources compiled. All 17 Python reader tests passed. Eleven new regressions
+cover outside-corridor unknown/authored confirmed offers, no invented future
+work, invalid-map/position and priority safeguards, retained accepted grouping,
+singleton stability, quarter-complete and zero-progress work within six minutes,
+unknown/known recipients, context pruning and bounded validation, pins/timed/
+near-ready/task-distance limits, exclusion of unaccepted forecasts and Runtime
+saved-context restoration after a simulated reload. Review found no actionable
+outing regression. No raw saved logs or notes were copied into fixtures.
+
+After reload, open a quest offer outside the authored corridor on Teldrassil;
+it should become a manual pickup suggestion, subject to existing priorities.
+Close it without accepting and ensure the unaccepted suggestion disappears.
+For a newly grouped accepted pair, finish one while its nearby companion remains
+unfinished. The retained outing can hold the elective return for up to six
+estimated work minutes; both unknown and known recipients remain correctly
+modeled. Test a reload while both are accepted and still in the same area.
+Timed deliveries/turn-ins beside you still take precedence, and unknown objective
+requirements remain a quest-log check. Play, mark/write feedback, then reload
+again before asking for a review. Expected capture tag 0.2.0-route-feedback-5.
+Mocked tests and file installation do not establish actual Forever behavior.
+
+## 0.2.0 Teldrassil catalogue — 2026-11-07
+
+All 250 Lua tests passed under the existing embedded Lua 5.1 runtime; all ten addon
+sources compiled. All 17 Python safe-reader tests passed. Eleven catalogue tests
+cover unique/acyclic internal prerequisite graph, advance hub pickups beyond the
+legacy corridor, actual-offer override with capacity/skips, accepted live-stage/
+XP/deduplication, city projection, Forever intermediary gates and elite risk,
+conditional profession/escort availability, owned-only rare starter versus
+object/supplied items, advisory-only rare opportunities, optional metadata
+conflicts, and missing accepted destinations including completed unknown returns.
+Earlier boundary/outing fixtures now isolate their subject from newly eligible
+catalogue choices. The wrong-map cleanup checks remain.
+
+Source/drop reviews found no factual issue beyond explicitly documented unknown
+metadata. Engineering review caught copying a missing recipient to an empty
+point; that path is now guarded and regression tested. NPC/object positions,
+work/travel and availability still need actual Forever testing. No raw saved logs
+or notes were added to fixtures. No guide route or database dump was bundled.
+
+The rebuilt ZIP adds Teldrassil.lua and CATALOGUE.md at the correct single addon
+root. This catalogue build is NOT installed; no installation was requested.
+After a separately requested installation, test predicted hub pickups before
+opening NPCs, prerequisite transitions, current objective/return replacement,
+Moss-twined Heart acceptance if found and object-started fruit/fronds. Conditional
+entries should wait for actual offers, and city handoffs must use live projection.
+Expected new-build capture tag 0.2.0-route-feedback-6. Existing saved feedback and
+last manual review cursor 211 remain unchanged by source/package work.
+
+## 0.2.0 zone registry / initial Darkshore — 2026-11-07
+
+All 265 Lua tests passed under embedded Lua 5.1 and all twelve addon sources
+compiled. All 17 Python reader tests passed. Ten zone regressions cover supported/
+unsupported selection, area-specific optional NPC coordinates, current-map reads,
+off-zone prerequisites, owned-waypoint cleanup, outing isolation, the first new
+zone interaction, stale-offer cleanup across unsupported detours and global
+starter identity/ambiguity. Five Darkshore tests cover coverage counts/map IDs,
+advance pickups without fake work, prerequisites/live metadata, conditional
+pickup materialization and owned starters/foreign destinations. Existing
+Teldrassil planner/UI/capture tests still pass. Directly toggled gossip fixtures
+now include the map stamp required for real interaction context.
+
+Research and read-only review used subagents. A reproduced stale-offer lifecycle
+gap was fixed and regression tested. No raw game logs/prose or private paths were
+added to sources. Package includes both zone audits; no new installation occurred.
+Mocked zone/map/waypoint tests do not prove actual Forever client transitions.
+
+After separately requested installation: load in Teldrassil, travel to Darkshore,
+verify new pickup candidates/current map points, and return. Confirm only the
+owned arrow switches and old outing/offer data do not leak. Try a conditional
+NPC offer and carried starter without accepting automatically; visit an
+unsupported area and confirm guidance pauses. Play and reload to save feedback
+with expected capture tag 0.2.0-route-feedback-7. Last reviewed cursor remains 211.
+
+## 0.2.0 Darnassus / build label — 2026-11-07
+
+All 273 Lua tests passed under embedded Lua 5.1; all thirteen addon sources
+compiled. All 17 Python reader tests passed. Eight new tests cover city records/
+accepted-only deliveries, live return replacement, named outward stages,
+uncatalogued foreign stages, foreign-map projection safety, actual Runtime
+entry/return, build label in both layouts and sanitized destination-map feedback.
+Read-only review found no actionable issue. City positions are source sightings,
+not local verification; UI stubs do not establish visual rendering in Forever.
+
+After installation, reload and check **v0.2.0 | build 8** below the title. Enter
+Darnassus with a city turn-in and check city catalogue/owned arrow; return to
+Teldrassil when the actual next stage belongs there. Test compact/expanded labels,
+city offers and missing-location notices. Play then reload again before asking
+for feedback review; expected capture tag 0.2.0-route-feedback-8, cursor 211.
+No game restart/reload or character action is performed by the installer.
+
+## 0.2.0 release acceptance — 2026-11-07
+
+The maintainer approved the installed 0.2.0 build 8 as the release baseline and
+authorized integration into main after playtesting. This is owner acceptance,
+not proof of exhaustive quest/class/zone/API/UI coverage. Existing catalogue
+unknowns and geometric work/travel estimates remain explicit limitations.
+The release retains the tested Lua behavior and capture tag 0.2.0-route-feedback-8;
+release preparation updates documentation without changing the installed code.
+No additional game action or installation is required for this documentation.
+Future UI/UX work requires a new branch and its own independent reviews/playtest.

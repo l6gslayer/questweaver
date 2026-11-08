@@ -1,125 +1,544 @@
 # QuestWeaver
 
-An adaptive quest planner for **WoW Forever**, starting with a 12-quest
-**Shadowglen** pack in the Night Elf starting area. Version 0.1.0 is an alpha;
-it has not been tested inside the game.
+An adaptive quest planner for **WoW Forever**, with separate zone catalogues
+for Teldrassil, Darkshore and Darnassus, including prerequisites, quest-starting drops and
+conditional offers. **0.2.0** was approved for release after maintainer playtesting
+on 2026-11-07. The loaded tracker identifies it as **v0.2.0 | build 8**.
 
-## Install
+## Install or update
 
-1. Unzip the release. Copy its single `QuestWeaver` folder into your **Forever**
-   client's `Interface/AddOns` directory. The result must contain
-   `QuestWeaver/QuestWeaver.toc` directly.
-2. Enable QuestWeaver in the character selection AddOns list. The manifest
-   targets Interface 16001; confirm the interface version with `GetBuildInfo()`
-   if the client has updated.
-3. Enter Shadowglen and type `/qw`. The panel becomes active within the starter
-   area of Teldrassil. Other zones intentionally show an out-of-scope message.
+1. Extract `QuestWeaver-0.2.0.zip`. Its single `QuestWeaver` folder belongs in
+   the Forever client's `Interface/AddOns` directory. Check that
+   `QuestWeaver/QuestWeaver.toc` exists directly, without another nested folder.
+2. When updating, replace the old addon source folder. Keep your game-managed
+   SavedVariables; skips, reward observations and preferences are migrated.
+3. Enable QuestWeaver in Teldrassil, Darkshore or Darnassus. Type `/qw` to show the tracker.
+   Use `/reload` if the addon is already enabled and its source was updated.
+   A newly installed addon may require returning to character selection.
 
-No dependency is required. **QuestieDB** is optional for current quest names,
-requirements, prerequisites and giver positions. **TomTom** is optional for a
-waypoint arrow. When available, the built-in waypoint API is the fallback;
-otherwise coordinates are printed to chat. A waypoint is set only on request.
-QuestieDB should be the matching Forever package. It is not bundled.
+The manifest targets Interface 16001. Recheck `GetBuildInfo()` after client
+updates. The packaged build was installed and file-verified, then approved by the
+maintainer after playtesting. This does not establish every quest, API, layout
+or character-specific path; see VALIDATION.md for the evidence boundaries.
 
-## What it does
+No dependency is required. Optional **QuestieDB** supplies quest names,
+requirements, prerequisites and giver positions; use its matching Forever
+package. Optional **TomTom** supplies an arrow and waypoints. Automatic TomTom guidance defaults to on
+when TomTom is available. Without it, the Waypoint button tries the built-in
+waypoint API and finally prints coordinates; these fallbacks remain manual. Third-party addons and databases are not bundled.
 
-- Replans from your current position, level, accepted quests, objective counts,
-  completed quests, equipment, and preferences.
-- Produces up to 12 actions: pickup, objectives, turn-in, then newly unlocked
-  quests. Only the first action is current; subsequent actions are projections
-  assuming the preceding actions are completed.
-- Scores estimated quest XP per minute through the turn-in, with bounded
-  preference for overlapping accepted objectives and quests unlocking a chain.
-- Looks up to three simple prerequisite links ahead for learned gear rewards,
-  including the estimated future work in the gear allowance calculation.
-- Offers **Balanced** (default), **Fastest XP**, and **Gear focused** modes.
-- Allows a 0-30 minute gear allowance, default 10. It compares estimated time to
-  reward against the fastest current candidate; this is a local heuristic, not
-  a guarantee about the total route's detour or globally fastest leveling.
-- Explains each step and permits pinning/skipping. Failed quests are excluded.
+## Window controls
 
-## Gear advice
+- **Drag the title bar** to move the window. Movement is enabled by default.
+- **Lock / Unlock** controls title dragging in either layout.
+- **- / +** minimizes to the next action or expands the full trip plan.
+- **Waypoint** targets or reselects the first outstanding destination.
+- **Auto: On / Off** controls automatic TomTom guidance in either layout.
+- **x** hides the window; `/qw` brings it back in its saved layout.
+- `/qw resetposition` recenters an offscreen window.
 
-Rewards are learned when you open a quest's offer/reward window. The addon
-stores only reward item IDs, observed quest XP and the level of that observation.
-It recalculates a basic **stat score** against your currently equipped gear using
-the selected role profile. Cached XP is used only at the same character level.
-For unknown rewards it explicitly says the gear is not yet known. Early quests
-can therefore have no gear-aware routing until their rewards have been seen.
+Position, compact/expanded state and lock preference survive reloads through
+per-character SavedVariables. Legacy 0.1.0 pixel positions are accepted, then
+saved as normalized coordinates when moved or the layout is toggled. Both
+layouts remain clamped to the screen.
 
-An improvement of at least 10% in this simple score may receive a bounded
-priority bonus within your detour allowance. This percentage is **not** a DPS,
-healing or survival increase. Default profiles are rough leveling weights;
-choose your profile explicitly, especially for hybrid classes. Effects, procs,
-set bonuses, weapon damage/speed, dual-wield loadouts and custom Forever stats
-are not modeled. Weapon swaps that require replacing a two-handed loadout with
-one-handed items are left unscored. There is no Pawn integration in this alpha.
-No rewards are chosen or items equipped automatically.
+Compact mode shows only the current action, its member quests/objectives,
+available live progress, destination and waypoint control. Expand to see all
+members when a stop contains more than three. Unknown progress says **check
+quest log**, rather than pretending an unmatched objective is complete.
+
+## Live quest destinations
+
+For accepted quests, QuestWeaver prefers WoW's current next waypoint, then a
+map-specific waypoint, then the quest's map point/area on the Teldrassil map.
+The tracker labels these **WoW objective** or **WoW quest area**. They refresh
+with quest progress and regular updates, including while Auto runs hidden.
+Completed quests use the live return destination when available. Pickups and
+projected follow-ups still use starter data.
+
+If the client exposes no valid location on the supported map, the tracker
+labels its fallback **starter estimate**. Missing APIs, errors, other-map points
+and invalid coordinates do not stop planning. QuestWeaver does not select a
+quest, alter tracking or change the open map to obtain coordinates.
+
+A live point describes the current quest stage, not individual spawn positions.
+For quests with separate gathering tasks, one live-stage destination replaces
+the static task pins while live data is available. The client decides which
+remaining area to identify; the addon does not infer that area from your position.
+Quest-area centers and routing waypoints are guidance, not terrain-safe paths
+or a guarantee that a mob is standing at the pin. Exact Forever API behavior
+still needs playtesting.
+
+## Nearby ready turn-ins
+
+The planner refreshes using your current map position and quest log. A ready,
+accepted turn-in within a small geometric radius (0.008 normalized map units)
+now takes priority over elective departures, pickups, pins, gear scoring and
+route stickiness. Up to four nearby returns can share that stop. An accepted
+timed delivery still takes first priority. This radius is an approximate map
+proximity rule, not measured interaction range or terrain/floor detection.
+
+WoW's optional `ReadyForTurnIn` check supplies readiness when available, with
+completion-state fallbacks for older clients. Standing beside an NPC or having
+finished-looking objective rows does not manufacture quest completion.
+
+## Nearby quests and quest-starting items
+
+The authored entries now include **Nature's Call** (97977) and **The Goddess
+Provides** (97979). Their precise availability gates are not assumed: pickup
+planning requires the quest to be offered in an open NPC conversation, or the
+quest must already be accepted. Talk to Tarindrella or Shanda normally. These
+offers are transient and disappear from eligibility when the conversation
+closes; nothing is automatically selected or accepted. The Goddess Provides
+uses a Night Elf race gate, with no assumed priest-only restriction. Both use
+live objective locations; missing location data asks you to check the log.
+
+**Welcome!** (5842) recognizes an owned Shadowglen Gift Voucher (14648), or an
+accepted quest. This conditional voucher is not a farmable mob drop. Its return
+uses client location data, and unavailable data is explained instead of guessed.
+**Gnarlpine Totems** for Nature's Call are objective items, not quest starters.
+Five class introductions and two Dolanaar handoffs are included as described
+below. The coverage audit in SOURCES.md records evidence and remaining limits.
+
+Fang of Githyiss (quest 97236, item 277190) is part of the pack. While Webwood
+Egg is accepted, or while you are near Githyiss's cave location, it can be
+considered as an optional **LOOT ITEM** opportunity. The planner compares its
+additional work and shared return travel; it does not assume the drop occurred.
+
+When a quest-starting item is detected in your carried bags, **ACCEPT ITEM**
+asks you to use it and accept the quest yourself. This action has no waypoint.
+A full quest log prevents scheduling acceptance, but keeps the reminder visible.
+Bag/log changes refresh the plan; an accepted/completed quest is not duplicated.
+Fang can be identified by its known item ID if the optional quest-item API is
+missing. Other starters require the client to identify the quest ID.
+
+Accepted quests outside the authored pack enter planning when WoW exposes a
+current destination on the Teldrassil map (1438), including outside the
+Shadowglen–Dolanaar pickup corridor (x 50-65%, y 23-65%). Discovered item starts require a local client destination
+or a local QuestieDB return location before they enter routing; unlocated items
+remain bag reminders. QuestieDB remains optional. No remote destination is
+silently converted into local coordinates.
+
+For a discovered quest with an unknown return, only its known current stage is
+planned. Completion refreshes the route to the real return location when the
+client supplies it. An unresolved item/stage never unlocks follow-ups or gets
+a guessed turn-in; later trips wait for updated bag/log evidence. Unknown XP
+uses a labeled 250 XP estimate, work defaults to five minutes, and unknown gear
+is unscored. Known drop work is also estimated. Unresolved stages receive half
+reward credit in ranking and reserve known return travel (or a three-minute
+unknown-return allowance); these are conservative heuristics, not measured drop
+odds or a promise of earned XP. Potential XP totals still include those quests.
+
+Large logs are shortlisted to sixteen candidates before whole-trip insertion,
+preserving prerequisite closure and eligible pins. Existing four-quest trips,
+three-trip forecasts and 24 displayed actions remain bounded. Arrival alone
+does not advance a quest. Pin/skip also work for discovered quests.
+
+## Pickups along your current route
+
+Known eligible, low-work quests can now join an already selected outing when
+their pickup is close to you or a modeled route leg and their return is close
+to one of its destinations. For example, passing Porthannius on a Crown of the
+Earth trip can insert Dolanaar Delivery before continuing south, even when its
+solo XP/minute would not win. Pickups whose actual NPC offer has not been read
+are labeled **check availability**; eligibility metadata is not proof of an
+exclamation mark in the live client.
+
+The supplement keeps the selected destination/pin and existing ready-return or
+timed priorities. It allows at most four quests, one minute of estimated work per pickup,
+a half minute of added modeled walking and 1.5 minutes of total extra outing
+cost; it requires a nearby return and no increased risk. Quest-log capacity,
+prerequisites, class/race gates, skips and completion still apply. Proximity is
+geometric (.012 map units to a leg/pickup, .03 to an existing destination), not
+terrain-aware pathfinding. No quest is automatically accepted.
+
+For multiple ready turn-ins, pickup lookahead now checks the bounded three-trip
+forecast. It can fold an independent ready-return prefix and a useful pickup
+into one outing when the total fits four quests. This allows collecting a
+package now even if its recipient is near the second or third planned stop.
+The remaining forecast is rebuilt so the pickup, reward and freed log slot are
+not counted again. Prefixes with unresolved work, urgent delivery, gear-detour
+assumptions or too many quests are left to normal planning; an actually nearby
+ready return still wins. Existing detour and current-eligibility limits apply.
+
+## Confirmed NPC offers
+
+Unknown quests in an open NPC conversation can now become pickup candidates,
+using the offered quest's name/level when the client supplies them. The initial
+step is **accept manually** at the current interaction location. It does not
+invent later objective or turn-in locations, gear value or completed progress.
+Unknown XP remains a labeled estimate until observed. Accepted quests then use
+normal live-location discovery and planning.
+
+Offers refresh immediately when a conversation opens or its options refresh.
+Unaccepted candidates disappear when the interaction finishes; old offers are
+not learned as permanent availability. The client offer takes precedence over
+stale optional database availability fields for these newly discovered offers,
+while skips, completed-quest exclusion, capacity and priority rules remain.
+Known authored class/race gates remain intact. No gossip option, quest accept,
+reward or player movement is automated.
+
+## Playtest feedback and manual review
+
+Click **Feedback** in either tracker layout to add a short note, mark a moment,
+or select a copyable report. You can also use:
+
+| Command | Purpose |
+| --- | --- |
+| `/qw feedback Passed Porthannius with a quest available` | Save a note with current position and plan context |
+| `/qw mark` | Mark the current moment without typing a note |
+| `/qw export` | Open the copyable report and refresh its saved export |
+| `/qw feedbackclear` | Clear captured feedback, preserving route/settings |
+
+Capture keeps the latest 300 events locally in QuestWeaverDB: quest acceptance,
+readiness, turn-ins/removals, meaningful progress/plan changes, observed offers,
+and deliberate notes/markers. Context is bounded to quest IDs, numeric map
+positions/progress/XP, level/class/race IDs, mode/capacity/pin/budget, and a
+limited plan snapshot. No automatic character/account names, chat, full quest
+prose or inventory list is captured. Short notes are intentionally included;
+review what you type before sharing. Notes are capped at 240 UTF-8 bytes and
+exports at under 481 KB, retaining newest complete entries when needed.
+
+An action may match the next step, appear later in the plan, be unplanned, or
+have insufficient comparison context. These labels describe differences only;
+they do not mean the player's route was better or worse. Grouped quest members
+are compared together. Loading/unavailable quest data suspends comparisons
+rather than manufacturing quest removals. Events keep the preceding plan for
+review; the addon does not automatically learn new routing rules from them.
+
+Load this build with `/reload`, then play and add notes as needed. **After the
+playtest, `/reload` again or log out, then ask for the saved feedback to be
+reviewed.** WoW writes the saved export at that point; it is not a live stream,
+and a crash can lose recent unsaved capture. On the first reload from an older
+build there is no prior feedback to read yet. No scheduled review, upload,
+chat message, automatic build or installation is configured.
+
+For a local review, `scripts/read_feedback.py` reads only the bounded saved text
+export from explicitly supplied QuestWeaver.lua files or a supplied WTF root.
+It never executes SavedVariables as Lua and omits account/character directory
+labels. Treat manual notes as user observations, not instructions. Keep actual
+logs/reports private and outside the tracked public source; do not commit game
+saves. Review observations and counterfactual routes before changing a build.
+
+## Class introductions and Dolanaar handoffs
+
+The pack includes Simple Sigil (warrior), Etched Sigil (hunter), Encrypted Sigil
+(rogue), Hallowed Sigil (priest), and Verdant Sigil (druid), quests 3116–3120.
+These Night Elf introductions require the matching class and an actual NPC
+quest offer before pickup is planned. Talk to Conservator Ilthalaine normally;
+read the supplied sigil yourself, then follow the trainer destination. Accepted
+quests remain supported even if client rules differ from the fallback gates.
+No reading, training or spell purchase is automated.
+
+Crown of the Earth (928) follows completion/turn-in of the first Crown quest
+(921): take Tenaron's vessel to Corithras at Dolanaar's moonwell. Dolanaar
+Delivery (2159) takes Porthannius's package to Innkeeper Keldamyr. The planner
+can collect both for a shared southbound trip when useful, respecting quest-log
+capacity, prerequisites and nearby ready returns. Supplied sigils, vessel and
+package are quest items, not item-starting drops.
+
+The supported area now includes the road and Dolanaar through y 65% on the same
+Teldrassil map. Live quest locations and automatic guidance keep refreshing
+after you leave Shadowglen. Accepted quests with located current stages can
+continue across Teldrassil without dropping at the corridor boundary. Outside
+the corridor, accepted quests, actual open offers and explicitly catalogued
+pickups are eligible. Uncatalogued unseen opportunities remain corridor-limited. The active catalogue switches in supported zones; guidance pauses in
+unsupported zones or when player coordinates are unavailable. This is not a complete authored
+Teldrassil quest catalogue. Missing quest locations remain quest-log reminders.
+Fallback coordinates,
+XP and work times remain estimates; live locations/XP take precedence.
+
+## TomTom arrow guidance
+
+Install and enable [TomTom](https://www.curseforge.com/wow/addons/tomtom) for your
+Forever client separately. The current official release lists Forever support;
+compatibility of the integration still needs an actual client playtest.
+
+**Auto: On** creates one temporary, silent QuestWeaver waypoint and selects
+TomTom's directional arrow. TomTom supplies the direction and distance display;
+its own `/tomtom` settings control arrow visibility, position, scale and style.
+QuestWeaver does not change those global settings. If TomTom is missing, the
+planner remains usable and displays its availability status.
+
+- The destination follows the first outstanding member of the current action,
+  including grouped pickups, objectives and turn-ins.
+- Accepting, finishing, skipping or turning in quests changes the destination
+  on the next planner refresh. Guidance continues with the tracker minimized
+  or hidden. QuestWeaver does not advance just because you reach coordinates.
+- The waypoint is replaced only when its action, coordinates or label changes,
+  not recreated every second. It is not saved across logins.
+- Turning Auto off, ending the route, leaving the supported area or leaving the
+  world for a loading transition removes only QuestWeaver's owned TomTom point.
+  Cleanup never uses a global waypoint reset. TomTom may resume another arrow
+  according to its own settings.
+- If you manually select another TomTom arrow, QuestWeaver leaves it alone while
+  its destination is unchanged. Click Waypoint to reselect the quest destination;
+  the next new automatic action will select its new destination.
+- With Auto off, Waypoint sets a single manual destination; it is cleared when
+  that action changes, without automatically creating a replacement.
+- Cave, upstairs and timed-delivery hints appear where relevant, including the
+  arrow label. An arrow points toward a coordinate, not a terrain-safe route.
+- `IsValidWaypoint` and `SetCrazyArrow` are used only when available. A manually
+  removed waypoint can be restored on a later automatic refresh if validity
+  checks are supported. API errors are caught and shown in the tracker status.
+- Automatic mode only drives TomTom. The built-in native-pin/chat fallback is
+  still invoked manually, and native pin behavior is unchanged.
+
+Use `/qw auto on`, `/qw auto off`, or `/qw auto` to toggle. Your preference is
+saved per character (schema 3); existing compact/lock and route preferences are
+kept. Reaching a cave pin may require finding its entrance or another floor.
+
+## Nearby work before a shared return
+
+Accepted nearby quests with a shared return area can now stay in the same outing
+when doing so saves modeled travel/time versus completing separate return trips.
+This comparison runs after normal trip selection, so a nearly finished quest's
+high instantaneous XP/minute does not automatically split off its companion.
+Within a selected outing, nearby accepted objective work precedes the shared
+return phase; accepting a locked follow-up still requires its real prerequisite
+turn-in first. Completing Moss in the field can therefore lead to Totems next,
+then the common recipient, rather than an extra return between objectives.
+
+The companion pass considers at most four total quests, returns within .02
+normalized map units and remaining tasks within .06 of an original accepted
+quest's area. It permits at most six extra estimated work minutes in total,
+requires positive XP or a known gear improvement, genuine modeled travel/time
+savings, no increased risk, and preserved gear allowance/capacity/pins. These
+are bounded heuristics, not terrain measurements or a globally optimal route.
+Missing locations, skipped/failed quests, unresolved stages and unconfirmed
+finished requirements are not treated as free companion work.
+
+Accepted timed deliveries and ready turn-ins already beside you retain their
+priority. Merely passing an estimated coordinate never completes a quest; the
+next refresh still depends on live quest progress. Both quests must actually
+be accepted with usable destination data for this new companion behavior.
+
+## How trips work
+
+The planner evaluates complete trips through currently eligible quests:
+
+1. **Collect compatible quests** at the hub before leaving when combining them
+   improves estimated quest XP per minute.
+2. **Work objective areas together**, including individual gathering areas.
+3. **Return and turn in** nearby completed quests together when the route fits.
+
+Each modeled leg contributes travel once. Combat work is reduced only when
+pack tasks explicitly identify the same creature source. Being near another
+quest does not by itself reduce the estimated kills or gathering work.
+
+A bounded greedy search starts with each eligible quest and tests inserting
+up to three others, for at most four quests per trip. It forecasts up to three
+trips and 24 displayed actions. Follow-up quests may be inserted in the same trip, but their pickups stay
+blocked until the required projected turn-ins. The first instruction reflects current state; the rest assumes you
+perform the preceding work. Replanning follows real accepts, progress,
+turn-ins, skips, equipment changes and movement.
+
+The expanded view shows the current trip, its total estimated time/quest XP,
+and subsequent projected trips. Adjacent pickups, objective work and returns
+are grouped. A grouped waypoint points at the first member; accepting or
+completing that member lets the next refresh advance to the next destination.
+
+Useful exceptions:
+
+- A nearby turn-in can happen early instead of forcing a complete hub loop.
+- The starter pack's timed antidote delivery, once accepted, takes priority
+  over elective detours and pins. Its timer is not read; the warning is based
+  on the pack's unverified timed-quest flag.
+- Quest-log capacity is respected when the client supplies its maximum. The
+  planner conservatively requires room for planned pickups up front.
+- Previous trips are retained within 15% of the best priority, and small
+  destination changes receive hysteresis to avoid repeated direction changes.
+- **Skip first quest** removes only the first quest of a grouped action from
+  recommendations. It never abandons quests. Restore clears skips and pins.
+
+## XP and gear modes
+
+| Mode | Priority |
+| --- | --- |
+| Balanced (default) | Estimated quest XP/time with bounded gear preference |
+| Fastest XP | Estimated quest XP/time without gear bonuses |
+| Gear focused | Stronger gear preference within the same allowance |
+
+Rewards are learned when their offer/reward window is opened. Unknown rewards
+remain unknown. Known rewards are compared to current equipment using rough
+melee, ranged, caster, healer or tank stat weights. Choose a profile explicitly
+for your leveling role, especially on hybrid classes.
+
+A known stat-score improvement of at least 10% may favor a trip if its estimated
+extra time fits your allowance (default 10 minutes, range 0-30). The comparison
+uses the **whole candidate trip**, plus estimated future work for a known reward
+up to three simple prerequisite links ahead. The comparator is the best current
+XP/time trip, which may contain a different set of quests. This is a local
+heuristic, not a guarantee of total route detour or globally optimal leveling.
+Pins override elective scoring but never prerequisites, skips or accepted timed
+quests. The addon never chooses rewards or equips gear for you.
+
+The gear percentage is a basic **stat-score** change, not a DPS/healing/survival
+prediction. Weapon damage/speed, procs, set bonuses, custom Forever stats and
+complete dual-wield loadouts are not modeled. Replacing a two-handed loadout
+with one-handed items remains unscored. There is no Pawn integration.
 
 ## Commands
 
 | Command | Action |
 | --- | --- |
-| `/qw` or `/qw show` | Open the planner |
-| `/qw hide` | Close it |
-| `/qw mode balanced` | Favor XP with bounded gear detours |
-| `/qw mode xp` | Use XP/time scoring without gear bonuses |
-| `/qw mode gear` | Stronger gear preference within the allowance |
-| `/qw profile melee` | Set melee weights |
-| `/qw profile ranged` | Set ranged weights |
-| `/qw profile caster` | Set caster weights |
-| `/qw profile healer` | Set healer weights |
-| `/qw profile tank` | Set tank weights |
-| `/qw budget 10` | Set gear allowance in minutes (0-30) |
-| `/qw pin 916` | Prioritize this quest when eligible |
+| `/qw` or `/qw show` | Show the tracker in its saved layout |
+| `/qw hide` | Hide it |
+| `/qw minimize` or `/qw compact` | Show the next action only |
+| `/qw expand` | Show the full trip plan |
+| `/qw lock` / `/qw unlock` | Disable/enable title dragging |
+| `/qw resetposition` | Recenter the window |
+| `/qw way` | Set or reselect a waypoint for the current destination |
+| `/qw auto on` / `/qw auto off` | Enable/disable automatic TomTom guidance |
+| `/qw mode balanced` / `xp` / `gear` | Set routing mode |
+| `/qw profile melee` / `ranged` / `caster` / `healer` / `tank` | Set stat weights |
+| `/qw budget 10` | Set gear allowance in minutes |
+| `/qw pin 916` | Prioritize an eligible quest |
 | `/qw unpin` | Clear the pin |
-| `/qw skip 916` | Stop recommending this quest; does not abandon it |
-| `/qw unskip 916` | Restore this quest |
-| `/qw restore` | Clear all skips and the pin |
-| `/qw way` | Place a waypoint for the current next action |
-| `/qw unlock` / `/qw lock` | Enable/disable title-bar dragging |
+| `/qw skip 916` / `/qw unskip 916` | Exclude/restore a quest |
+| `/qw restore` | Clear skips and pin |
 
-Skip/pin without an ID applies to the next recommended quest. The panel also
-has mode, waypoint, skip-next and restore buttons. Preferences and position
-are SavedVariables **per character**; no character/account names are recorded
-by the addon. WoW itself stores per-character files in its own directories.
-Nothing is sent over the network.
+Pin/skip/unskip without an ID uses the first quest of the next action. Expanded
+steps include IDs to support targeting a different member.
 
-## Scope and uncertainty
+## Limits and data quality
 
-- The pack is an original approximation of the Classic Shadowglen starter
-  chains. It is **not a verified Forever route**. Added/changed Forever quests
-  and class quests are outside this first pack. A missing recommendation does
-  not prove no quest is available.
-- QuestieDB can replace names, prerequisites and giver positions, but objective
-  locations, XP baselines and timings remain starter estimates. No quest or
-  route dataset is copied or shipped from another addon.
-- Travel is scaled geometric distance with a conservative multiplier. It does
-  not understand mountains, cave entrances, buildings, transport or walkable
-  terrain. Cave and upstairs steps have warnings. The addon never moves you.
-- Objective groups are treated as one area per quest; multiple distant
-  objectives are not separately routed. Kill XP, rested XP, spawn competition,
-  drop rates and your personal combat pace are not yet modeled.
-- Time-to-reward is recomputed for each action; summing the displayed estimates
-  would double-count future quest work. Treat them as per-candidate estimates.
-- The manifest/API choices need actual Forever-client validation, including
-  startup, cold login, reload, combat, quest updates and SavedVariables.
-- The planner refreshes at most once per second while visible or after an
-  event. It does not change the normal quest tracker, bindings or CVars.
+- The catalogue includes 79 Teldrassil records, with availability/position gaps
+  documented in [CATALOGUE.md](CATALOGUE.md). Known pickups can be proposed ahead
+  of time; conditional records require observed offers. Accepted quests and bag
+  starters still join dynamically. This is not exhaustive coverage of every
+  event, profession variant, class follow-up or drop. Darkshore has its own
+  initial catalogue; unsupported maps pause guidance.
+- Starter objective coordinates, XP baselines and work times are **unverified
+  estimates**. QuestieDB can replace selected metadata and giver positions,
+  but not these objective areas. No paid routes or third-party datasets are
+  copied or redistributed.
+- Travel uses scaled geometric distance and a conservative multiplier. It does
+  not understand walkable terrain, transport, building floors or cave paths.
+  Cave/upstairs warnings remain visible in the expanded view.
+- Mushroom/lily/spider task matching currently uses English objective tokens.
+  Unmatched/localized data stays unresolved until the client confirms quest
+  completion. If all known tasks are done but the client says incomplete, the
+  tracker asks you to check remaining requirements instead of claiming a turn-in.
+- XP is credited once per quest in the trip estimate. Kill XP, rested bonuses,
+  spawn competition, measured drop rates and personal combat pace are not
+  modeled. A same-level XP observation from the quest window replaces the
+  fallback estimate, as does a usable current quest-log XP read. Changed buffs
+  may still make a saved observation stale.
+- UI refresh/planning runs at most once a second while shown, while TomTom
+  guidance is active, or after events.
+  No bindings, CVars, normal quest tracker, automatic quest accepts or movement
+  are changed.
+- Settings, quest IDs/reward observations and bounded playtest feedback stay
+  in per-character SavedVariables. Automatic capture excludes character/account
+  names and chat; manual notes are included deliberately. Nothing is uploaded.
 
-## Development and validation
-
-From the repository root, using Lua 5.1 (or LuaJIT):
+## Development and review
 
 ```sh
 lua tests/run.lua
+python3 -m unittest discover -s tests -p 'test_*.py'
 python3 scripts/package.py
 ```
 
-The package script validates manifest references, scans the publishable file
-set for common private information, and creates `dist/QuestWeaver-0.1.0.zip`
-with one addon folder at its root. Source code, tests, docs, workflow and build
-script belong in Git; generated ZIPs, saves and local settings do not.
+Lua 5.1/LuaJIT is required for the test suite. Tests cover planner and runtime
+logic plus simulated window behavior; UI stubs are not actual game rendering.
+The frozen 0.1.0 planner lives only in `tests/reference_planner.lua` for baseline
+regressions and is not shipped in the addon.
 
-See [VALIDATION.md](VALIDATION.md) for actual checks performed and a playtest
-checklist. See [SOURCES.md](SOURCES.md) for research references.
+The package script checks the public source set, privacy signatures, manifest
+references and single-folder ZIP integrity, producing `dist/QuestWeaver-0.2.0.zip`.
+GitHub Actions repeats Lua syntax checks, tests and packaging when the branch is
+pushed. Generated packages, logs, local settings and game saves are ignored.
+
+0.2.0 is the approved release baseline for `main`. Further UI/UX work belongs on
+a new branch and requires its own playtest approval before integration. See [VALIDATION.md](VALIDATION.md) for the test record and
+playtest checklist, [CHANGELOG.md](CHANGELOG.md) for changes and
+[SOURCES.md](SOURCES.md) for research boundaries.
+
+### Continuing accepted work beyond the corridor
+
+Accepted quests with current destinations on Teldrassil remain eligible across
+the pickup corridor boundary. Other supported maps select their own catalogue;
+unsupported maps and missing player coordinates pause guidance. Unlocated accepted quests ask you to check the quest log;
+unknown objectives or recipients are never invented.
+
+When accepted quests share the current objective step, QuestWeaver saves a small
+outing context (at most four quest IDs, map and area center). It survives
+singleton replans and UI reloads while those quests remain accepted in the same
+area. Completed/removed, skipped and failed members are pruned; leaving the map
+or moving more than .12 map distance from that area clears the context.
+
+Before an elective return, nearby companions in that outing can finish first
+with up to six total estimated work minutes remaining, known progress, remaining
+objectives within .06 map distance and no increased modeled combat risk. The
+recipient may still be unknown; it is never invented. Timed deliveries, actual
+nearby turn-ins and explicit pins retain priority. Once the companion is ready,
+its observed return location drives replanning. Without retained outing context,
+the previous-trip fallback still requires at least half completion and at most
+two work minutes within .04 map distance.
+
+### Direct quest offers
+
+Some interactions open a quest offer directly without a list of available quests.
+QuestWeaver now reads that open offer immediately and can recommend accepting it
+manually. This handles quests outside the authored pack without guessing their
+availability, objectives or recipient. The offer is transient: accepting it,
+closing the quest dialog, switching to progress/rewards or opening another
+interaction clears it. Confirmed offers can become manual pickups anywhere on
+Teldrassil, including outside the authored corridor, with no guessed later work
+or recipient. Skips, completion, capacity, class/race safeguards and urgent/
+nearby-return priorities still apply. Uncatalogued unseen pickups remain corridor-limited. Discovery starts
+when the client exposes the offer; it cannot predict an unseen NPC's quests.
+
+### Advance pickup catalogue
+
+The [catalogue audit](CATALOGUE.md) lists the new chains, sources and uncertainty.
+Known NPC/object locations and prerequisite links let the planner propose
+**Check availability** pickups before you interact. Most new records deliberately
+plan only the pickup until acceptance reveals current work. This can group hub
+pickups but does not guess objective locations, completion or later chain unlocks.
+Actual offers override conservative catalogue gates. Live progress/XP/locations
+remain authoritative.
+
+Moss-twined Heart 5179 is a rare quest starter, accepted manually only if carried;
+a nearby advisory does not promise a drop or route you to camp it. Glowing Fruit,
+Shimmering Frond and Sprouted Fronds are object-started quests, not bag starters.
+City handoffs wait for a valid live projection rather than treating Darnassus
+coordinates as Teldrassil coordinates. See the audit for conditional records and
+remaining coverage gaps.
+
+### Separate zone catalogues
+
+Each zone owns its quest records, UI map ID, database area ID, faction and data
+coverage notes. A shared registry selects the catalogue for your current map
+before reading quest locations. The same planner, bag/offer discovery, feedback
+and navigation modules serve every zone. Switching zones clears the old owned
+waypoint and outing context so percentages cannot refer to the wrong map.
+Quest prerequisites can refer to completed quests from another zone. Carried
+starter identities are recognized across registered catalogues, but ambiguous
+item-only variants require an explicit client quest ID.
+
+Teldrassil retains its [79-record audit](CATALOGUE.md). Darkshore begins with an
+[Auberdine-area catalogue and evidence audit](DARKSHORE_CATALOGUE.md). Known
+pickups can be proposed in advance; unknown work and conditional quests keep
+the same pickup-only/observed-offer safeguards. Each zone is expanded through
+source research and playtest review. Neither catalogue claims exhaustive quests
+or measured optimal travel. Darkshore still uses geometric travel
+estimates rather than terrain-aware paths or measured movement times.
+
+### Darnassus and visible build identification
+
+[Darnassus has its own city catalogue](DARNASSUS_CATALOGUE.md), including incoming
+Teldrassil deliveries and city follow-ups. The active map selects the catalogue.
+Live city turn-in points override reference NPC sightings. A stage outside the
+current zone names its target area when known and waits for travel there; it
+never treats forest or Darkshore percentages as city positions or projects an
+out-of-zone objective as completed locally. This does not automate travel or
+provide a terrain/portal path.
+
+Below the tracker title, compact and expanded layouts show the loaded version,
+build and active catalogue, for example **v0.2.0 | build 8 | Darnassus**. This
+comes from the same capture build identifier used in feedback. After updating,
+reload to load the new files and check this line; play and reload again to save
+observations from the running build.

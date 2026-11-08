@@ -1,13 +1,20 @@
 ## Interface: 16001
 ## Title: QuestWeaver
-## Notes: Adaptive Shadowglen quest planning with explained XP and gear tradeoffs.
-## Version: 0.1.0
+## Notes: Adaptive zone quest planning with explained XP and gear tradeoffs.
+## Version: 0.2.0
 ## Author: QuestWeaver contributors
 ## OptionalDeps: QuestieDB, TomTom
 ## SavedVariablesPerCharacter: QuestWeaverDB
 Core.lua
+Trips.lua
 Shadowglen.lua
+Teldrassil.lua
+Catalogues.lua
+Darkshore.lua
+Darnassus.lua
 Provider.lua
 Gear.lua
+Navigation.lua
+Feedback.lua
 Runtime.lua
 UI.lua
