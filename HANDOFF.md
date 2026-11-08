@@ -1,10 +1,28 @@
 # QuestWeaver handoff
 
-Updated 2026-11-07. Read this alongside `AGENTS.md`, `README.md` and
+Updated 2026-11-08. Read this alongside `AGENTS.md`, `README.md` and
 `VALIDATION.md`. Machine-specific installation details are deliberately kept
 in the parent workspace's local instructions, not this public repository.
 
-## Latest manual feedback review — awaiting tag 9 evidence
+## Latest manual feedback review — tag 9 confirmed, 2026-11-08
+
+After the maintainer played with UI dev 3 active and reloaded again, the safe
+reader found a fresh, continuous tag 9 playtest window. Both lead and independent
+read-only review found no recurrence of the old refresh-by-refresh oscillation.
+Changes in the reviewed timeline coincide with progression, offers, ready returns
+or zone context rather than repeated unchanged-state reversal.
+
+Recent-pickup attribution is observed in real saved data: both a previously-next
+pickup and a previously-later pickup were correctly labeled recently_recommended,
+with matching same-map source plans within the time limit. Other unplanned
+acceptances have no recent recommendation in the exported context. All observed
+turn-ins in this window matched the next recommendation. The bounded evidence
+supports these fixes, not exhaustive planner/quest/UI acceptance or optimality.
+New capture data persisted and was readable; other preferences/persistence paths
+were not separately retested. No code, package, installation, SavedVariables or
+game controls were changed; only sanitized local documentation was updated.
+
+## Earlier manual feedback review — tag 9 evidence previously unavailable
 
 The maintainer reported playtesting UI dev 3 and reloading, then requested a
 read-only stability/attribution review. The fresh saved export and its structured
@@ -42,8 +60,9 @@ Package SHA256: `0e013c6495f0fdb5bcda574c558b864146aa82361d26261f9d3f3d4d9eae589
 All package files matched source before installation. Ignored receipt:
 `dist/ui-dev-3-install-receipt.json`. SavedVariables, other addons, previous
 backups and packages were preserved. No game input/restart, push or PR occurred.
-The user must reload manually and playtest; actual dev3 planning/attribution and
-persistence remain unverified. This installation record did not rebuild the
+The targeted tag 9 playtest review above now supports planner stability and
+recent-pickup attribution in the observed saved window. Broader client behavior
+and exhaustive quest/route acceptance remain unverified. This installation record did not rebuild the
 installed package. No game input/restart, push or PR authorized.
 
 ## UI dev 2 follow-up — historical work

@@ -1,5 +1,27 @@
 # Validation record
 
+## UI dev 3 saved tag 9 playtest review — 2026-11-08
+
+The latest safe export identifies 0.2.0-route-feedback-9 and includes a continuous
+new playtest window over two sessions. The entire newly saved window was retained
+and exported. Lead and independent read-only review found no repeated rapid
+unchanged-state next-action reversal like the earlier stability defect. Short
+plan changes occur alongside offer/acceptance, readiness/progress or zone context.
+
+Two real acceptances carry recently_recommended with valid same-map pickup source
+plans: one previously-next and one previously-later action. Immediate next matches
+remain distinct. Other unplanned pickups have no recent matching recommendation
+in the recorded context; an NPC offer alone was not counted as a recommendation.
+All reviewed turn-ins matched the next recommendation. No concrete stability or
+attribution counterexample was identified in this bounded window.
+
+This observes tag 9 capture/export persistence and supports the targeted fixes;
+it is not exhaustive quest/route, preference persistence or combat/UI acceptance.
+Raw logs and numeric review artifacts remain ignored/private. No implementation,
+package, installed addon, SavedVariables, game input or external state changed.
+No additional automated tests were needed for this read-only evidence review.
+
+
 ## UI dev 3 requested playtest review — evidence mismatch
 
 The maintainer reported a UI dev 3 playtest/reload. The latest saved export still
