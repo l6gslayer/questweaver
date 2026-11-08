@@ -1,5 +1,23 @@
 # Validation record
 
+## Follow-up owner playtest and manual quest review — 2026-11-07
+
+Owner report: after reloading UI dev 2, refresh-driven window jumping is fixed.
+This is a targeted playtest confirmation, not acceptance of the entire UI.
+Read-only saved-export review found repeated first-action switching without quest
+state changes. An isolated private replay reproduced alternating choices with
+fixed position and progress: a valid near-best previous plan can be omitted from
+the greedy candidate set, bypassing retention. A separate review confirmed that
+some unplanned acceptance labels follow recently recommended pickups when the
+NPC interaction lifecycle changes the immediate plan. These are pre-existing
+planner/capture paths; UI dev 2 left both implementations unchanged.
+
+No code fix, package rebuild, installation or game input occurred during the
+review. Raw saves/exports, quest snapshots and replay fixtures remain private and
+ignored. Exact current-session UI identity cannot be established from the shared
+planner capture tag alone. Missing-location coverage remains explicit; no travel
+improvement was claimed from an unequal-endpoint route comparison.
+
 ## UI dev 2 corrections — 2026-11-07
 
 **297 Lua 5.1 tests passed**, including compilation of all thirteen addon sources,
@@ -17,7 +35,9 @@ No actionable source/simulated-layout issue remains in that review:
 states were rendered against UI dev 1, including single live-objective and Options
 fixtures, and inspected under ignored build/ui-dev2 output. The actual user
 screenshot establishes UI dev 1 rendering only; it was not copied into public
-source. No actual UI dev 2 dragging or rendering has yet been verified in Forever.
+source. The maintainer subsequently reported reloading UI dev 2 and confirmed the
+refresh-driven dragging issue is fixed. Other UI dev 2 rendering/input and
+persistence cases remain unverified by the agent.
 
 The dev 2 package uses a distinct filename and manifest; package/privacy,
 manifest/integrity/single-folder and source-byte comparison checks are required

@@ -19,11 +19,31 @@ Final validation passed: 297 Lua 5.1 tests, 17 Python reader tests, all thirteen
 addon sources compiled, package/privacy/manifest/integrity and diff checks.
 An independent final review found no actionable source/simulation issue.
 SavedVariables, other addons, previous backups and game controls were untouched.
-User must reload manually and playtest; no actual dev 2 rendering/drag validation
-is claimed. Recording this status did not rebuild the installed package. Preserve
+The maintainer subsequently reported reloading UI dev 2 and confirmed that the
+refresh dragging is fixed. This is owner-reported drag verification, not full
+UI/quest/navigation acceptance. Recording this status did not rebuild the installed package. Preserve
 SavedVariables, all other addons, approved release ZIP and prior backups. No
 restart/game command, push or PR is authorized. Earlier dev 1 records below are
 historical; approved release remains 0.2.0/build 8, not the UI development build.
+
+## Manual quest review follow-up
+
+After the UI dev 2 reload, the maintainer authorized a manual quest review.
+Safe exported-feedback review and isolated private numeric replays identified a
+planner stability defect: the previous-plan retention safeguard only examines
+plans admitted by greedy candidate insertion. A valid near-best previous plan
+can fall out of that set; prior-action preferences then make unchanged-input
+refreshes alternate between work and return recommendations. This was reproduced
+without changing source or driving the client. A separate feedback limitation
+labels an acceptance unplanned even when the pickup appeared shortly before an
+NPC interaction changed the immediate plan. Missing live objective locations
+also limit guidance for some accepted quests; do not invent coordinates.
+
+This was investigation only. No planner/capture/source behavior, package or
+installation was changed. Private exports/replay data remain ignored. A proposed
+return-order detour was not established once its follow-up pickup was considered.
+Fixing planner stability and improving feedback attribution are the recommended
+next scope; no installation, push or PR is implied by this review.
 
 ## UI dev 1 installation — historical status
 
